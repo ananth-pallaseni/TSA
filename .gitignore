@@ -1,0 +1,8 @@
+# All text files
+*.txt
+
+# Test files used to playing around
+test.py
+
+# Compiled python modules.
+*.pyc
