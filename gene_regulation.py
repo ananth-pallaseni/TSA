@@ -26,7 +26,8 @@ def gene_regulation_fn(topology, specie_vals):
 		base_degr = params[1]
 
 		# Add basal synthesis and basl degradation terms
-		dX = base_synth - specie_vals[target_species] * base_degr
+		dX = base_synth - specie_vals[:, target_species] * base_degr
+
 
 		# Add contributions from each edge
 		for i in range(len(parents)):
@@ -39,7 +40,7 @@ def gene_regulation_fn(topology, specie_vals):
 			m = params[ j + 2 ]   # Hill fn parameter (m)
 
 			# Value of parent for all t
-			parent_vals = specie_vals[p]
+			parent_vals = specie_vals[:, p]
 
 			if inter == 0:
 				dX += (b * parent_vals**m) / (parent_vals**m + k**m)
@@ -51,20 +52,49 @@ def gene_regulation_fn(topology, specie_vals):
 	# Enumerate the length of the parameter list that dX requires
 	param_len = 2 + 3*len(parents)   # [base_synth, base_degr] + [b, k, m] for each parent
 
-	return dX, param_len
+	b_bound = (0.5, 4)
+	k_bound = (0.2, 3)
+	m_bound = (0.7, 5)
+
+	param_bounds = [(0.1, 1), (0.1, 2)]   # Basal synth, basal degr
+	for i in parents:
+		param_bounds += [b_bound, k_bound, m_bound]
+
+	return dX, param_len, param_bounds
+
+def accepted_model_fn(x, t):
+	s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5
+	g = [0.9, 0.9, 0.7, 1.5, 1.5];      # basal degradation
+	b = [2, 2, 2, 2, 2, 2, 2];          # interaction 'strength' (beta_nk)
+	k = [1.5, 1.5, 1.5, 1.5, 1.5];     # hill fn parameter (theta_nk)
+	m = [5, 5, 5, 5, 5];                # hill fn parameter (m_nk)
+	
+	dx = [0 for i in range(len(x))]
+
+	dx[0] = s[0] - g[0]*x[0] + b[0]*(x[4]**m[4])/(x[4]**m[4] + k[4]**m[4]);
+
+	dx[1] = s[1] - g[1]*x[1] + b[1]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
+	
+	dx[2] = s[2] - g[2]*x[2] + b[2]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
+	
+	dx[3] = s[3] - g[3]*x[3] + b[3]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]) + b[5]/(1 + (x[2]/k[2])**m[2]);
+	
+	dx[4] = s[4] - g[4]*x[4] + b[4]*(x[3]**m[3])/(x[3]**m[3] + k[3]**m[3]) + b[6]/(1 + (x[1]/k[1])**m[1]);
+
+	return dx
 
 
 class GeneRegulationModel(model.Model):
 	"""Specifies the form and limits of a model based on Gene Regualation networks
 	"""
 
-	def __init__(self, max_parents, num_nodes, time_scale, accepted_topology):
+	def __init__(self, max_parents, num_nodes, time_scale):
 		# Invoke the parent constructor with specific values
 		super(GeneRegulationModel, self).__init__(max_parents=max_parents,
 			num_nodes=num_nodes,
 			time_scale=time_scale,
-			accepted_topology=accepted_topology,
+			accepted_model_fn=accepted_model_fn,
 			num_interactions = 2,   # Edges can either Activate or Repress
 			max_order=0,   # Order not used in this model
-			topology_to_function=gene_regulation_fn   # Using function specific to gene regulation networks (based on hill-kinetics)
+			fn=gene_regulation_fn   # Using function specific to gene regulation networks (based on hill-kinetics)
 			)
