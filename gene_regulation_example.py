@@ -10,85 +10,46 @@
 # 4 activates 5
 # 5 activates 1
 
+import tsa 
 from gene_regulation import GeneRegulationModel
 import numpy as np
-from scipy.integrate import odeint
-import matplotlib.pyplot as plt 
-from scipy.optimize import minimize
 
-
-max_parents = 2
+# Parameters for our gene regulation network:
 num_nodes = 5
-time_scale = [0,10,31]
-
-# accepted_topology = [TargetTopology(target=1, parents=[5], interactions=[1], order=0),
-# 				  TargetTopology(target=2, parents=[1], interactions=[1], order=0),
-# 				  TargetTopology(target=3, parents=[1], interactions=[1], order=0),
-# 				  TargetTopology(target=4, parents=[1,3], interactions=[1,2], order=0),
-# 				  TargetTopology(target=5, parents=[2,4], interactions=[2,1], order=0)]
-
-gene_reg_model = GeneRegulationModel(max_parents=max_parents, 
-							num_nodes=num_nodes,
-							time_scale=time_scale
-							)
-
-#########################################
-
-# Simulate "true" data
-species_data, species_derivs = gene_reg_model.sim_data(model_fn=gene_reg_model.accepted_model_fn,
-									time_scale = gene_reg_model.time_scale,
-									x0=[1, 0.5, 1, 1.5, 0.5])
+max_parents = 2 
+time_scale = [0, 10, 31]
+initial_vals = np.array([1, 0.5, 1, 1.5, 0.5])
 
 
+# Define the Model Space
+model_space = GeneRegulationModel(max_parents=max_parents, 
+								  num_nodes=num_nodes)
 
-## Plot
-# plt.plot(ts, true_data[:, 0], "+", label="x1")
-# plt.plot(ts, true_data[:, 1], "x", label="x2")
-# plt.plot(ts, true_data[:, 2], "o", label="x3")
-# plt.xlabel("Time")
-# plt.ylabel("X")
-# plt.legend();
+# Define the accepted model
+def accepted_model_fn(x, t):
+	s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5
+	g = [0.9, 0.9, 0.7, 1.5, 1.5];      # basal degradation
+	b = [2, 2, 2, 2, 2, 2, 2];          # interaction 'strength' (beta_nk)
+	k = [1.5, 1.5, 1.5, 1.5, 1.5];      # hill fn parameter (theta_nk)
+	m = [5, 5, 5, 5, 5];                # hill fn parameter (m_nk)
+	
+	dx = [0 for i in range(len(x))]
 
-# enumerate all models
-models = gene_reg_model.generate_models(0, species_data)
+	dx[0] = s[0] - g[0]*x[0] + b[0]*(x[4]**m[4])/(x[4]**m[4] + k[4]**m[4]);
 
-# fo each model, optimize it
-best_models = []
-cnt = 0
-for t in [0]:
-	for m in models:
-		cnt += 1
-		if cnt > 100:
-			input("done 100")
-		# if cnt > 1:
-		# 	print ("best 0 = ", best_models[0][0])
-		# 	print()
-		dX, paramlen, bounds, top = m
-		# print (top)
-		# print()
-		obj = gene_reg_model.objective_fn(dX, t, species_derivs)
+	dx[1] = s[1] - g[1]*x[1] + b[1]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
+	
+	dx[2] = s[2] - g[2]*x[2] + b[2]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
+	
+	dx[3] = s[3] - g[3]*x[3] + b[3]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]) + b[5]/(1 + (x[2]/k[2])**m[2]);
+	
+	dx[4] = s[4] - g[4]*x[4] + b[4]*(x[3]**m[3])/(x[3]**m[3] + k[3]**m[3]) + b[6]/(1 + (x[1]/k[1])**m[1]);
 
-		init_params = [1 for i in range(paramlen)]
-		res = minimize(obj, init_params, method='TNC', tol=1e-7, bounds=bounds)
-		opt_params = res.x 
-		dist = obj(opt_params)
+	return dx
 
-		# Do Ordering
-		# print(top)
-		# print()
-		best_models.append( (top, dX, opt_params, dist) )
-
-
-
-
-s = sorted(best_models, key=lambda x:x[3])
-for i in s:
-	print(i[0])
-	print(i[3])
-	print()
-
-
-
-
-
+# Perform tsa on the model space
+candidate_models = tsa.TSA(model_space=model_space,
+						   accepted_model_fn=accepted_model_fn,
+						   time_scale=time_scale,
+						   initial_vals=initial_vals)
 
