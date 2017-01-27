@@ -100,7 +100,7 @@ def generate_models(model_space, target, species_vals):
 	interactions = [i for i in range(model_space.num_interactions)]
 
 	# How many parents?
-	for num_parents in range(1, model_space.max_parents+1):
+	for num_parents in range(model_space.max_parents+1):
 		all_parent_combs = itertools.combinations(nodes, num_parents)
 
 		# What combination of parents (includes self interactions)?
@@ -183,27 +183,35 @@ def find_best_models(models, target, species_derivs, num_best_models=10):
 		# Calculate the distance of best guess
 		dist = obj(opt_params)
 
-		model_details = (top, dX, param_len, opt_params, dist)
+		# Calculate num time steps
+		ts = species_derivs.shape[0]
+
+		# Calculate Biased AIC for this model
+		AIC_bias = 2 * (param_len + 1) * (ts / (ts - param_len))
+		AIC  = ts * np.log(dist / ts) + AIC_bias
+
+
+		model_details = (top, dX, param_len, opt_params, dist, AIC)
 
 		
 		if len(best) < num_best_models:
 			best.append(model_details)
 		else:
-			# Find the index and distance of the worst model we have stored
-			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1][4])
-			biggest_dist = biggest_item[4]
+			# Find the index and AIC of the worst model we have stored
+			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1][5])
+			biggest_AIC = biggest_item[5]
 
-			# If the distance of this model is less than the distance of the worst model, replace the worst with this
-			if dist < biggest_dist:
+			# If the AIC of this model is less than the AIC of the worst model, replace the worst with this
+			if AIC < biggest_AIC:
 				best[biggest_ind] = model_details
 
 	# Sort the list of best models
-	best = sorted(best, key=lambda x: x[4])
+	best = sorted(best, key=lambda x: x[5])
 
 	return best
 
 
-def TSA(model_space, accepted_model_fn, time_scale, initial_vals):
+def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
@@ -218,6 +226,23 @@ def TSA(model_space, accepted_model_fn, time_scale, initial_vals):
 		Returns:
 		The top models that fit closest the "true" values for each species. 
 	"""
+	# Check for built in functions:
+	fn_name = topology_fn.__name__
+	if fn_name == 'gene_regulation_fn':
+		num_interactions = 2
+		max_order = 0 
+	elif fn_name == ''
+
+
+	# Create Model Space
+	model_space = ModelSpace(num_nodes=num_nodes, 
+							 max_parents=max_parents,
+							 num_interactions=num_interactions,
+							 max_order=max_order,
+							 topology_fn=topology_fn)
+
+
+
 	# Simulate the 'true' values of the species and their derivatives from the accepted model. 
 	# We use these values as the 'truth' against which to compare our candidate models
 	species_vals, species_derivs = sim_data(accepted_model_fn, time_scale, initial_vals)

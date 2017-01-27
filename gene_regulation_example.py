@@ -11,7 +11,7 @@
 # 5 activates 1
 
 import tsa 
-from gene_regulation import GeneRegulationModel
+from gene_regulation import gene_regulation_fn
 import numpy as np
 
 # Parameters for our gene regulation network:
@@ -21,9 +21,9 @@ time_scale = [0, 10, 31]
 initial_vals = np.array([1, 0.5, 1, 1.5, 0.5])
 
 
-# Define the Model Space
-model_space = GeneRegulationModel(max_parents=max_parents, 
-								  num_nodes=num_nodes)
+# # Define the Model Space
+# model_space = GeneRegulationModel(max_parents=max_parents, 
+# 								  num_nodes=num_nodes)
 
 # Define the accepted model
 def accepted_model_fn(x, t):
@@ -48,7 +48,9 @@ def accepted_model_fn(x, t):
 	return dx
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(model_space=model_space,
+candidate_models = tsa.TSA(topology_fn=gene_regulation_fn,
+						   num_nodes=num_nodes,
+						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
 						   initial_vals=initial_vals)
