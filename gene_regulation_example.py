@@ -53,3 +53,8 @@ candidate_models = tsa.TSA(model_space=model_space,
 						   time_scale=time_scale,
 						   initial_vals=initial_vals)
 
+
+best_combined = [x[0][0] for x in candidate_models]
+nodes, edges, edge_types = tsa.parse_topology(best_combined)
+graph = tsa.to_graph(nodes, edges, edge_types)
+tsa.vis(graph)
