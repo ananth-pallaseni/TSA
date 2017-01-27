@@ -1,8 +1,8 @@
 import tsa
 import numpy as np 
 
-def population_dynamics_fn(topology, specie_vals):
-	""" Converts the topology of a network into an ODE representing a population dynamics model for the target species X. 
+def linear_model_fn(topology, specie_vals):
+	""" Converts the topology of a network into an ODE representing a linear model for the target species X. 
 
 		Args:
 		topology - A TargetTopology object. Contains the exact network description
@@ -20,34 +20,31 @@ def population_dynamics_fn(topology, specie_vals):
 			Args:
 			params - A list of parameters that this model requires t calculate dX. In this case, it takes the form [basal synth for target, basal degr for target] + [b, k, m] for each parent.
 		"""
+		target_vals = specie_vals[:, target_species]   # Value of target for all t
 
-		growth_rate = params[0]
+		const_term = params[0]
 
-		growth_term = growth_rate * specie_vals[:, target_species]
-		strength_term = 1 - specie_vals[:, target_species]
+		dX = const_term 
 
 		# Add contributions from each edge
 		for i in range(len(parents)):
 			p = parents[i]
 
-			s = params[i + 1]   # Interaction Strength
+			k = params[i + 1]   # Parent coefficient
 
-			# Value of parent for all t
-			parent_vals = specie_vals[:, p]
+			parent_vals = specie_vals[:, p]   # Value of parent for all t
 
-			strength_term -= s * parent_vals
-
-		dX = growth_term * strength_term
+			dX += k * parent_vals
 		
 		return dX
 
 	# Enumerate the length of the parameter list that dX requires
-	param_len = 1 + len(parents)   # growth rate + strength for each parent
+	param_len = 1 + len(parents)   # [constant] + [parent coeff] for each parent
 
 	# Specify the bounds for each parameter:
-	growth_bound = (0.1, 1)
-	strength_bound = (0.1, 2)
-	param_bounds = [growth_bound] + [strength_bound] * len(parents) 
+	const_bound = (-1e12, 1e12)   # unbounded
+	coef_bound = (-1e12, 1e12)   # unbounded
+	param_bounds = [const_bound] + [coef_bound]*len(parents) 
 
 	return dX, param_len, param_bounds
 

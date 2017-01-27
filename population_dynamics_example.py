@@ -20,8 +20,6 @@ def accepted_model_fn(y,t):
 
 num_nodes = 5
 max_parents = 3 
-num_interactions = 1
-max_order = 0
 
 y0 = [0.2, 0.5, 0.2, 0.2, 0.3]
 time_scale = [0,10,40]

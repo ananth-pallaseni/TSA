@@ -20,11 +20,6 @@ max_parents = 2
 time_scale = [0, 10, 31]
 initial_vals = np.array([1, 0.5, 1, 1.5, 0.5])
 
-
-# # Define the Model Space
-# model_space = GeneRegulationModel(max_parents=max_parents, 
-# 								  num_nodes=num_nodes)
-
 # Define the accepted model
 def accepted_model_fn(x, t):
 	s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5

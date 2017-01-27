@@ -215,7 +215,7 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
-		model_space -  A ModelSpace object containing the dexcription of the model space 
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
 		accepted_model_fn - A function that takes in a time t and the value of all species at that time and outputs the derivatives of all species at time t. 
 
@@ -223,15 +223,29 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 
 		initial_vals - The initial values for all species. Should be a numpy array such that initial_vals[s] is the starting value of species s.
 
+		num_nodes - The number of nodes/species that exist in the system
+
+		max_parents - The maximum number of parents that any node in the system can have
+
+		num_interactions - The number of different interactions that nodes can have (eg activation or repression for gene regulation)
+
+		max_order - The maximum order of term that any expression can have in the system
+
 		Returns:
 		The top models that fit closest the "true" values for each species. 
 	"""
 	# Check for built in functions:
-	fn_name = topology_fn.__name__
-	if fn_name == 'gene_regulation_fn':
+	fn_module = topology_fn.__module__
+	if fn_module == 'gene_regulation' :
 		num_interactions = 2
 		max_order = 0 
-	elif fn_name == ''
+	elif fn_module == 'population_dynamics':
+		num_interactions = 1
+		max_order = 0
+	elif fn_module == 'linear_model':
+		num_interactions = 1
+		max_order = 0
+
 
 
 	# Create Model Space

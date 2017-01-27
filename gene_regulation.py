@@ -52,13 +52,13 @@ def gene_regulation_fn(topology, specie_vals):
 	# Enumerate the length of the parameter list that dX requires
 	param_len = 2 + 3*len(parents)   # [base_synth, base_degr] + [b, k, m] for each parent
 
+	# Specify the bounds for each parameter:
+	s_bound = (0.1, 1)
+	g_bound = (0.1, 2)
 	b_bound = (0.5, 4)
 	k_bound = (0.2, 3)
 	m_bound = (0.7, 5)
-
-	param_bounds = [(0.1, 1), (0.1, 2)]   # Basal synth, basal degr
-	for i in parents:
-		param_bounds += [b_bound, k_bound, m_bound]
+	param_bounds = [s_bound, g_bound] + [b_bound, k_bound, m_bound] * len(parents)
 
 	return dX, param_len, param_bounds
 
