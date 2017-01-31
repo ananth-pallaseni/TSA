@@ -52,6 +52,33 @@ def sim_data(model_fn, time_scale, x0):
 	
 	return specie_vals, specie_derivs
 
+def enumerate_perms(num_parents, interactions):
+	""" Generates all possible ways of having `num_parents species interact with the target, with the possible interactions in `interactions.
+
+		Examples:
+		>>> e = enumerate_inter_perms(3, [0,1])
+		>>> for perm in e:
+		...    print(perm)
+		(0, 0, 0)
+		(1, 0, 0)
+		(0, 1, 0)
+		(1, 1, 0)
+		(0, 0, 1)
+		(1, 0, 1)
+		(0, 1, 1)
+		(1, 1, 1)
+	"""
+	def perms(length, options, lst):
+		if length == 0:
+			yield lst 
+		else:
+			for i in options:
+				lst[length-1] = i
+				for p in perms(length-1, options, lst):
+					yield p
+	perm_list = perms(length=num_parents, options=interactions, lst=[-1 for i in range(num_parents)])
+	for i in perm_list:
+		yield tuple(i)
 
 def generate_models(model_space, target, species_vals):
 	""" Generate all possible network topologies concerning one target species
@@ -66,34 +93,6 @@ def generate_models(model_space, target, species_vals):
 		Returns:
 		An iterator containing all possible network topologies in the form (dX, param_len, bounds, topology). dX is a function that takes in a list of length param_len and returns the derivatives of the target variable for the given topology. bounds specifies the lower and upper bounds for each parameter to dX, such that bounds[i] = (lower bound, upper bound) for parameter i. 
 	"""
-	
-	def enumerate_inter_perms(num_parents, interactions):
-		""" Generates all possible ways of having `num_parents species interact with the target, with the possible interactions in `interactions.
-
-			Examples:
-			>>> e = enumerate_inter_perms(3, [0,1])
-			>>> for perm in e:
-			...    print(perm)
-			(0, 0, 0)
-			(1, 0, 0)
-			(0, 1, 0)
-			(1, 1, 0)
-			(0, 0, 1)
-			(1, 0, 1)
-			(0, 1, 1)
-			(1, 1, 1)
-		"""
-		def perms(length, options, lst):
-			if length == 0:
-				yield lst 
-			else:
-				for i in options:
-					lst[length-1] = i
-					for p in perms(length-1, options, lst):
-						yield p
-		perm_list = perms(length=num_parents, options=interactions, lst=[-1 for i in range(num_parents)])
-		for i in perm_list:
-			yield tuple(i)
 
 	# List out the nodes and interactions
 	nodes = [i for i in range(model_space.num_nodes)]
@@ -105,7 +104,7 @@ def generate_models(model_space, target, species_vals):
 
 		# What combination of parents (includes self interactions)?
 		for parent_comb in all_parent_combs:
-			all_interaction_perms = enumerate_inter_perms(num_parents, interactions)
+			all_interaction_perms = enumerate_perms(num_parents, interactions)
 
 			# What permutation of interactions?
 			for interaction_perm in all_interaction_perms:
@@ -210,6 +209,43 @@ def find_best_models(models, target, species_derivs, num_best_models=10):
 
 	return best
 
+def permute_whole_models(best_models):
+	""" Consider a list of length n where each position in the list can take one of a set of values for that position. This function finds all permutations of that list given the set of values that each position can take. 
+
+		Args:
+		best_models - A list of lists such that best_models[i] is the list of values that position i can take.
+
+		Returns:
+		A generator of all the permutations of the list. 
+
+		Examples:
+		>>> a = [ [c + str(i) for i in range(2)] for c in ['AB'] ]
+		>>> all = permute_whole_models(a)
+		>>> for i in all:
+		...    print(i)
+		('A0', 'B0')
+		('A0', 'B1')
+		('A1', 'B0')
+		('A1', 'B1')
+	"""
+	num_species = len(best_models)
+
+	def permute_helper(n, opts, lst, pos):
+		if pos == n:
+			yield lst 
+		else:
+			for i in opts[pos]:
+				lst[pos] = i 
+				for p in permute_helper(n, opts, lst, pos+1):
+					yield p 
+
+
+	lst = [-1 for i in range(num_species)]
+	permutations = permute_helper(num_species, best_models, lst, 0)
+
+	for perm in permutations:
+		yield tuple(perm)
+
 
 def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
@@ -281,6 +317,10 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 		best_models.append(best)
 
 	return best_models
+
+
+
+
 
 
 import matplotlib.pyplot as plt
