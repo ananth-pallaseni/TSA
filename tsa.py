@@ -80,7 +80,7 @@ def enumerate_perms(num_parents, interactions):
 	for i in perm_list:
 		yield tuple(i)
 
-def generate_models(model_space, target, species_vals):
+def generate_models(model_space, target, species_vals, enf_edges=[], enf_gaps=[]):
 	""" Generate all possible network topologies concerning one target species
 
 		Args:
@@ -90,18 +90,35 @@ def generate_models(model_space, target, species_vals):
 
 		species_vals - A numpy array containing the value of each species across all time stpes, such that species_vals[t, s] = value of species s at time t.
 
+		enf_edges - An array of nodes that specify which nodes must be parents of this target 
+
+		enf_gaps - An array of nodes that specify which nodes cannot be parents of this target 
+
 		Returns:
 		An iterator containing all possible network topologies in the form (dX, param_len, bounds, topology). dX is a function that takes in a list of length param_len and returns the derivatives of the target variable for the given topology. bounds specifies the lower and upper bounds for each parameter to dX, such that bounds[i] = (lower bound, upper bound) for parameter i. 
 	"""
+	# Check if there are more enforced edges than allowable parents
+	num_enf_edges = len(enf_edges)
+	if num_enf_edges > model_space.max_parents:
+		# If so, then cut down the list of enforced edges until it is equal to the number of alwed parents
+		print ("Warning. More enforced edges than allowed parents. Have {} enforced edges and at most {} parents".format(num_enf_edges, model_space.max_parents))
+		enf_edges = enf_edges[:model_space.max_parents]
+		num_enf_edges = model_space.max_parents
 
-	# List out the nodes and interactions
-	nodes = [i for i in range(model_space.num_nodes)]
+	enf_edges = tuple(enf_edges)
+
+	# List out the non-enforced nodes and interactions
+	nodes = [i for i in range(model_space.num_nodes) if i not in enf_gaps and i not in enf_edges]
 	interactions = [i for i in range(model_space.num_interactions)]
 
 	# How many parents?
-	for num_parents in range(model_space.max_parents+1):
+	for num_parents in range(model_space.max_parents+1 - num_enf_edges):
+		# Enumerate all non-enforced edges
 		all_parent_combs = itertools.combinations(nodes, num_parents)
-
+		
+		# Add in all enforced edges
+		all_parent_combs = map(lambda x: x + enf_edges, all_parent_combs)
+		
 		# What combination of parents (includes self interactions)?
 		for parent_comb in all_parent_combs:
 			all_interaction_perms = enumerate_perms(num_parents, interactions)
@@ -246,8 +263,11 @@ def permute_whole_models(best_models):
 	for perm in permutations:
 		yield tuple(perm)
 
+def optimize_whole_model():
+	pass
 
-def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1):
+
+def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[]):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
@@ -266,6 +286,10 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 		num_interactions - The number of different interactions that nodes can have (eg activation or repression for gene regulation)
 
 		max_order - The maximum order of term that any expression can have in the system
+
+		enf_edges - A list of edge tuples for edges that must be present in all models 
+
+		enf_gaps - A list of edge tuples for edges that must not be present in any models 
 
 		Returns:
 		The top models that fit closest the "true" values for each species. 
@@ -300,13 +324,23 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 	# Specify the list of possible target species
 	targets = [i for i in range(model_space.num_nodes)]
 
+	# Parse the list of enforced edges:
+	enf_edges_target = [ [] for i in range(num_nodes) ]
+	enf_gaps_target = [ [] for i in range(num_nodes) ]
+	for (p, t) in enf_edges:
+		enf_edges_target[t].append(p)
+	for (p, t) in enf_gaps:
+		enf_gaps_target[t].append(p)
+
 	best_models = []
 
 	for t in targets:
 		# Generate all possible permutations of topologies involving the target
 		models = generate_models(model_space=model_space, 
 								 target=t,
-								 species_vals=species_vals)
+								 species_vals=species_vals,
+								 enf_edges=enf_edges_target[t],
+								 enf_gaps=enf_gaps_target[t])
 
 		# Perform gradient matching on each candidate model and obtain the closest matches to our 'true' data
 		best = find_best_models(models=models,
@@ -317,7 +351,7 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 		best_models.append(best)
 
 	return best_models
-
+		
 
 
 
