@@ -36,6 +36,8 @@ def sim_data(model_fn, time_scale, x0):
 
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
 
+		x0 - The initial values of the system 
+
 		Returns:
 		A numpy array of each species values and another numpy aray of each species derivatives. In both cases rows are time steps, columns are species such that specie_derviates[t, s] = value of derivative of species s at time t. 
 	"""
@@ -263,8 +265,45 @@ def permute_whole_models(best_models):
 	for perm in permutations:
 		yield tuple(perm)
 
-def optimize_whole_model():
-	pass
+
+def distance(target_fns, target_params, specie_vals, init_vals, time_scale):
+	""" Finds the distance between the values generated from target_fns and those in specie_vals.
+
+		Args:
+		target_fns - A list of functions, one per species, that calculate the value of dX for that species.
+
+		target_params - A list such that target_params[s] is the parameter list for the dX function of species s. 
+
+		specie_vals - A numpy array containing the value of each species across all time stpes, such that species_vals[t, s] = value of species s at time t.
+
+		init_vals - The initial values of the system
+
+		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		Returns:
+		The distance between the output of the target functions and the specie_vals.
+	"""
+	# Calculate the derivatives of all species in the model 
+	derivs = np.zeros(specie_vals.shape)
+	for t in range(specie_vals.shape[1]):
+		derivs[:, t] = target_fns[t](target_params[t])
+
+	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
+	time_map = dict([(ts[i], i) for i in range(len(ts))])
+
+	# Define a function to use with odeint
+	def dX(x, t):
+		return derivs[time_map[t],:]
+
+	# Solve the system of lienar equations
+	sim_vals = odeint(dX, init_vals, ts)
+
+	# Calculate distance (via frobenius norm)
+	dist = np.linalg.norm(sim_vals - specie_vals)
+
+	return dist
+		
+
 
 
 def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[]):
@@ -332,7 +371,7 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 	for (p, t) in enf_gaps:
 		enf_gaps_target[t].append(p)
 
-	best_models = []
+	best_target_models = []
 
 	for t in targets:
 		# Generate all possible permutations of topologies involving the target
@@ -348,9 +387,26 @@ def TSA(topology_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, 
 								species_derivs=species_derivs,
 								num_best_models=10)
 
-		best_models.append(best)
+		best_target_models.append(best)
 
-	return best_models
+	# Generate list of best ensemble models, taking all permutations of the best topologies for each target that we found. 
+	system_models = permute_whole_models(best_target_models)
+
+	# Find distance of each model
+	for sm in system_models:
+		# Collect the dX functions and the parameters
+		fns = [target[1] for target in sm]
+		params = [target[3] for target in sm]
+
+		dist = distance(target_fns=fns, 
+					    target_params=params, 
+					    specie_vals=species_vals, 
+					    init_vals=initial_vals, 
+					    time_scale=time_scale)
+
+
+
+	return system_models
 		
 
 

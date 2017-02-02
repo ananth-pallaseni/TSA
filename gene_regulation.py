@@ -25,7 +25,7 @@ def gene_regulation_fn(topology, specie_vals):
 		base_synth = params[0]
 		base_degr = params[1]
 
-		# Add basal synthesis and basl degradation terms
+		# Add basal synthesis and basal degradation terms
 		dX = base_synth - specie_vals[:, target_species] * base_degr
 
 
