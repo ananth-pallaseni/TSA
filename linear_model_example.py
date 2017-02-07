@@ -1,5 +1,5 @@
 import tsa 
-from linear_model import linear_model_fn
+from linear_model import dX_linear_fn, param_len_linear, param_bounds_linear
 import numpy as np
 
 
@@ -25,15 +25,11 @@ max_parents = 3
 time_scale = [0,20,51]
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(topology_fn=linear_model_fn,
+candidate_models = tsa.TSA(topology_fn=dX_linear_fn,
+                           param_len_fn=param_len_linear,
+                           bounds_fn=param_bounds_linear,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
 						   initial_vals=y0)
-
-
-best_combined = [x[0][0] for x in candidate_models]
-nodes, edges, edge_types = tsa.parse_topology(best_combined)
-graph = tsa.to_graph(nodes, edges, edge_types)
-tsa.vis(graph)

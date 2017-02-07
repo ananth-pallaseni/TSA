@@ -1,53 +1,51 @@
-import tsa
 import numpy as np 
 
-def population_dynamics_fn(topology, specie_vals):
-	""" Converts the topology of a network into an ODE representing a population dynamics model for the target species X. 
+
+
+def dX_pop_dynamics_fn(x, t, topology, params):
+	""" Calculates the derivative of the target species at time t under a population dynamics model.
 
 		Args:
-		topology - A TargetTopology object. Contains the exact network description
-		specie_vals - A numpy array of the value of each species in the model at all time steps. Rows are time steps, columns are species such that specie_vals[t, s] = value of species s at time t. 
+		x - The values of all species at time t 
 
-		Returns: 
-		A tuple containing the function that calculates the value of dX and also the length of the param list it takes.
+		t - The time 
+
+		topology - A Topology object describing the model currently being examined
+
+		params - A list of params for this model 
 	"""
-	target_species = topology.target
 	parents = topology.parents
+	target = topology.target
+
+	growth_rate = params[0]
+	growth_term = growth_rate * x[target]
+	strength_term = 1 - x[target]
+
+	# Add contributions from each edge
+	for i in range(len(parents)):
+		p = parents[i]
+		s = params[i + 1]   # Interaction Strength
+		parent_vals = x[p]
+		strength_term -= s * parent_vals
+
+	dX = growth_term * strength_term
+
+	return dX
+
 	
-	def dX(params):
-		""" Calculates the value of dX at all time steps, where X is the target species we are considering. 
+def param_len_pop_dynamics(num_edges):
+	""" Returns the length of the parameter list required for dX based on the number of edges the target has.
+	"""
+	num_params = 0
+	num_params += 1 # For growth rate  
+	num_params += 1 * num_edges # For parent interaction strengths
+	return num_params
 
-			Args:
-			params - A list of parameters that this model requires t calculate dX. In this case, it takes the form [basal synth for target, basal degr for target] + [b, k, m] for each parent.
-		"""
-
-		growth_rate = params[0]
-
-		growth_term = growth_rate * specie_vals[:, target_species]
-		strength_term = 1 - specie_vals[:, target_species]
-
-		# Add contributions from each edge
-		for i in range(len(parents)):
-			p = parents[i]
-
-			s = params[i + 1]   # Interaction Strength
-
-			# Value of parent for all t
-			parent_vals = specie_vals[:, p]
-
-			strength_term -= s * parent_vals
-
-		dX = growth_term * strength_term
-		
-		return dX
-
-	# Enumerate the length of the parameter list that dX requires
-	param_len = 1 + len(parents)   # growth rate + strength for each parent
-
-	# Specify the bounds for each parameter:
+def param_bounds_pop_dynamics(num_edges):
+	""" Returns the bounds of the parameters that dX requires.
+	"""
 	growth_bound = (0.1, 1)
 	strength_bound = (0.1, 2)
-	param_bounds = [growth_bound] + [strength_bound] * len(parents) 
-
-	return dX, param_len, param_bounds
+	param_bounds = [growth_bound] + [strength_bound] * num_edges 
+	return param_bounds
 

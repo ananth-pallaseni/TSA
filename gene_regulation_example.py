@@ -11,7 +11,7 @@
 # 5 activates 1
 
 import tsa 
-from gene_regulation import gene_regulation_fn
+from gene_regulation import dX_gene_reg_fn, param_len_gene_reg, param_bounds_gene_reg
 import numpy as np
 
 # Parameters for our gene regulation network:
@@ -29,29 +29,20 @@ def accepted_model_fn(x, t):
 	m = [5, 5, 5, 5, 5];                # hill fn parameter (m_nk)
 	
 	dx = [0 for i in range(len(x))]
-
 	dx[0] = s[0] - g[0]*x[0] + b[0]*(x[4]**m[4])/(x[4]**m[4] + k[4]**m[4]);
-
-	dx[1] = s[1] - g[1]*x[1] + b[1]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
-	
-	dx[2] = s[2] - g[2]*x[2] + b[2]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);
-	
-	dx[3] = s[3] - g[3]*x[3] + b[3]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]) + b[5]/(1 + (x[2]/k[2])**m[2]);
-	
+	dx[1] = s[1] - g[1]*x[1] + b[1]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);	
+	dx[2] = s[2] - g[2]*x[2] + b[2]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);	
+	dx[3] = s[3] - g[3]*x[3] + b[3]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]) + b[5]/(1 + (x[2]/k[2])**m[2]);	
 	dx[4] = s[4] - g[4]*x[4] + b[4]*(x[3]**m[3])/(x[3]**m[3] + k[3]**m[3]) + b[6]/(1 + (x[1]/k[1])**m[1]);
-
 	return dx
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(topology_fn=gene_regulation_fn,
+candidate_models = tsa.TSA(topology_fn=dX_gene_reg_fn,
+                           param_len_fn=param_len_gene_reg,
+                           bounds_fn=param_bounds_gene_reg,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
 						   initial_vals=initial_vals)
 
-
-best_combined = [x[0][0] for x in candidate_models]
-nodes, edges, edge_types = tsa.parse_topology(best_combined)
-graph = tsa.to_graph(nodes, edges, edge_types)
-tsa.vis(graph)
