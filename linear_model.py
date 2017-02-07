@@ -1,6 +1,8 @@
-import tsa
+from model import *
 import numpy as np 
 
+PARAMETER_TYPES = ['CONST', 'PARENT_COEF']
+PARAMETER_BOUNDS = {'CONST':(-10, 10), 'PARENT_COEF':(-10, 10)}
 
 def dX_linear_fn(x, t, topology, params):
 	""" Calculates the derivative of the target species at time t under a linear model.
@@ -15,8 +17,9 @@ def dX_linear_fn(x, t, topology, params):
 		params - A list of params for this model 
 	"""
 	parents = topology.parents
+	target = topology.target
 
-	const_term = params[0]
+	const_term = Parameter.get_param_by_node(params, param_type='CONST', node=target)
 
 	deriv = const_term 
 
@@ -24,7 +27,7 @@ def dX_linear_fn(x, t, topology, params):
 	for i in range(len(parents)):
 		p = parents[i]
 
-		k = params[i + 1]   # Parent coefficient
+		k = Parameter.get_param_by_parent(params, param_type='PARENT_COEF', parent=p)   # Parent coefficient
 
 		parent_val = x[p]   # Value of parent
 
