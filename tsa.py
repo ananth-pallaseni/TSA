@@ -317,7 +317,7 @@ def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
-		initial_values - The strating values of the system 
+		initial_values - The starting values of the system 
 
 		true_vals - The values to fit to 
 
@@ -355,6 +355,35 @@ def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
 		results.append((m, opt_params, opt_dist))
 
 	return sorted(results, key=lambda x: x[2])[:100]
+
+def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale):
+	""" Checks the distance of all the input models from the true_vals.
+
+		Args: 
+		models - A list of models 
+
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
+
+		initial_values - The starting values of the system
+
+		true_vals - The values to compare against 
+
+		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		Returns:
+		A sorted list of the models in ascending order of distace from the true_vals 
+	"""
+	results = []
+	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
+	for m in models:
+		topologies = [tup[0] for tup in m]
+		params = sum([list(tup[3]) for tup in m], [])
+		param_lens = [tup[2] for tup in m]
+		ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+		sim_vals = odeint(ode, initial_values, ts)
+		dist = np.linalg.norm(sim_vals-true_vals)
+		results.append((m, dist))
+	return sorted(results, key=lambda x: x[1])
 		
 
 
@@ -456,12 +485,13 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 	# Generate list of best ensemble models, taking all permutations of the best topologies for each target that we found. 
 	system_models = permute_whole_models(best_target_models)
 
+	print("Running simple integrity check on generated whole models")
+	est_start = time.time()
+	est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
+	print('Time taken = {} seconds'.format(time.time() - est_start))
 
-
-	return system_models
+	return est_best_models
 		
-
-
 
 
 
