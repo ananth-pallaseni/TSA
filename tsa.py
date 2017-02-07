@@ -162,7 +162,7 @@ def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
 	return obj
 
 
-def find_best_models(models, target, species_vals, species_derivs, time_scale, num_best_models=10, num_restarts=5):
+def find_best_models(models, target, species_vals, species_derivs, time_scale, num_best_models=10, num_restarts=5, weak_sig_thresh=1e-5):
 	""" Outputs the model topologies for a certain target that produce data close to its "true" values. 
 
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
@@ -179,6 +179,8 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 		num_best_models - The number of best_performing models to retain. 
 
 		num_restarts - The number of times we restart the optimization function to avoid local optima
+
+		weak_sig_thresh - The threshold below which any parameter is considered to be spurious
 
 		Returns:
 		A list of the of length num_best_models containing the models that closest matched the "true" values in the form (topology, dX, optimal_parameters, distance_from_true_vals).
@@ -223,6 +225,10 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 
 		model_details = (top, dX, param_len, best_params, best_dist, min_AIC, bounds)
 
+		# Check if any parameter is below the weak signal threshold
+		weakest_param = min(best_params, key=lambda x:abs(x))
+		if abs(weakest_param) < weak_sig_thresh:
+			continue
 		
 		if len(best) < num_best_models:
 			best.append(model_details)
