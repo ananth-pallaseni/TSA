@@ -534,6 +534,30 @@ def vis(g):
 	plt.show()
 	plt.clf()
 
+def visulize(whole_model):
+	tops = [t[0] for t in whole_model[0]]
+	n, e, et = parse_topology(tops)
+	graph = to_graph(n, e, et)
+	vis(graph)
+
+def mosaic(whole_model_list):
+	g_list = []
+	for i in range(9):
+		whole_model = whole_model_list[i][0]
+		tops = [t[0] for t in whole_model]
+		n, e, et = parse_topology(tops)
+		graph = to_graph(n, e, et) 
+		g_list.append(graph)
+
+	colors = dict(enumerate(color_choices))
+	for j in range(len(g_list)):
+		g = g_list[j]
+		plt.subplot(3,3,j+1)
+		clist = [colors[g[n1][n2]['type']] for (n1, n2) in g.edges()]
+		nx.draw_circular(g, with_labels=True, edge_color=clist)
+	plt.tight_layout()
+	plt.show()
+	plt.clf()
 
 
 
