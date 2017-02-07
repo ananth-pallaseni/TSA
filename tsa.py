@@ -162,7 +162,7 @@ def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
 	return obj
 
 
-def find_best_models(models, target, species_vals, species_derivs, time_scale, num_best_models=10):
+def find_best_models(models, target, species_vals, species_derivs, time_scale, num_best_models=10, num_restarts=5):
 	""" Outputs the model topologies for a certain target that produce data close to its "true" values. 
 
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
@@ -178,6 +178,8 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 
 		num_best_models - The number of best_performing models to retain. 
 
+		num_restarts - The number of times we restart the optimization function to avoid local optima
+
 		Returns:
 		A list of the of length num_best_models containing the models that closest matched the "true" values in the form (topology, dX, optimal_parameters, distance_from_true_vals).
 	"""
@@ -189,25 +191,37 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 		# Calculate objective function 
 		obj = objective_fn(dX, species_vals, target_derivs, top, time_scale)
 
-		# Randomly initiate starting values 
-		param_list = [np.random.random() for i in range(param_len)]
+		min_AIC = 1e12
+		best_params = []
+		best_dist = 1e12
 
-		# Perform gradient matching to find optimal parameters
-		res = minimize(obj, param_list, method='SLSQP', tol=1e-6, bounds=bounds)
-		opt_params = res.x
+		# Random restarts 
+		for rr in range(num_restarts):
 
-		# Calculate the distance of best guess
-		dist = obj(opt_params)
+			# Randomly initiate starting values 
+			param_list = [np.random.random() for i in range(param_len)]
 
-		# Calculate num time steps
-		ts = species_derivs.shape[0]
+			# Perform gradient matching to find optimal parameters
+			res = minimize(obj, param_list, method='SLSQP', tol=1e-6, bounds=bounds)
+			opt_params = res.x
 
-		# Calculate Biased AIC for this model
-		AIC_bias = 2 * (param_len + 1) * (ts / (ts - param_len))
-		AIC  = ts * np.log(dist / ts) + AIC_bias
+			# Calculate the distance of best guess
+			dist = obj(opt_params)
+
+			# Calculate num time steps
+			ts = species_derivs.shape[0]
+
+			# Calculate Biased AIC for this model
+			AIC_bias = 2 * (param_len + 1) * (ts / (ts - param_len))
+			AIC  = ts * np.log(dist / ts) + AIC_bias
+
+			if AIC < min_AIC:
+				min_AIC = AIC
+				best_params = opt_params
+				best_dist = dist 
 
 
-		model_details = (top, dX, param_len, opt_params, dist, AIC)
+		model_details = (top, dX, param_len, best_params, best_dist, min_AIC, bounds)
 
 		
 		if len(best) < num_best_models:
@@ -353,7 +367,8 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 								species_vals=species_vals,
 								species_derivs=species_derivs,
 								time_scale=time_scale,
-								num_best_models=5)
+								num_best_models=5,
+								num_restarts=1)
 
 		best_target_models.append(best)
 
