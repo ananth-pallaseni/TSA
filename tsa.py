@@ -282,6 +282,79 @@ def permute_whole_models(best_models):
 
 	for perm in permutations:
 		yield tuple(perm)
+
+def whole_model_to_ode(topology_fn, topologies, params, param_lens):
+	""" Converts from a list of topologies to a function that computes the derivative of the whole model.
+
+		Args:
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
+
+		topologies - A list of Topology objects representing the parental structure of each species 
+
+		params - A list of parameters for the whole model 
+
+		param_lens - A list such that param_lens[i] is the length of the parameter list required for the derivative fucntion of topology i.
+
+		Returns:
+		A function that calculates the derivatives of every species in the model given their values and the time t.
+	"""
+	num_species = len(topologies)
+	def fn(x, t):
+		derivs = [0 for i in range(num_species)]
+		for i in range(num_species):
+			top = topologies[i]
+			start = sum(param_lens[:i])
+			pars = params[start: start+param_lens[i]]
+			derivs[i] = topology_fn(x, t, top, pars)
+		return derivs 
+	return fn 
+
+def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
+	""" Fits the parameters of every model in the models to match true_vals.
+
+		Args:
+		models - A list of models 
+
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
+
+		initial_values - The strating values of the system 
+
+		true_vals - The values to fit to 
+
+		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		Returns:
+		A list containing every model in models, but refit to match the values in true_vals. Sorted in order of increasing distance from the true_vals.
+	"""
+	results = []
+	cnt = 0
+	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
+	t_start = time.time()
+	for m in models:
+		print("cnt={}".format(cnt))
+		if cnt % 10 == 0:
+			t_end = time.time()
+			print("batch={}, took {} seconds".format(cnt//10, t_end-t_start))
+			t_start = time.time()
+		cnt += 1
+		topologies = [tup[0] for tup in m]
+		initial_guess = sum([list(tup[3]) for tup in m], [])
+		param_lens = [tup[2] for tup in m]
+		bounds = sum([list(tup[6]) for tup in m], [])
+		
+		def whole_model_obj(params):
+			ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+			sim_vals = odeint(ode, initial_values, ts)
+			dist = np.linalg.norm(sim_vals-true_vals)
+			return dist 
+
+
+		res = minimize(whole_model_obj, initial_guess, method="SLSQP", bounds=bounds)
+		opt_params = res.x 
+		opt_dist = whole_model_obj(opt_params)
+		results.append((m, opt_params, opt_dist))
+
+	return sorted(results, key=lambda x: x[2])[:100]
 		
 
 
