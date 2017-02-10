@@ -386,10 +386,10 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 
 def model_dist_par(tup):
 	""" Does the same as the model_dist fuction but exists to facilitate parallelization.
+		Returns the model and the dist in a tuple
 	"""
 	model, topology_fn, initial_values, true_vals, time_scale = tup 
-	return model_dist(model, topology_fn, initial_values, true_vals, time_scale)
-
+	return model, model_dist(model, topology_fn, initial_values, true_vals, time_scale)
 
 def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
@@ -435,8 +435,8 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 	"""	
 	pool = mp.Pool(processes=processes)
 	args = map(lambda m: (m, topology_fn, initial_values, true_vals, time_scale), models)
-	results = pool.map(model_dist_par, args)
-	return results
+	results = pool.map(model_dist_par, args) 
+	return sorted(results, key=lambda x: x[1])
 
 
 
