@@ -335,6 +335,39 @@ def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
 
 	return sorted(results, key=lambda x: x[2])[:100]
 
+def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
+	""" Checks the distance of all the input models from the true_vals.
+
+		Args: 
+		model - A model
+
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
+
+		initial_values - The starting values of the system
+
+		true_vals - The values to compare against 
+
+		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		Returns:
+		A sorted list of the models in ascending order of distace from the true_vals 
+	"""
+	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
+	topologies = [tup[0] for tup in model]
+	params = sum([list(tup[3]) for tup in model], [])
+	param_lens = [tup[2] for tup in model]
+	ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+	sim_vals = odeint(ode, initial_values, ts)
+	dist = np.linalg.norm(sim_vals-true_vals)
+	return dist 
+
+def model_dist_par(tup):
+	""" Does the same as the model_dist fuction but exists to facilitate parallelization.
+		Returns the model and the dist in a tuple
+	"""
+	model, topology_fn, initial_values, true_vals, time_scale = tup 
+	return model, model_dist(model, topology_fn, initial_values, true_vals, time_scale)
+
 def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
 
@@ -353,20 +386,38 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 		A sorted list of the models in ascending order of distace from the true_vals 
 	"""
 	results = []
-	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
 	for m in models:
-		topologies = [tup[0] for tup in m]
-		params = sum([list(tup[3]) for tup in m], [])
-		param_lens = [tup[2] for tup in m]
-		ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
-		sim_vals = odeint(ode, initial_values, ts)
-		dist = np.linalg.norm(sim_vals-true_vals)
+		dist = model_dist(m, topology_fn, initial_values, true_vals, time_scale)
 		results.append((m, dist))
 	return sorted(results, key=lambda x: x[1])
-		
+	
+def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_scale, processes=4):
+	""" Checks the distance of all the input models from the true_vals. Parallelized
+
+		Args: 
+		models - A list of models 
+
+		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
+
+		initial_values - The starting values of the system
+
+		true_vals - The values to compare against 
+
+		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		processes - The number of processes to parallelize across 
+
+		Returns:
+		A sorted list of the models in ascending order of distace from the true_vals 
+	"""	
+	pool = mp.Pool(processes=processes)
+	args = map(lambda m: (m, topology_fn, initial_values, true_vals, time_scale), models)
+	results = pool.map(model_dist_par, args) 
+	return sorted(results, key=lambda x: x[1])
 
 
-def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[]):
+
+def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
@@ -463,13 +514,26 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 	print("Creating Whole Models")
 	# Generate list of best ensemble models, taking all permutations of the best topologies for each target that we found. 
 	system_models = permute_whole_models(best_target_models)
+	system_models = list(system_models)
 
-	print("Running simple integrity check on generated whole models")
-	est_start = time.time()
-	est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
-	print('Time taken = {} seconds'.format(time.time() - est_start))
-
-	return est_best_models
+	if platform.system() != 'Windows':
+		if processes is None:
+			num_procs = 8
+		else:
+			num_procs = processes
+		print("Running simple integrity check on generated whole models.\nMultiprocessing enabled, using {} processes".format(num_procs))
+		mp_start = time.time()
+		mp_best_models = whole_model_check_par(system_models, topology_fn, initial_vals, species_vals, time_scale, processes=num_procs)
+		print('Time taken = {} seconds'.format(time.time() - mp_start))
+		return mp_best_models
+	else:
+		if processes is not None:
+			print("Process count is set, but cannot run multiprocessing on Windows machines. Proceeding without parallelization")
+		print("Running simple integrity check on generated whole models")
+		est_start = time.time()
+		est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
+		print('Time taken = {} seconds'.format(time.time() - est_start))
+		return est_best_models
 		
 
 
