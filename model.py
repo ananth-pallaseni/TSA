@@ -1,3 +1,4 @@
+import random 
 
 class Parameter():
 	num_params = 0
@@ -22,7 +23,13 @@ class Parameter():
 	def update_val(self, new_val):
 		self.value = new_val
 
-	def from_list(param_lst, is_edge_param, param_type, bound):
+	def random(self):
+		rnd = random.random()
+		rng = self.bounds[1] - self.bounds[0]
+		lb = self.bounds[0]
+		return rnd * rng + lb 
+
+	def from_value_list(param_lst, is_edge_param, param_type, bound):
 		return [Parameter(param_type, is_edge_param, value, bound) for value in param_lst]
 
 	def get_params_by_type(param_lst, param_type):
@@ -53,6 +60,34 @@ class Parameter():
 			raise ValueError('More than one Parameter with type {} and node {}'.format(param_type, node))
 		return by_node
 
+	def __str__(self):
+		return 'Parameter of type {} with value {}'.format(self.param_type, self.value)
+
+class ParameterType():
+	def __init__(self, param_type, bounds, is_edge_param):
+		self.param_type = param_type 
+		self.bounds = bounds 
+		self.is_edge_param = is_edge_param
+
+	def create(self, value, edge=None, node=None):
+		return Parameter(param_type=self.param_type, 
+						 value=value, 
+						 bounds=self.bounds, 
+						 is_edge_param=self.is_edge_param, 
+						 edge=edge, 
+						 node=node)
+
+	def create_random(self, edge=None, node=None):
+		p = Parameter(param_type=self.param_type, 
+						 value=self.bounds[0], 
+						 bounds=self.bounds, 
+						 is_edge_param=self.is_edge_param, 
+						 edge=edge, 
+						 node=node)
+		p.value = p.random()
+		return p 
+
+
 class Species():
 	num_species = 0
 	default_name = 'species'
@@ -79,8 +114,21 @@ class Topology():
 	def __str__(self):
 		return 'target = {},\nparents = {},\ninteractions = {},\norder = {}\n'.format(self.target, self.parents, self.interactions, self.order)
 
-	def __repr__(self):
-		return self.__str__()
+	# def __repr__(self):
+	# 	return self.__str__()
+
+	def to_param_lst(self, edge_ptypes, node_ptypes):
+		param_lst = [n.create_random(node=self.target) for n in node_ptypes]
+		for p in self.parents:
+			edge = (p, self.target)
+			param_lst += [e.create_random(edge=edge) for e in edge_ptypes]
+		return param_lst
+
+	def to_bounds_lst(self, edge_ptypes, node_ptypes):
+		bounds_lst = [n.bounds for n in node_ptypes]
+		for p in self.parents:
+			bounds_lst += [e.bounds for e in edge_ptypes]
+		return bounds_lst
 
 class ModelSpace():
 	""" Container for the functional description and limitations of the model space
@@ -95,14 +143,21 @@ class ModelSpace():
 		self.bounds_fn = bounds_fn					# A function that takes in the number of inbound edges and returns the bounds on each paramter in the parameter list for topology fn. 
 
 
+class TargetModel():
+	def __init__(self, topology, params, dist, AIC):
+		self.topology = topology 
+		self.params = params 
+		self.dist = dist 
+		self.AIC = AIC 
+
+
 class WholeModel():
-	def __init__(self, num_species, dist=-1):
+	def __init__(self, num_species, edge_params, node_params, edge_interactions, topologies, dist=-1):
 		self.num_species = num_species
-		self.node_params = {}
-		self.node_param_bounds = {}
-		self.edge_params = {}
-		self.edge_param_bounds = {}
-		self.edge_types = {}
+		self.node_params = node_params
+		self.edge_params = edge_params
+		self.edge_interactions = edge_interactions
+		self.topologies = topologies 
 		self.dist = dist
 
 	def edge_exists(self, n1, n2):
@@ -121,10 +176,32 @@ class WholeModel():
 		return self.edge_params.keys()
 
 	def parents(self, node):
-		return [p for (p, t) in self.edges() if t == node]
+		if self.node_exists(node):
+			res = [p for (p, t) in self.edges() if t == node]
+			return list(set(res))
+		else:
+			raise IndexError("No such node exists")
+
+	def topology_for(self, node):
+		return self.topologies[node]
+
+	def parameters_for(self, node):
+		node_pars = [self.node_params[n] for n in self.node_params if self.node_params[n].node == node]
+		edge_pars = [self.edge_params[e] for e in self.edge_params if e[1] == node]
+		edge_pars = sorted(edge_pars, key=lambda x:x.edge[0])
+		return node_pars + edge_pars
+
+	def node_exists(self, node):
+		if node in self.node_params:
+			return True
+		else:
+			return False
 
 	def node_vals(self, node):
-		return self.node_params[node]
+		if self.node_exists(node):
+			return self.node_params[node]
+		else:
+			raise IndexError("No such node exists")
 
 	def dist(self):
 		return self.dist
@@ -137,7 +214,7 @@ class WholeModel():
 		else:
 			self.edge_params[(n1, n2)] = param_lst
 			self.edge_param_bounds = param_bounds_lst
-			self.edge_types[](n1, n2)] = edge_type
+			self.edge_types[(n1, n2)] = edge_type
 
 
 	def add_node_param(self, node, param_lst, param_bounds_lst):
@@ -148,37 +225,46 @@ class WholeModel():
 			self.node_params[node] = param_lst
 			self.node_param_bounds = param_bounds_lst
 
-	def parse_topology(topology_lst):
-		nodes = [i for i in range(len(topology_lst))]
-		edges = []
-		edge_type = []
-		for top in topology_lst:
-			target = top.target
-			parents = top.parents
-			interactions = top.interactions 
-
-			for i in range(len(parents)):
-				p = parents[i]
-				inter = interactions[i]
-				edges.append( (p, target) )
-				edge_type.append( inter )
-
-		return nodes, edges, edge_type
+	def to_ode(self, topology_fn):
+		def fn(x, t):
+			derivs = [0 for i in range(self.num_species)]
+			for i in range(self.num_species):
+				top = self.topology_for(i)
+				params = [p.value for p in self.parameters_for(i)]
+				derivs[i] = topology_fn(x, t, top, params)
+			return derivs
+		return fn
 
 	def from_list(lst):
 		num_species = len(lst)
-		m = WholeModel(num_species)
 
-		# List of Parameter objects
-		parameters = sum([list(l[3]) for l in lst], [])
+		all_params = sum([tm.params for tm in lst], [])
+		edge_params = [p for p in all_params if p.is_edge_param]
+		node_params = [p for p in all_params if not p.is_edge_param]
 
-		for p in parameters:
-			if p.is_edge_param:
-				n1, n2 = p.edge
-				param_lst = [p.value]
-				param_bounds = [p.bounds]
-				edge_type = 
-				m.add_edge()
+		edge_params = dict(map(lambda x: (x.edge, x), edge_params))
+		node_params = dict(map(lambda x: (x.node, x), node_params))
+
+		edge_interactions = []
+		order = []
+		for tm in lst:
+			top = tm.topology 
+			for i in range(len(top.parents)):
+				edge = (top.parents[i], top.target)
+				interaction = top.interactions[i]
+				edge_interactions += [(edge, interaction)]
+				order += [(edge, top.order)]
+		edge_interactions = dict(edge_interactions)
+
+		topologies = [tm.topology for tm in lst]
+
+		wm = WholeModel(num_species=num_species, 
+				   	    edge_params=edge_params,
+				   	    node_params=node_params,
+				   	    edge_interactions=edge_interactions,
+				   	    topologies=topologies)
+
+		return wm 
 
 
 

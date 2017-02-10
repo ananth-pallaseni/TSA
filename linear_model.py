@@ -1,8 +1,10 @@
 from model import *
 import numpy as np 
 
-PARAMETER_TYPES = ['CONST', 'PARENT_COEF']
-PARAMETER_BOUNDS = {'CONST':(-10, 10), 'PARENT_COEF':(-10, 10)}
+
+# Define parameters
+const = ParameterType(param_type='CONST', bounds=(-10, 10), is_edge_param=False)
+coeff = ParameterType(param_type='COEFF', bounds=(-10, 10), is_edge_param=True)
 
 def dX_linear_fn(x, t, topology, params):
 	""" Calculates the derivative of the target species at time t under a linear model.
@@ -14,12 +16,12 @@ def dX_linear_fn(x, t, topology, params):
 
 		topology - A Topology object describing the model currently being examined
 
-		params - A list of params for this model 
+		params - A list of parameters for this model 
 	"""
 	parents = topology.parents
 	target = topology.target
 
-	const_term = Parameter.get_param_by_node(params, param_type='CONST', node=target)
+	const_term = params[0]
 
 	deriv = const_term 
 
@@ -27,13 +29,17 @@ def dX_linear_fn(x, t, topology, params):
 	for i in range(len(parents)):
 		p = parents[i]
 
-		k = Parameter.get_param_by_parent(params, param_type='PARENT_COEF', parent=p)   # Parent coefficient
+		k = params[i + 1]   # Parent coefficient
 
 		parent_val = x[p]   # Value of parent
 
 		deriv += k * parent_val
 
 	return deriv
+
+def params_linear():
+	return [const, coeff]
+
 
 def param_len_linear(num_edges):
 	""" Returns the length of the parameter list required for dX based on the number of edges the target has.
