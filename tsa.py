@@ -340,7 +340,7 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
 
 		Args: 
-		model - A model
+		model - An array of TargetModel objects
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
@@ -354,9 +354,9 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 		A sorted list of the models in ascending order of distace from the true_vals 
 	"""
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
-	topologies = [tup[0] for tup in model]
-	params = sum([list(tup[3]) for tup in model], [])
-	param_lens = [tup[2] for tup in model]
+	topologies = [tup.topology for tup in model]
+	params = sum([list(tup.params) for tup in model], [])
+	param_lens = [len(tup.params) for tup in model]
 	ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
 	sim_vals = odeint(ode, initial_values, ts)
 	dist = np.linalg.norm(sim_vals-true_vals)
@@ -373,7 +373,7 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 	""" Checks the distance of all the input models from the true_vals.
 
 		Args: 
-		models - A list of models 
+		models - An array of TargetModel objects
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
