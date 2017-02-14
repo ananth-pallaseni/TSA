@@ -278,7 +278,7 @@ def permute_whole_models(best_models):
 
 	lst = [-1 for i in range(num_species)]
 	permutations = permute_helper(num_species, best_models, lst, 0)
-	permutations = map(WholeModel.from_list, permutations)
+	#permutations = map(WholeModel.from_list, permutations)
 
 	for perm in permutations:
 		yield perm
@@ -330,6 +330,7 @@ def permute_whole_models(best_models):
 
 # 	return sorted(results, key=lambda x: x[2])[:100]
 
+tim_in_odeint = 0
 def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
 
@@ -344,12 +345,18 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
 
-		Returns:
+		Returns:1
 		A sorted list of the models in ascending order of distace from the true_vals 
 	"""
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
-	ode = model.to_ode(topology_fn)
+	#ode = model.to_ode(topology_fn)
+	def ode(x, t):
+		return [m.to_ode(topology_fn)(x,t) for m in model]
+	t_start = time.time()
 	sim_vals = odeint(ode, initial_values, ts)
+	t_end = time.time()
+	global tim_in_odeint 
+	tim_in_odeint+= t_end - t_start
 	dist = np.linalg.norm(sim_vals-true_vals)
 	return dist 
 
@@ -488,7 +495,8 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 
 	best_target_models = []
 
-	print("Starting gradient matching")
+	print("Starting gradient matching ... ", end='')
+	t_gm = time.time()
 	for t in targets:
 		# Generate all possible permutations of topologies involving the target
 		topologies = generate_models(model_space=model_space, 
@@ -506,23 +514,25 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 								dX=model_space.topology_fn,
 								edge_ptypes=edge_ptypes,
 								node_ptypes=node_ptypes,
-								num_best_models=5,
+								num_best_models=4,
 								num_restarts=1)
 
 		best_target_models.append(best)
+	print('Time taken = {} seconds'.format(time.time()-t_gm))
 
-
-	print("Creating Whole Models")
+	print("Creating Whole Models ... ", end='')
+	t_wm = time.time()
 	# Generate list of best ensemble models, taking all permutations of the best topologies for each target that we found. 
 	system_models = permute_whole_models(best_target_models)
 	#system_models = list(system_models)
+	print('Time taken = {} seconds'.format(time.time()-t_wm))
 
 	if platform.system() != 'Windows':
 		if processes is None:
 			num_procs = 8
 		else:
 			num_procs = processes
-		print("Running simple integrity check on generated whole models.\nMultiprocessing enabled, using {} processes".format(num_procs))
+		print("Running simple integrity check on generated whole models.\nMultiprocessing enabled, using {} processes ... ".format(num_procs), end='')
 		mp_start = time.time()
 		mp_best_models = whole_model_check_par(system_models, topology_fn, initial_vals, species_vals, time_scale, processes=num_procs)
 		print('Time taken = {} seconds'.format(time.time() - mp_start))
@@ -533,6 +543,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 		print("Running simple integrity check on generated whole models")
 		est_start = time.time()
 		est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
+		print('time in odeint = {}'.format(tim_in_odeint))
 		print('Time taken = {} seconds'.format(time.time() - est_start))
 		return est_best_models
 		

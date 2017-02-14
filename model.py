@@ -63,6 +63,10 @@ class Parameter():
 	def __str__(self):
 		return 'Parameter of type {} with value {}'.format(self.param_type, self.value)
 
+	def to_list(p_lst):
+		return list(map(lambda x: x.value, p_lst))
+
+
 class ParameterType():
 	def __init__(self, param_type, bounds, is_edge_param):
 		self.param_type = param_type 
@@ -149,6 +153,12 @@ class TargetModel():
 		self.params = params 
 		self.dist = dist 
 		self.AIC = AIC 
+
+	def to_ode(self, topology_fn):
+		params = Parameter.to_list(self.params)
+		def f(x, t):
+			return topology_fn(x, t, self.topology, params)
+		return f 
 
 
 class WholeModel():
