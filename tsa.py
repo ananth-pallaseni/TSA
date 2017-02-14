@@ -214,15 +214,15 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 			best.append(model_details)
 		else:
 			# Find the index and AIC of the worst model we have stored
-			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1][5])
-			biggest_AIC = biggest_item[5]
+			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1].AIC)
+			biggest_AIC = biggest_item.AIC
 
 			# If the AIC of this model is less than the AIC of the worst model, replace the worst with this
 			if AIC < biggest_AIC:
 				best[biggest_ind] = model_details
 
 	# Sort the list of best models
-	best = sorted(best, key=lambda x: x[5])
+	best = sorted(best, key=lambda x: x.AIC)
 
 	return best
 
