@@ -520,8 +520,8 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 								species_vals=species_vals,
 								species_derivs=species_derivs,
 								time_scale=time_scale,
-								edge_ptypes= ,
-								node_ptypes= ,
+								edge_ptypes= edge_ptypes,
+								node_ptypes= node_ptypes,
 								num_best_models=5,
 								num_restarts=1)
 
