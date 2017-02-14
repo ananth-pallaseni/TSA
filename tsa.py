@@ -409,9 +409,13 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 		A sorted list of the models in ascending order of distace from the true_vals 
 	"""
 	results = []
+	num = len(models)
+	i=0
 	for m in models:
 		dist = model_dist(m, topology_fn, initial_values, true_vals, time_scale)
 		results.append((m, dist))
+		i += 1
+		print('Done {:%}\r'.format(i / num), end='')
 	return sorted(results, key=lambda x: x[1])
 	
 def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_scale, processes=4):
@@ -435,7 +439,10 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 	"""	
 	pool = mp.Pool(processes=processes)
 	args = map(lambda m: (m, topology_fn, initial_values, true_vals, time_scale), models)
-	results = pool.map(model_dist_par, args) 
+	num = len(models)
+	results = []
+	for i, _ in enumerate(pool.imap(model_dist_par, args) , 1):
+		print('Done {:%}\r'.formt(i/num), end='')
 	return sorted(results, key=lambda x: x[1])
 
 
@@ -528,7 +535,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 								species_vals=species_vals,
 								species_derivs=species_derivs,
 								time_scale=time_scale,
-								num_best_models=5,
+								num_best_models=4,
 								num_restarts=1)
 
 		best_target_models.append(best)
