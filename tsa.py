@@ -415,9 +415,9 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 		dist = model_dist(m, topology_fn, initial_values, true_vals, time_scale)
 		results.append((m, dist))
 		i += 1
-		print('Done {:%}\r'.format(i / num), end='')
+		print('Done {:.1%}\r'.format(i / num), end='')
 	return sorted(results, key=lambda x: x[1])
-	
+
 def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_scale, processes=4):
 	""" Checks the distance of all the input models from the true_vals. Parallelized
 
@@ -442,7 +442,7 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 	num = len(models)
 	results = []
 	for i, _ in enumerate(pool.imap(model_dist_par, args) , 1):
-		print('Done {:%}\r'.formt(i/num), end='')
+		print('Done {:.1%}\r'.format(i/num), end='')
 	return sorted(results, key=lambda x: x[1])
 
 
@@ -520,7 +520,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 
 	best_target_models = []
 
-	print("Starting gradient matching")
+	print("Starting gradient matching ... ", end='')
 	for t in targets:
 		# Generate all possible permutations of topologies involving the target
 		models = generate_models(model_space=model_space, 
@@ -539,12 +539,13 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 								num_restarts=1)
 
 		best_target_models.append(best)
+	print('Done')
 
-
-	print("Creating Whole Models")
+	print("Creating Whole Models ... ", end='')
 	# Generate list of best ensemble models, taking all permutations of the best topologies for each target that we found. 
 	system_models = permute_whole_models(best_target_models)
 	system_models = list(system_models)
+	print('Done')
 
 	if platform.system() != 'Windows':
 		if processes is None:
