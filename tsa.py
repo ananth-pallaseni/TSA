@@ -5,33 +5,8 @@ from scipy.optimize import minimize
 import time
 import platform 
 import multiprocessing as mp 
+from model import *
 
-class ModelSpace():
-	""" Container for the functional description and limitations of the model space
-	"""
-	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn, param_len_fn, bounds_fn):
-		self.max_parents = max_parents				
-		self.num_interactions = num_interactions	# Number of possible interactions (eg: Activation, Repression etc). Not necessarily required for all models.
-		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
-		self.num_nodes = num_nodes
-		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
-		self.param_len_fn = param_len_fn			# A function that takes in the number of inbound edges and returns the number of parameters required for the topology fn
-		self.bounds_fn = bounds_fn					# A function that takes in the number of inbound edges and returns the bounds on each paramter in the parameter list for topology fn. 
-
-class Topology():
-	""" Container for all the parameters required to fully describe a certain topology.
-	"""
-	def __init__(self, target, interactions, parents, order):
-		self.target = target 			 # The target species
-		self.interactions = interactions # The interactions that each parent has with the target. 
-		self.parents = parents 			 # The parents of the species
-		self.order = order 				 # Order of equation that represents the topology
-
-	def __str__(self):
-		return 'target = {},\nparents = {},\ninteractions = {},\norder = {}\n'.format(self.target, self.parents, self.interactions, self.order)
-
-	def __repr__(self):
-		return self.__str__()
 
 def sim_data(model_fn, time_scale, x0):
 	""" Create time series data for a model by simulating it across the given time scale. 
