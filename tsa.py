@@ -182,7 +182,7 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale,  
 		for rr in range(num_restarts):
 
 			# Randomly initiate starting values 
-			param_list = top.to_param_lst(self, edge_ptypes, node_ptypes)
+			param_list = top.to_param_lst(edge_ptypes, node_ptypes)
 			param_list = list(map(lambda x:x.value, param_list)) 
 
 			# Perform gradient matching to find optimal parameters
@@ -474,6 +474,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 
 
 	# Create Model Space
+	print("Creating Model Space ... ", end='')
 	model_space = ModelSpace(num_nodes=num_nodes, 
 							 max_parents=max_parents,
 							 num_interactions=num_interactions,
@@ -481,16 +482,21 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 							 topology_fn=topology_fn,
 							 param_len_fn=param_len_fn,
 							 bounds_fn=bounds_fn)
+	print("Done")
 
 
 	# Seperate parameter types into nodes/edges
+	print('Parsing paramter types ... ', end='')
 	all_params = parameter_fn()
 	node_ptypes = [pt for pt in all_params if not pt.is_edge_param]
 	edge_ptypes = [pt for pt in all_params if pt.is_edge_param]
+	print('Done')
 
 	# Simulate the 'true' values of the species and their derivatives from the accepted model. 
 	# We use these values as the 'truth' against which to compare our candidate models
+	print('Simulating given model ... ', end='')
 	species_vals, species_derivs = sim_data(accepted_model_fn, time_scale, initial_vals)
+	print('Done')
 
 	# Specify the list of possible target species
 	targets = [i for i in range(model_space.num_nodes)]
