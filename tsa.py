@@ -358,6 +358,7 @@ def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
 
 	return sorted(results, key=lambda x: x[2])[:100]
 
+t_odeint = 0
 def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
 
@@ -380,7 +381,10 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	params = sum([list(tup[3]) for tup in model], [])
 	param_lens = [tup[2] for tup in model]
 	ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+	global t_odeint
+	t_start = time.time()
 	sim_vals = odeint(ode, initial_values, ts)
+	t_odeint += time.time() - t_start
 	dist = np.linalg.norm(sim_vals-true_vals)
 	return dist 
 
@@ -555,6 +559,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 		print("Running simple integrity check on generated whole models")
 		est_start = time.time()
 		est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
+		print('Time in odeint = {} seconds'.format(t_odeint))
 		print('Time taken = {} seconds'.format(time.time() - est_start))
 		return est_best_models
 		
