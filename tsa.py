@@ -263,7 +263,7 @@ def permute_whole_models(best_models):
 	for perm in permutations:
 		yield tuple(perm)
 
-def whole_model_to_ode(topology_fn, topologies, params, param_lens):
+def whole_model_to_ode(topology_fn, topologies, params):
 	""" Converts from a list of topologies to a function that computes the derivative of the whole model.
 
 		Args:
@@ -271,9 +271,7 @@ def whole_model_to_ode(topology_fn, topologies, params, param_lens):
 
 		topologies - A list of Topology objects representing the parental structure of each species 
 
-		params - A list of parameters for the whole model 
-
-		param_lens - A list such that param_lens[i] is the length of the parameter list required for the derivative fucntion of topology i.
+		params - A list such that params[i] is the ist of parameters for topology i 
 
 		Returns:
 		A function that calculates the derivatives of every species in the model given their values and the time t.
@@ -283,8 +281,7 @@ def whole_model_to_ode(topology_fn, topologies, params, param_lens):
 		derivs = [0 for i in range(num_species)]
 		for i in range(num_species):
 			top = topologies[i]
-			start = sum(param_lens[:i])
-			pars = params[start: start+param_lens[i]]
+			pars = params[i]
 			derivs[i] = topology_fn(x, t, top, pars)
 		return derivs 
 	return fn 
@@ -355,9 +352,8 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	"""
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
 	topologies = [tup.topology for tup in model]
-	params = sum([list(tup.params) for tup in model], [])
-	param_lens = [len(tup.params) for tup in model]
-	ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+	params = [tup.params for tup in model]
+	ode = whole_model_to_ode(topology_fn, topologies, params)
 	sim_vals = odeint(ode, initial_values, ts)
 	dist = np.linalg.norm(sim_vals-true_vals)
 	return dist 
