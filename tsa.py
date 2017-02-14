@@ -200,7 +200,10 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 				best_dist = dist 
 
 
-		model_details = (top, dX, param_len, best_params, best_dist, min_AIC, bounds)
+		model_details = model_details = TargetModel(topology=top,
+													params=best_params,
+													dist=best_dist,
+													AIC=min_AIC)
 
 		# Check if any parameter is below the weak signal threshold
 		weakest_param = min(best_params, key=lambda x:abs(x))
@@ -510,7 +513,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 								species_vals=species_vals,
 								species_derivs=species_derivs,
 								time_scale=time_scale,
-								num_best_models=4,
+								num_best_models=5,
 								num_restarts=1)
 
 		best_target_models.append(best)
