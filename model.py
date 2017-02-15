@@ -1,146 +1,153 @@
-import itertools
-import numpy as np 
-import math
-from scipy.integrate import odeint
+import random 
 
-class TargetTopology():
-	""" Contains all information required to define a certain topology for a target species
-	"""
-
-	def __init__(self, target, interactions, parents, order):
-		self.target = target 					 # The target species
-		self.interactions = interactions # The interactions that each parent has with the target. 
-		self.parents = parents
-		self.order = order 
-
-	def __getitem__(self, key):
-		if type(key) != int or type(key) != str:
-			raise TypeError
-		if key == 0 or key == "target":
-			return self.target
-		elif key == 1 or key == "parents":
-			return self.parents
-		elif key == 2 or key == "interactions":
-			return self.interactions
-		elif key == 3 or key == "order":
-			return self.order
+class Parameter():
+	num_params = 0
+	def __init__(self, param_type, value, bounds, is_edge_param, edge=None, node=None):
+		self.idx = Parameter.num_params
+		Parameter.num_params += 1
+		self.param_type = param_type 
+		self.value = value 
+		self.bounds = bounds 
+		self.is_edge_param = is_edge_param
+		if is_edge_param:
+			if edge is None:
+				raise ValueError('Edge cannot be none if this is an edge parameter')
+			self.edge = edge 
+			self.node = None
 		else:
-			raise IndexError
+			if node is None:
+				raise ValueError('Node cannot be none if this is a node parameter')
+			self.edge = None
+			self.node = node
+
+	def update_val(self, new_val):
+		self.value = new_val
+
+	def random(self):
+		rnd = random.random()
+		rng = self.bounds[1] - self.bounds[0]
+		lb = self.bounds[0]
+		return rnd * rng + lb 
+
+	def from_value_list(param_lst, is_edge_param, param_type, bound):
+		return [Parameter(param_type, is_edge_param, value, bound) for value in param_lst]
+
+	def get_params_by_type(param_lst, param_type):
+		by_type = [p.value for p in param_lst if p.param_type == param_type]
+		if len(by_type) == 0:
+			raise ValueError('No Parameters with type {}'.format(param_type))
+		return by_type
+		
+	def get_param_by_parent(param_lst, param_type, parent):
+		by_type = [p for p in param_lst if p.param_type == param_type]
+		if len(by_type) == 0:
+			raise ValueError('No Parameters with type {}'.format(param_type))
+		by_parent = [p.value for p in by_type if p.edge is not None and p.edge[0] == parent]
+		if len(by_parent) == 0:
+			raise ValueError('No Parameters with type {} and parent {}'.format(param_type, parent))
+		elif len(by_parent) > 1:
+			raise ValueError('More than one Parameter with type {} and parent {}'.format(param_type, parent))
+		return by_parent
+
+	def get_param_by_node(param_lst, param_type, node):
+		by_type = [p for p in param_lst if p.param_type == param_type]
+		if len(by_type) == 0:
+			raise ValueError('No Parameters with type {}'.format(param_type))
+		by_node = [p.value for p in by_type if p.node is not None and p.node == node]
+		if len(by_node) == 0:
+			raise ValueError('No Parameters with type {} and node {}'.format(param_type, node))
+		elif len(by_node) > 1:
+			raise ValueError('More than one Parameter with type {} and node {}'.format(param_type, node))
+		return by_node
 
 	def __str__(self):
-		return "Parents=" + str(self.parents) + "\n" \
-			   "Interactions=" + str(self.interactions) + "\n" \
-			   "Order=" + str(self.order)
+		return 'Parameter of type {} with value {}'.format(self.param_type, self.value)
 
-	def __repr__(self):
-		return self.__str__()
+class ParameterType():
+	def __init__(self, param_type, bounds, is_edge_param):
+		self.param_type = param_type 
+		self.bounds = bounds 
+		self.is_edge_param = is_edge_param
+
+	def create(self, value, edge=None, node=None):
+		return Parameter(param_type=self.param_type, 
+						 value=value, 
+						 bounds=self.bounds, 
+						 is_edge_param=self.is_edge_param, 
+						 edge=edge, 
+						 node=node)
+
+	def create_random(self, edge=None, node=None):
+		p = Parameter(param_type=self.param_type, 
+						 value=self.bounds[0], 
+						 bounds=self.bounds, 
+						 is_edge_param=self.is_edge_param, 
+						 edge=edge, 
+						 node=node)
+		p.value = p.random()
+		return p 
 
 
-class Model():
-	""" Container for the functional description and limitations of the model set.
+class Species():
+	num_species = 0
+	default_name = 'species'
+	def __init__(self, name=None):
+		self.idx = Species.num_species
+		Species.num_species += 1
+		if name == None:
+			self.name = Species.default_name + str(self.idx)
+		else:
+			self.name = name 
+
+	def from_list(specie_lst):
+		return [Species(name) for name in specie_lst]
+
+class Topology():
+	""" Container for all the parameters required to fully describe a certain topology.
 	"""
+	def __init__(self, target, interactions, parents, order):
+		self.target = target 			 # The target species
+		self.interactions = interactions # The interactions that each parent has with the target. 
+		self.parents = parents 			 # The parents of the species
+		self.order = order 				 # Order of equation that represents the topology
 
-	def __init__(self, max_parents, num_interactions=1, num_nodes=-1, max_order=0, time_scale=[], fn=[], accepted_model_fn=[]):
+	def __str__(self):
+		return 'target = {},\nparents = {},\ninteractions = {},\norder = {}\n'.format(self.target, self.parents, self.interactions, self.order)
+
+	# def __repr__(self):
+	# 	return self.__str__()
+
+	def to_param_lst(self, edge_ptypes, node_ptypes):
+		param_lst = [n.create_random(node=self.target) for n in node_ptypes]
+		for p in self.parents:
+			edge = (p, self.target)
+			param_lst += [e.create_random(edge=edge) for e in edge_ptypes]
+		return param_lst
+
+	def to_bounds_lst(self, edge_ptypes, node_ptypes):
+		bounds_lst = [n.bounds for n in node_ptypes]
+		for p in self.parents:
+			bounds_lst += [e.bounds for e in edge_ptypes]
+		return bounds_lst
+
+class ModelSpace():
+	""" Container for the functional description and limitations of the model space
+	"""
+	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn, param_len_fn, bounds_fn):
 		self.max_parents = max_parents				
 		self.num_interactions = num_interactions	# Number of possible interactions (eg: Activation, Repression etc). Not necessarily required for all models.
 		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
 		self.num_nodes = num_nodes
-		self.time_scale = time_scale				# The time scale to simulate across. Should have the form [start, stop, num_steps]
-		self.target_topology_to_function = fn 		# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
-		self.accepted_model_fn = accepted_model_fn 	# The accepted model for your system. Should be a function that takes in the values of your species and the time and outputs an array of derivatives. 
-
-	def sim_data(self, model_fn, time_scale, x0=[]):
-		""" Create time series data for a model by simulating it across the given time scale. 
-
-			Args:
-			model_fn - The function that takes in the value of its variables and the time and outputs the derivatives of those variables.
-
-			time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
-
-			Returns:
-			A numpy array of the value of each species derivatives in the model at all time steps. Rows are time steps, columns are species such that specie_vals[t, s] = value of derivative of species s at time t. 
-		"""
-
-		# Create time scale array
-		ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
-
-		# Simulate the value of species across the time scale
-		specie_vals = np.ndarray.astype(odeint(model_fn, x0, ts), float)
-
-		# Calculate derivatives of the species
-		specie_derivs = np.zeros(specie_vals.shape, dtype=float)
-		for step in range(len(ts)):
-			specie_derivs[step, :] = model_fn(specie_vals[step, :], ts[step])
-
-		return specie_vals, specie_derivs
+		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
+		self.param_len_fn = param_len_fn			# A function that takes in the number of inbound edges and returns the number of parameters required for the topology fn
+		self.bounds_fn = bounds_fn					# A function that takes in the number of inbound edges and returns the bounds on each paramter in the parameter list for topology fn. 
 
 
-	def __enumerate_inter_perms(self, num_parents, interactions):
-		""" Generates an iterator of all possible ways of having `num_parents species interact with the target, with the possible interactions in `interactions.
-		"""
-		def perms(length, options, lst):
-			if length == 0:
-				yield lst 
-			else:
-				for i in options:
-					lst[length-1] = i
-					for p in perms(length-1, options, lst):
-						yield p
-		perm_list = perms(length=num_parents, options=interactions, lst=[-1 for i in range(num_parents)])
-		for i in perm_list:
-			yield tuple(i)
+class TargetModel():
+	def __init__(self, topology, params, dist, AIC):
+		self.topology = topology 
+		self.params = params 
+		self.dist = dist 
+		self.AIC = AIC 
 
 
-
-	def generate_models(self, target, true_data):
-		""" Generate all possible network topologies concerning one certain target species
-		"""
-		nodes = [i for i in range(self.num_nodes)]
-		interactions = [i for i in range(self.num_interactions)]
-
-		# How many parents?
-		for num_parents in range(1, self.max_parents+1):
-			all_parent_combs = itertools.combinations(nodes, num_parents)
-
-			# What combination of parents (includes self interactions)?
-			for parent_comb in all_parent_combs:
-				all_interaction_perms = self.__enumerate_inter_perms(num_parents, interactions)
-				
-				# What permutation of interactions?
-				for interaction_perm in all_interaction_perms:
-					# What order?
-					for order in range(self.max_order+1):
-						
-						target_topology = TargetTopology(target=target, interactions=interaction_perm, parents=parent_comb, order=order)
-
-						dX, params, bounds = self.target_topology_to_function(topology=target_topology, specie_vals=true_data)
-
-						yield (dX, params, bounds, target_topology)
-
-
-	def objective_fn(self, top_fn, target, true_data):
-
-		def obj(params):
-			sim = top_fn(params)
-			true = true_data[:, target]
-			diff = sim - true 
-			return math.sqrt(sum(diff**2))
-			
-		return obj
-
-
-
-	def __str__(self):
-		return self.__class__.__name__
-
-
-		
-		
-
-
-
-
-
-
-
-				
