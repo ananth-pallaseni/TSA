@@ -1,5 +1,9 @@
-import tsa
+from model import *
 import numpy as np 
+
+# Define parameters
+const = ParameterType(param_type='CONST', bounds=(-10, 10), is_edge_param=False)
+coeff = ParameterType(param_type='COEFF', bounds=(-10, 10), is_edge_param=True)
 
 
 def dX_linear_fn(x, t, topology, params):
@@ -31,6 +35,9 @@ def dX_linear_fn(x, t, topology, params):
 		deriv += k * parent_val
 
 	return deriv
+
+def params_linear():
+	return [const, coeff]
 
 def param_len_linear(num_edges):
 	""" Returns the length of the parameter list required for dX based on the number of edges the target has.

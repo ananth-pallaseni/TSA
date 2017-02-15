@@ -5,33 +5,8 @@ from scipy.optimize import minimize
 import time
 import platform 
 import multiprocessing as mp 
+from model import *
 
-class ModelSpace():
-	""" Container for the functional description and limitations of the model space
-	"""
-	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn, param_len_fn, bounds_fn):
-		self.max_parents = max_parents				
-		self.num_interactions = num_interactions	# Number of possible interactions (eg: Activation, Repression etc). Not necessarily required for all models.
-		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
-		self.num_nodes = num_nodes
-		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
-		self.param_len_fn = param_len_fn			# A function that takes in the number of inbound edges and returns the number of parameters required for the topology fn
-		self.bounds_fn = bounds_fn					# A function that takes in the number of inbound edges and returns the bounds on each paramter in the parameter list for topology fn. 
-
-class Topology():
-	""" Container for all the parameters required to fully describe a certain topology.
-	"""
-	def __init__(self, target, interactions, parents, order):
-		self.target = target 			 # The target species
-		self.interactions = interactions # The interactions that each parent has with the target. 
-		self.parents = parents 			 # The parents of the species
-		self.order = order 				 # Order of equation that represents the topology
-
-	def __str__(self):
-		return 'target = {},\nparents = {},\ninteractions = {},\norder = {}\n'.format(self.target, self.parents, self.interactions, self.order)
-
-	def __repr__(self):
-		return self.__str__()
 
 def sim_data(model_fn, time_scale, x0):
 	""" Create time series data for a model by simulating it across the given time scale. 
@@ -164,7 +139,7 @@ def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
 	return obj
 
 
-def find_best_models(models, target, species_vals, species_derivs, time_scale, num_best_models=10, num_restarts=5, weak_sig_thresh=1e-5):
+def find_best_models(models, target, species_vals, species_derivs, time_scale,  edge_ptypes, node_ptypes, num_best_models=10, num_restarts=5, weak_sig_thresh=1e-5):
 	""" Outputs the model topologies for a certain target that produce data close to its "true" values. 
 
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
@@ -177,6 +152,10 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 		species_derivs - The "true" values of all species derivatives for all time steps. Should be a numpy array such that species_derivs[t, s] is the derivative of species s at time t. 
 
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
+
+		edge_ptypes - A list of ParameterType objects representing types of parameters attached to edges
+
+		node_ptypes - A list of ParameterType objects representing types of parameters attached to nodes
 
 		num_best_models - The number of best_performing models to retain. 
 
@@ -203,7 +182,8 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 		for rr in range(num_restarts):
 
 			# Randomly initiate starting values 
-			param_list = [np.random.random() for i in range(param_len)]
+			param_list = top.to_param_lst(edge_ptypes, node_ptypes)
+			param_list = list(map(lambda x:x.value, param_list)) 
 
 			# Perform gradient matching to find optimal parameters
 			res = minimize(obj, param_list, method='SLSQP', tol=1e-6, bounds=bounds)
@@ -224,8 +204,11 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 				best_params = opt_params
 				best_dist = dist 
 
-
-		model_details = (top, dX, param_len, best_params, best_dist, min_AIC, bounds)
+		# Create TargetModel using best parameters and AIC 
+		model_details = model_details = TargetModel(topology=top,
+													params=best_params,
+													dist=best_dist,
+													AIC=min_AIC)
 
 		# Check if any parameter is below the weak signal threshold
 		weakest_param = min(best_params, key=lambda x:abs(x))
@@ -236,15 +219,15 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale, n
 			best.append(model_details)
 		else:
 			# Find the index and AIC of the worst model we have stored
-			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1][5])
-			biggest_AIC = biggest_item[5]
+			biggest_ind, biggest_item = max(enumerate(best), key=lambda x:x[1].AIC)
+			biggest_AIC = biggest_item.AIC
 
 			# If the AIC of this model is less than the AIC of the worst model, replace the worst with this
 			if AIC < biggest_AIC:
 				best[biggest_ind] = model_details
 
 	# Sort the list of best models
-	best = sorted(best, key=lambda x: x[5])
+	best = sorted(best, key=lambda x: x.AIC)
 
 	return best
 
@@ -285,7 +268,7 @@ def permute_whole_models(best_models):
 	for perm in permutations:
 		yield tuple(perm)
 
-def whole_model_to_ode(topology_fn, topologies, params, param_lens):
+def whole_model_to_ode(topology_fn, topologies, params):
 	""" Converts from a list of topologies to a function that computes the derivative of the whole model.
 
 		Args:
@@ -293,9 +276,7 @@ def whole_model_to_ode(topology_fn, topologies, params, param_lens):
 
 		topologies - A list of Topology objects representing the parental structure of each species 
 
-		params - A list of parameters for the whole model 
-
-		param_lens - A list such that param_lens[i] is the length of the parameter list required for the derivative fucntion of topology i.
+		params - A list such that params[i] is the ist of parameters for topology i 
 
 		Returns:
 		A function that calculates the derivatives of every species in the model given their values and the time t.
@@ -305,8 +286,7 @@ def whole_model_to_ode(topology_fn, topologies, params, param_lens):
 		derivs = [0 for i in range(num_species)]
 		for i in range(num_species):
 			top = topologies[i]
-			start = sum(param_lens[:i])
-			pars = params[start: start+param_lens[i]]
+			pars = params[i]
 			derivs[i] = topology_fn(x, t, top, pars)
 		return derivs 
 	return fn 
@@ -362,7 +342,7 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
 
 		Args: 
-		model - A model
+		model - An array of TargetModel objects
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
@@ -376,10 +356,9 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 		A sorted list of the models in ascending order of distace from the true_vals 
 	"""
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
-	topologies = [tup[0] for tup in model]
-	params = sum([list(tup[3]) for tup in model], [])
-	param_lens = [tup[2] for tup in model]
-	ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+	topologies = [tup.topology for tup in model]
+	params = [tup.params for tup in model]
+	ode = whole_model_to_ode(topology_fn, topologies, params)
 	sim_vals = odeint(ode, initial_values, ts)
 	dist = np.linalg.norm(sim_vals-true_vals)
 	return dist 
@@ -395,7 +374,7 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 	""" Checks the distance of all the input models from the true_vals.
 
 		Args: 
-		models - A list of models 
+		models - An array of TargetModel objects
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
@@ -447,7 +426,7 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 
 
 
-def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
+def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
@@ -456,6 +435,8 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 		param_len_fn - A function that returns the number of parameters the topology function requires in its parameter list
 
 		bounds_fn - A function that returns the bounds of the parameters in the parameter list for the topology function.
+
+		parameter_fn - A function that returns all the types of parameters the model contains
 
 		accepted_model_fn - A function that takes in a time t and the value of all species at that time and outputs the derivatives of all species at time t. 
 
@@ -493,6 +474,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 
 
 	# Create Model Space
+	print("Creating Model Space ... ", end='')
 	model_space = ModelSpace(num_nodes=num_nodes, 
 							 max_parents=max_parents,
 							 num_interactions=num_interactions,
@@ -500,12 +482,21 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 							 topology_fn=topology_fn,
 							 param_len_fn=param_len_fn,
 							 bounds_fn=bounds_fn)
+	print("Done")
 
 
+	# Seperate parameter types into nodes/edges
+	print('Parsing paramter types ... ', end='')
+	all_params = parameter_fn()
+	node_ptypes = [pt for pt in all_params if not pt.is_edge_param]
+	edge_ptypes = [pt for pt in all_params if pt.is_edge_param]
+	print('Done')
 
 	# Simulate the 'true' values of the species and their derivatives from the accepted model. 
 	# We use these values as the 'truth' against which to compare our candidate models
+	print('Simulating given model ... ', end='')
 	species_vals, species_derivs = sim_data(accepted_model_fn, time_scale, initial_vals)
+	print('Done')
 
 	# Specify the list of possible target species
 	targets = [i for i in range(model_space.num_nodes)]
@@ -535,7 +526,9 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 								species_vals=species_vals,
 								species_derivs=species_derivs,
 								time_scale=time_scale,
-								num_best_models=4,
+								edge_ptypes= edge_ptypes,
+								node_ptypes= node_ptypes,
+								num_best_models=5,
 								num_restarts=1)
 
 		best_target_models.append(best)
@@ -547,6 +540,9 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 	system_models = list(system_models)
 	print('Done')
 
+
+	# Resimulate each ensemble model and reorder based on distace from our accepted model
+	best_whole_models = []
 	if platform.system() != 'Windows':
 		if processes is None:
 			num_procs = 8
@@ -556,7 +552,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 		mp_start = time.time()
 		mp_best_models = whole_model_check_par(system_models, topology_fn, initial_vals, species_vals, time_scale, processes=num_procs)
 		print('Time taken = {} seconds'.format(time.time() - mp_start))
-		return mp_best_models
+		best_whole_models = mp_best_models
 	else:
 		if processes is not None:
 			print("Process count is set, but cannot run multiprocessing on Windows machines. Proceeding without parallelization")
@@ -564,9 +560,13 @@ def TSA(topology_fn, param_len_fn, bounds_fn, accepted_model_fn, time_scale, ini
 		est_start = time.time()
 		est_best_models = whole_model_check(system_models, topology_fn, initial_vals, species_vals, time_scale)
 		print('Time taken = {} seconds'.format(time.time() - est_start))
-		return est_best_models
-		
+		best_whole_models = est_best_models
+	
 
+	# Convert to WholeModel format for future analysis
+
+	return best_whole_models
+	
 
 
 import matplotlib.pyplot as plt

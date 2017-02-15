@@ -1,5 +1,5 @@
 import tsa 
-from linear_model import dX_linear_fn, param_len_linear, param_bounds_linear
+from linear_model import dX_linear_fn, param_len_linear, param_bounds_linear, params_linear
 import numpy as np
 
 
@@ -28,6 +28,7 @@ time_scale = [0,20,51]
 candidate_models = tsa.TSA(topology_fn=dX_linear_fn,
                            param_len_fn=param_len_linear,
                            bounds_fn=param_bounds_linear,
+                           parameter_fn=params_linear,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
