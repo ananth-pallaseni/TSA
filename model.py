@@ -155,6 +155,14 @@ class WholeModel():
 		self.targets = target_lst
 		self.dist = dist
 
+	def get_edges(self):
+		tops = [t.topology for t in self.targets]
+		edges = sum([[(p, t.target) for p in t.parents] for t in tops], [])
+		
+		# Filter out complex interactomes
+		edges = list(filter(lambda tup: tup[0] is not tuple and tup[1] is not tuple, edges))
+		return edges
+
 
 
 

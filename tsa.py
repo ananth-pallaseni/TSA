@@ -62,15 +62,13 @@ def enumerate_perms(num_parents, interactions):
 	for i in perm_list:
 		yield tuple(i)
 
-def generate_models(model_space, target, species_vals, enf_edges=[], enf_gaps=[]):
+def generate_models(model_space, target, enf_edges=[], enf_gaps=[]):
 	""" Generate all possible network topologies concerning one target species
 
 		Args:
-		model_space - A ModelSpace object containing the dexcription of the model space 
+		model_space - A ModelSpace object containing the description of the model space 
 
 		target - The value of the target species 
-
-		species_vals - A numpy array containing the value of each species across all time stpes, such that species_vals[t, s] = value of species s at time t.
 
 		enf_edges - An array of nodes that specify which nodes must be parents of this target 
 
@@ -87,16 +85,31 @@ def generate_models(model_space, target, species_vals, enf_edges=[], enf_gaps=[]
 		enf_edges = enf_edges[:model_space.max_parents]
 		num_enf_edges = model_space.max_parents
 
-	enf_edges = tuple(enf_edges)
+	# Put all enforced nodes in tuple form for next steps
+	enf_edges = tuple([tuple([e]) for e in enf_edges])
+	enf_gaps = tuple([tuple([e]) for e in enf_gaps])
+	
+	# List out the nodes that are not enforced gaps 
+	nodes = [(i) for i in range(model_space.num_nodes) if i not in enf_gaps]
+	
+	# Generate a list of interactomes based on order
+	max_order = model_space.max_order
+	interactomes = [itertools.combinations(nodes, i) for i in range(1, max_order+1)]
+	interactomes = [map(lambda x: x[0] if len(x)==1 else x, i) for i in interactomes] # Makes it so that non-complex interactomes are represented as ints, while complex ones are tuples (eg: (1) becomes 1, but (1,2) stays the same)
+	interactomes = itertools.chain(*tuple(interactomes))
 
-	# List out the non-enforced nodes and interactions
-	nodes = [i for i in range(model_space.num_nodes) if i not in enf_gaps and i not in enf_edges]
+	# Remove enforced nodes so that they can be added in later:
+	interactomes = filter(lambda x: x not in enf_edges, interactomes)
+
+	interactomes = list(interactomes)
+
+	# List out interactions
 	interactions = [i for i in range(model_space.num_interactions)]
 
 	# How many parents?
 	for num_parents in range(model_space.max_parents+1 - num_enf_edges):
 		# Enumerate all non-enforced edges
-		all_parent_combs = itertools.combinations(nodes, num_parents)
+		all_parent_combs = itertools.combinations(interactomes, num_parents)
 		
 		# Add in all enforced edges
 		all_parent_combs = map(lambda x: x + enf_edges, all_parent_combs)
@@ -107,17 +120,13 @@ def generate_models(model_space, target, species_vals, enf_edges=[], enf_gaps=[]
 
 			# What permutation of interactions?
 			for interaction_perm in all_interaction_perms:
+				topology = Topology(target=target, interactions=interaction_perm, parents=parent_comb, order=0)
 
-				# What order?
-				for order in range(model_space.max_order+1):
-				
-					topology = Topology(target=target, interactions=interaction_perm, parents=parent_comb, order=order)
+				dX = model_space.topology_fn
+				param_len = model_space.param_len_fn(len(topology.parents))
+				bounds = model_space.bounds_fn(len(topology.parents))
 
-					dX = model_space.topology_fn
-					param_len = model_space.param_len_fn(len(topology.parents))
-					bounds = model_space.bounds_fn(len(topology.parents))
-
-					yield (dX, param_len, bounds, topology)
+				yield (dX, param_len, bounds, topology)
 
 
 def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
@@ -463,13 +472,13 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 	fn_module = topology_fn.__module__
 	if fn_module == 'gene_regulation' :
 		num_interactions = 2
-		max_order = 0 
+		max_order = 1 
 	elif fn_module == 'population_dynamics':
 		num_interactions = 1
-		max_order = 0
+		max_order = 1
 	elif fn_module == 'linear_model':
 		num_interactions = 1
-		max_order = 0
+		max_order = 1
 
 
 
@@ -516,7 +525,6 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 		# Generate all possible permutations of topologies involving the target
 		models = generate_models(model_space=model_space, 
 								 target=t,
-								 species_vals=species_vals,
 								 enf_edges=enf_edges_target[t],
 								 enf_gaps=enf_gaps_target[t])
 
