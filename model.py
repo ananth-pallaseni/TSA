@@ -150,4 +150,13 @@ class TargetModel():
 		self.dist = dist 
 		self.AIC = AIC 
 
+class WholeModel():
+	def __init__(self, target_lst, dist):
+		self.targets = target_lst
+		self.dist = dist
+
+
+
+
+
 
