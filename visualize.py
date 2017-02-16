@@ -42,7 +42,7 @@ def vis(g):
 	plt.clf()
 
 def visulize(whole_model):
-	tops = [t.topology for t in whole_model]
+	tops = [t.topology for t in whole_model.targets]
 	n, e, et = parse_topology(tops)
 	graph = to_graph(n, e, et)
 	vis(graph)
@@ -50,8 +50,8 @@ def visulize(whole_model):
 def mosaic(whole_model_list):
 	g_list = []
 	for i in range(9):
-		whole_model = whole_model_list[i][0]
-		tops = [t.topology for t in whole_model]
+		whole_model = whole_model_list[i]
+		tops = [t.topology for t in whole_model.targets]
 		n, e, et = parse_topology(tops)
 		graph = to_graph(n, e, et) 
 		g_list.append(graph)
