@@ -47,9 +47,10 @@ def visulize(whole_model):
 	graph = to_graph(n, e, et)
 	vis(graph)
 
-def mosaic(whole_model_list):
+def mosaic(whole_model_list, w=3, h=3):
 	g_list = []
-	for i in range(9):
+	num_models = w * h
+	for i in range(num_models):
 		whole_model = whole_model_list[i]
 		tops = [t.topology for t in whole_model.targets]
 		n, e, et = parse_topology(tops)
@@ -59,7 +60,7 @@ def mosaic(whole_model_list):
 	colors = dict(enumerate(color_choices))
 	for j in range(len(g_list)):
 		g = g_list[j]
-		plt.subplot(3,3,j+1)
+		plt.subplot(w,h,j+1)
 		clist = [colors[g[n1][n2]['type']] for (n1, n2) in g.edges()]
 		nx.draw_circular(g, with_labels=True, edge_color=clist)
 	plt.tight_layout()
