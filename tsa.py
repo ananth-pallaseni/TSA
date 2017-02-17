@@ -573,7 +573,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 	
 
 	# Convert to WholeModel format for future analysis
-	best_whole_models = [WholeModel(targets, dist) for (targets, dist) in best_whole_models]
+	best_whole_models = ModelBag(best_whole_models, node_ptypes, edge_ptypes)
 
 	return best_whole_models
 	

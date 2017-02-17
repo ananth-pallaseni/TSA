@@ -32,6 +32,13 @@ class Parameter():
 	def from_value_list(param_lst, is_edge_param, param_type, bound):
 		return [Parameter(param_type, is_edge_param, value, bound) for value in param_lst]
 
+	def update_lst(param_lst, value_lst):
+		if len(param_lst) != len(value_lst):
+			raise ValueError('Length of input lists are mismatched')
+		for i in range(len(param_lst)):
+			param_lst[i].update_val(value_lst[i])
+
+
 	def get_params_by_type(param_lst, param_type):
 		by_type = [p.value for p in param_lst if p.param_type == param_type]
 		if len(by_type) == 0:
@@ -62,6 +69,9 @@ class Parameter():
 
 	def __str__(self):
 		return 'Parameter of type {} with value {}'.format(self.param_type, self.value)
+
+	def __repr__(self):
+		return self.__str__()
 
 class ParameterType():
 	def __init__(self, param_type, bounds, is_edge_param):
@@ -150,11 +160,21 @@ class TargetModel():
 		self.dist = dist 
 		self.AIC = AIC 
 
+	def to_param_lst(self, node_ptypes, edge_ptypes):
+		lst = self.topology.to_param_lst(edge_ptypes, node_ptypes)
+		Parameter.update_lst(lst, self.params)
+		return lst
+
+
 class WholeModel():
-	def __init__(self, target_lst, dist):
+	def __init__(self, target_lst, dist, node_ptypes, edge_ptypes):
 		self.targets = target_lst
 		self.dist = dist
+		self.params = self.build_par_dict(target_lst, node_ptypes, edge_ptypes)
 
+	def topologies(self):
+		return [t.topology for t in self.targets]
+		
 	def get_edges(self):
 		tops = [t.topology for t in self.targets]
 		edges = sum([[(p, t.target) for p in t.parents] for t in tops], [])
@@ -163,18 +183,63 @@ class WholeModel():
 		edges = list(filter(lambda tup: tup[0] is not tuple and tup[1] is not tuple, edges))
 		return edges
 
+	def build_par_dict(self, target_lst, node_ptypes, edge_ptypes):
+		d = {}
+		for n in node_ptypes:
+			d[n.param_type] = {}
+		for e in edge_ptypes:
+			d[e.param_type] = {}
+		for t in target_lst:
+			p_lst = t.to_param_lst(node_ptypes, edge_ptypes)
+			for p in p_lst:
+				p_type = p.param_type 
+				if p.is_edge_param:
+					d[p_type][p.edge] = p 
+				else:
+					d[p_type][p.node] = p
+		return d
+
+	def get_all_params(self):
+		return sum([[self.params[t][p] for p in self.params[t]] for t in self.params], [])
+
+	def get_param(self, param_type, node=None, edge=None):
+		if param_type not in self.params:
+			raise ValueError('No parameter of type {}'.format(param_type))
+		
+		sub = self.params[param_type]
+		if node is not None:
+			if node in sub:
+				return sub[node]
+			else:
+				raise ValueError('No parameter of type {} attached to node {}'.format(param_type, node))
+
+		elif edge is not None:
+			if edge in sub:
+				return sub[edge]
+			else:
+				raise ValueError('No parameter of type {} attached to edge {}'.format(param_type, edge))
+
+		else:
+			raise ValueError('Must specify either node or edge')
+
+	def get_param_value(self, param_type, node=None, edge=None):
+		return self.get_param_by_node(param_type, node=node, edge=edge).value
+
 
 class ModelBag():
-	def __init__(self, lst):
-		self.models = sorted([WholeModel(targets, dist) for (targets, dist) in lst], key=lambda x:x.dist)
-
+	def __init__(self, lst, node_ptypes, edge_ptypes):
+		self.models = sorted([WholeModel(targets, dist, node_ptypes, edge_ptypes) for (targets, dist) in lst], key=lambda x:x.dist)
+		self.node_ptypes = node_ptypes
+		self.edge_ptypes = edge_ptypes
 
 	def __getitem__(self, key):
 		if type(key) is not int:
-			raise TypeError
+			raise TypeError('Index must be an int. Instead got a {}'.format(type(key)))
 		else:
 			return self.models[key]
 
 	def top(self, num):
 		return self.models[:num]
 
+	def __len__(self):
+		return len(self.models)
