@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='tsa',
-      version='0.0',
+      version='0.1',
       description='Topological Sensitivity Analysis',
       url='http://github.com/ananth-pallaseni/TSA',
       author='Ananth Pallaseni',
