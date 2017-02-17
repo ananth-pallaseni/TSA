@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 import time
 import platform 
 import multiprocessing as mp 
-from model import *
+from .model import *
 
 
 def sim_data(model_fn, time_scale, x0):
@@ -470,13 +470,13 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 	"""
 	# Check for built in functions:
 	fn_module = topology_fn.__module__
-	if fn_module == 'gene_regulation' :
+	if fn_module == 'tsa.models.gene_regulation' :
 		num_interactions = 2
 		max_order = 1 
-	elif fn_module == 'population_dynamics':
+	elif fn_module == 'tsa.models.population_dynamics':
 		num_interactions = 1
 		max_order = 1
-	elif fn_module == 'linear_model':
+	elif fn_module == 'tsa.models.linear_model':
 		num_interactions = 1
 		max_order = 1
 

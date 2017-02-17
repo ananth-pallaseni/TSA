@@ -1,11 +1,11 @@
 import tsa 
-from linear_model import dX_linear_fn, params_linear
+from tsa.models.linear_model import dX_linear_fn, params_linear
 import numpy as np
 
 
-s = [0.5, 0.3, 0.7, 0.4, 1,1.5];      # basal synthesis for species 1-5
-g = [1, 0.3, 0.7, 1.5, 1.5, 3];      # basal degradation
-b = [-1,-0.5,1.5,-0.8,-0.6,0.7,-1.5,1] # edge coefficients
+s = [0.5, 0.3, 0.7, 0.4, 1,1.5];        # basal synthesis for species 1-5
+g = [1, 0.3, 0.7, 1.5, 1.5, 3];         # basal degradation
+b = [-1,-0.5,1.5,-0.8,-0.6,0.7,-1.5,1]  # edge coefficients
 
 y0 = [0,0,0,0,0,0]
 
