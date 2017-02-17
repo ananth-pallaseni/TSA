@@ -73,8 +73,7 @@ def prevalence_graph(model_lst, numtop):
 	max_width=20.0
 	min_width=1.0
 
-	srt = sorted(model_lst, key=lambda x: x.dist)
-	top_n = srt[:numtop]
+	top_n = model_lst.top(numtop)
 
 	edge_list = sum([wm.get_edges() for wm in top_n], [])
 	edges = {}
@@ -95,7 +94,7 @@ def prevalence_graph(model_lst, numtop):
 	pos = nx.circular_layout(graph)
 
 	for (u, v, d) in graph.edges(data=True):
-		nx.draw_networkx_edges(graph, pos=pos, edgelist=[(u,v)], width=d['weight'],alpha=0.5, arrows=False)
+		nx.draw_networkx_edges(graph, pos=pos, edgelist=[(u,v)], width=d['weight'],alpha=0.7, arrows=False)
 	nx.draw_networkx_nodes(graph, pos, with_labels=True)
 
 	plt.show()
