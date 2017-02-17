@@ -164,7 +164,17 @@ class WholeModel():
 		return edges
 
 
+class ModelBag():
+	def __init__(self, lst):
+		self.models = sorted([WholeModel(targets, dist) for (targets, dist) in lst], key=lambda x:x.dist)
 
 
+	def __getitem__(self, key):
+		if type(key) is not int:
+			raise TypeError
+		else:
+			return self.models[key]
 
+	def top(self, num):
+		return self.models[:num]
 
