@@ -62,7 +62,7 @@ def enumerate_perms(num_parents, interactions):
 	for i in perm_list:
 		yield tuple(i)
 
-def generate_models(model_space, target, enf_edges=[], enf_gaps=[]):
+def generate_target_topologies(model_space, target, enf_edges=[], enf_gaps=[]):
 	""" Generate all possible network topologies concerning one target species
 
 		Args:
@@ -146,13 +146,13 @@ def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
 	return obj
 
 
-def find_best_models(models, target, species_vals, species_derivs, time_scale,  edge_ptypes, node_ptypes, num_best_models=10, num_restarts=5, weak_sig_thresh=1e-5):
-	""" Outputs the model topologies for a certain target that produce data close to its "true" values. 
+def gradient_match_topologies(models, target, species_vals, species_derivs, time_scale,  edge_ptypes, node_ptypes, num_best_models=10, num_restarts=5, weak_sig_thresh=1e-5):
+	""" Outputs the model topologies for a target species that produce data closest to its "true" values. 
 
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
 
 		Args: 
-		models - An iterator containing all the possible model topologies in the form (dX, top). See the generate_models function for more details 
+		models - An iterator containing all the possible model topologies in the form (dX, top). See the generate_target_topologies function for more details 
 
 		target - The target species the models are for (eg. species 0)
 
@@ -437,8 +437,10 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 
 
 
-def TSA(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
-	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
+def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
+	""" Generate a set of models that show similar behaviour to the accepted model. 
+
+		Each model is a permuation of the original system with attached parameter values that are based on gradient matching. 
 
 		Args:
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
@@ -464,7 +466,7 @@ def TSA(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, 
 		enf_gaps - A list of edge tuples for edges that must not be present in any models 
 
 		Returns:
-		The top models that fit closest the "true" values for each species. 
+		A ModelBag object containing the top models that closest match the accepted model.
 	"""
 	# Check for built in functions:
 	fn_module = topology_fn.__module__
@@ -519,13 +521,13 @@ def TSA(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, 
 	print("Starting gradient matching ... ", end='')
 	for t in targets:
 		# Generate all possible permutations of topologies involving the target
-		models = generate_models(model_space=model_space, 
+		topologies = generate_target_topologies(model_space=model_space, 
 								 target=t,
 								 enf_edges=enf_edges_target[t],
 								 enf_gaps=enf_gaps_target[t])
 
 		# Perform gradient matching on each candidate model and obtain the closest matches to our 'true' data
-		best = find_best_models(models=models,
+		best = gradient_match_topologies(models=topologies,
 								target=t,
 								species_vals=species_vals,
 								species_derivs=species_derivs,

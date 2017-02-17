@@ -25,7 +25,7 @@ max_parents = 3
 time_scale = [0,20,51]
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(topology_fn=dX_linear_fn,
+candidate_models = tsa.generate_models(topology_fn=dX_linear_fn,
                            parameter_fn=params_linear,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
