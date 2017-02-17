@@ -38,19 +38,3 @@ def dX_linear_fn(x, t, topology, params):
 
 def params_linear():
 	return [const, coeff]
-
-def param_len_linear(num_edges):
-	""" Returns the length of the parameter list required for dX based on the number of edges the target has.
-	"""
-	num_params = 0
-	num_params += 1 # For constant term 
-	num_params += 1 * num_edges # For parent coefficient
-	return num_params
-
-def param_bounds_linear(num_edges):
-	""" Returns the bounds of the parameters that dX requires.
-	"""
-	const_bound = (-10, 10)   
-	coef_bound = (-10, 10)   
-	param_bounds = [const_bound] + [coef_bound]*num_edges 
-	return param_bounds

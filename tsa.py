@@ -123,10 +123,8 @@ def generate_models(model_space, target, enf_edges=[], enf_gaps=[]):
 				topology = Topology(target=target, interactions=interaction_perm, parents=parent_comb, order=0)
 
 				dX = model_space.topology_fn
-				param_len = model_space.param_len_fn(len(topology.parents))
-				bounds = model_space.bounds_fn(len(topology.parents))
 
-				yield (dX, param_len, bounds, topology)
+				yield (dX, topology)
 
 
 def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
@@ -154,7 +152,7 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale,  
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
 
 		Args: 
-		models - An iterator containing all the possible model topologies in the form (dX, param_len, bounds, top). See the generate_models function for more details 
+		models - An iterator containing all the possible model topologies in the form (dX, top). See the generate_models function for more details 
 
 		target - The target species the models are for (eg. species 0)
 
@@ -179,13 +177,16 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale,  
 	target_derivs = species_derivs[:, target]
 
 	# Iterate through all models in the list
-	for (dX, param_len, bounds, top) in models:
+	for (dX, top) in models:
 		# Calculate objective function 
 		obj = objective_fn(dX, species_vals, target_derivs, top, time_scale)
 
 		min_AIC = 1e12
 		best_params = []
 		best_dist = 1e12
+
+		bounds_list = top.to_bounds_lst(edge_ptypes, node_ptypes)
+		num_params = len(bounds_list)
 
 		# Random restarts 
 		for rr in range(num_restarts):
@@ -195,7 +196,7 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale,  
 			param_list = list(map(lambda x:x.value, param_list)) 
 
 			# Perform gradient matching to find optimal parameters
-			res = minimize(obj, param_list, method='SLSQP', tol=1e-6, bounds=bounds)
+			res = minimize(obj, param_list, method='SLSQP', tol=1e-6, bounds=bounds_list)
 			opt_params = res.x
 
 			# Calculate the distance of best guess
@@ -205,7 +206,7 @@ def find_best_models(models, target, species_vals, species_derivs, time_scale,  
 			ts = species_derivs.shape[0]
 
 			# Calculate Biased AIC for this model
-			AIC_bias = 2 * (param_len + 1) * (ts / (ts - param_len))
+			AIC_bias = 2 * (num_params + 1) * (ts / (ts - num_params))
 			AIC  = ts * np.log(dist / ts) + AIC_bias
 
 			if AIC < min_AIC:
@@ -436,15 +437,11 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 
 
 
-def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
+def TSA(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
 	""" Perform Topological Sensitivity Analysis on a given representation of a model space.
 
 		Args:
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
-
-		param_len_fn - A function that returns the number of parameters the topology function requires in its parameter list
-
-		bounds_fn - A function that returns the bounds of the parameters in the parameter list for the topology function.
 
 		parameter_fn - A function that returns all the types of parameters the model contains
 
@@ -489,9 +486,7 @@ def TSA(topology_fn, param_len_fn, bounds_fn, parameter_fn, accepted_model_fn, t
 							 max_parents=max_parents,
 							 num_interactions=num_interactions,
 							 max_order=max_order,
-							 topology_fn=topology_fn,
-							 param_len_fn=param_len_fn,
-							 bounds_fn=bounds_fn)
+							 topology_fn=topology_fn)
 	print("Done")
 
 

@@ -144,15 +144,13 @@ class Topology():
 class ModelSpace():
 	""" Container for the functional description and limitations of the model space
 	"""
-	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn, param_len_fn, bounds_fn):
+	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn):
 		self.max_parents = max_parents				
 		self.num_interactions = num_interactions	# Number of possible interactions (eg: Activation, Repression etc). Not necessarily required for all models.
 		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
 		self.num_nodes = num_nodes
 		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
-		self.param_len_fn = param_len_fn			# A function that takes in the number of inbound edges and returns the number of parameters required for the topology fn
-		self.bounds_fn = bounds_fn					# A function that takes in the number of inbound edges and returns the bounds on each paramter in the parameter list for topology fn. 
-
+		
 
 class TargetModel():
 	def __init__(self, topology, params, dist, AIC):
