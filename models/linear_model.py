@@ -1,5 +1,5 @@
-from model import *
 import numpy as np 
+from TSA import *
 
 # Define parameters
 const = ParameterType(param_type='CONST', bounds=(-10, 10), is_edge_param=False)

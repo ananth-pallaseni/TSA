@@ -1,11 +1,11 @@
-import tsa 
-from linear_model import dX_linear_fn, params_linear
+import TSA 
+from TSA.models.linear_model import dX_linear_fn, params_linear
 import numpy as np
 
 
-s = [0.5, 0.3, 0.7, 0.4, 1,1.5];      # basal synthesis for species 1-5
-g = [1, 0.3, 0.7, 1.5, 1.5, 3];      # basal degradation
-b = [-1,-0.5,1.5,-0.8,-0.6,0.7,-1.5,1] # edge coefficients
+s = [0.5, 0.3, 0.7, 0.4, 1,1.5];        # basal synthesis for species 1-5
+g = [1, 0.3, 0.7, 1.5, 1.5, 3];         # basal degradation
+b = [-1,-0.5,1.5,-0.8,-0.6,0.7,-1.5,1]  # edge coefficients
 
 y0 = [0,0,0,0,0,0]
 
@@ -25,7 +25,7 @@ max_parents = 3
 time_scale = [0,20,51]
 
 # Perform tsa on the model space
-candidate_models = tsa.generate_models(topology_fn=dX_linear_fn,
+candidate_models = TSA.generate_models(topology_fn=dX_linear_fn,
                            parameter_fn=params_linear,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,

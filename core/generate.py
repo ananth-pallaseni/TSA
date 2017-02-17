@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 import time
 import platform 
 import multiprocessing as mp 
-from model import *
+from .model import *
 
 
 def sim_data(model_fn, time_scale, x0):
