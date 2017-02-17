@@ -100,3 +100,43 @@ def prevalence_graph(model_lst, numtop):
 	plt.show()
 	plt.clf()
 
+
+def plot_errs(model_bag, numtop):
+	""" Plot a bar chart of the best models by distance from the original model.
+
+		Args:
+		model_bag - A ModelBag object 
+
+		numtop - The number of best mdoels to select
+
+		Returns:
+		Nothing. Displays a chart.
+	"""
+	ys = [m.dist for m in model_bag.top(numtop)]
+	xs = range(numtop)
+	for i in xs:
+	    plt.plot([xs[i]+1,xs[i]+1],[0,ys[i]],'k-')
+	plt.xlabel('Model')
+	plt.ylabel('Distance')
+	plt.show()
+	plt.clf()
+
+def inter_map(model_lst, numtop):
+	""" Plot a heat map where square i, j is colored according to how often edge i,j exists in the top models.
+
+		Args:
+		model_lst - A ModelBag object 
+
+		numtop - The number of best models to select
+
+		Returns:
+		Nothing. Displays a heat map.
+	"""
+	topx = model_lst.top(numtop)
+	means = sum([model.to_adjacency_mat() for model in topx]) / numtop
+	plt.imshow(means, cmap='Blues', interpolation='nearest')
+	plt.title("Interaction Prevalence %")
+	plt.ylabel("Outgoing Node")
+	plt.xlabel("Incoming Node")
+	plt.colorbar()
+	plt.show()

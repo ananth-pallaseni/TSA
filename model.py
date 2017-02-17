@@ -1,4 +1,5 @@
 import random 
+import numpy as np
 
 class Parameter():
 	num_params = 0
@@ -168,6 +169,7 @@ class TargetModel():
 
 class WholeModel():
 	def __init__(self, target_lst, dist, node_ptypes, edge_ptypes):
+		self.num_species = len(target_lst)
 		self.targets = target_lst
 		self.dist = dist
 		self.params = self.build_par_dict(target_lst, node_ptypes, edge_ptypes)
@@ -198,6 +200,13 @@ class WholeModel():
 				else:
 					d[p_type][p.node] = p
 		return d
+
+	def to_adjacency_mat(self):
+		n = self.num_species
+		adj = np.zeros( (n,n) )
+		for (p, t) in self.get_edges():
+			adj[p, t] = 1
+		return adj 
 
 	def get_all_params(self):
 		return sum([[self.params[t][p] for p in self.params[t]] for t in self.params], [])
