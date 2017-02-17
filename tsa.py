@@ -429,7 +429,8 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 	args = map(lambda m: (m, topology_fn, initial_values, true_vals, time_scale), models)
 	num = len(models)
 	results = []
-	for i, _ in enumerate(pool.imap(model_dist_par, args) , 1):
+	for i, m in enumerate(pool.imap(model_dist_par, args) , 1):
+		results.append(m)
 		print('Done {:.1%}\r'.format(i/num), end='')
 	return sorted(results, key=lambda x: x[1])
 
