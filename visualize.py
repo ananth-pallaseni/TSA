@@ -66,3 +66,38 @@ def mosaic(whole_model_list, w=3, h=3):
 	plt.tight_layout()
 	plt.show()
 	plt.clf()
+
+def prevalence_graph(model_lst, numtop):
+	""" Generates a graph whose edges are weighted based on how often that edge appeared in the top N models.
+	"""
+	max_width=20.0
+	min_width=1.0
+
+	srt = sorted(model_lst, key=lambda x: x.dist)
+	top_n = srt[:numtop]
+
+	edge_list = sum([wm.get_edges() for wm in top_n], [])
+	edges = {}
+	for e in edge_list:
+		if e in edges:
+			edges[e] += 1
+		else:
+			edges[e] = 1
+
+	most = max(edges.values())
+
+	scale = lambda x: (x/most) * (max_width-min_width) + min_width
+	
+	graph = nx.DiGraph()
+	for e in edge_list:
+		graph.add_edge(e[0], e[1], weight=scale(edges[e]))
+
+	pos = nx.circular_layout(graph)
+
+	for (u, v, d) in graph.edges(data=True):
+		nx.draw_networkx_edges(graph, pos=pos, edgelist=[(u,v)], width=d['weight'],alpha=0.5, arrows=False)
+	nx.draw_networkx_nodes(graph, pos, with_labels=True)
+
+	plt.show()
+	plt.clf()
+
