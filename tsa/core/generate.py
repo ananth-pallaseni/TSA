@@ -479,6 +479,8 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 	elif fn_module == 'tsa.models.linear_model':
 		num_interactions = 1
 		max_order = 1
+	elif fn_module == 'tsa.models.mass_action':
+		num_interactions = 1
 
 
 
