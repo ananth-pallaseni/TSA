@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools
 import numpy as np 
 from scipy.integrate import odeint
