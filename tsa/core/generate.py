@@ -7,6 +7,8 @@ import platform
 import multiprocessing as mp 
 from .model import *
 
+import pickle
+
 
 def sim_data(model_fn, time_scale, x0):
 	""" Create time series data for a model by simulating it across the given time scale. 
@@ -576,3 +578,16 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 
 	return best_whole_models
 	
+
+
+def store(model_bag, fname=None):
+	if fname == None:
+		return pickle.dumps(model_bag)
+	else:
+		with open(fname, 'wb') as f:
+			pickle.dump(model_bag, f)
+
+def load(fname):
+	with open(fname, 'rb') as f:
+		return pickle.load(f)
+
