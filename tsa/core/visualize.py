@@ -4,6 +4,8 @@
 
 import matplotlib.pyplot as plt
 import networkx as nx
+from scipy.stats import gaussian_kde
+import numpy as np 
 
 def parse_topology(topology_lst):
 	nodes = [i for i in range(len(topology_lst))]
@@ -37,7 +39,7 @@ color_choices = ['r', 'g', 'b', 'y', 'black', 'grey']
 def vis(g):
 	colors = dict(enumerate(color_choices))
 	clist = [colors[g[n1][n2]['type']] for (n1, n2) in g.edges()]
-	nx.draw(g, with_labels=True, edge_color=clist)
+	nx.draw_circular(g, with_labels=True, edge_color=clist, font_size=22)
 	plt.show()
 	plt.clf()
 
@@ -140,3 +142,23 @@ def inter_map(model_lst, numtop):
 	plt.xlabel("Incoming Node")
 	plt.colorbar()
 	plt.show()
+
+def param_density(model_lst, numtop, param_type, node=None, edge=None):
+	params = model_lst.get_param(param_type, numtop, node=node, edge=edge)
+	params = [p.value for p in params]
+	density = gaussian_kde(params)
+	bins = np.linspace(min(params)-0.5, max(params)+0.5, 200)
+	plt.plot(bins, density(bins), label='Parameter Density Estimate')
+	plt.xlabel('Parameter Value')
+	plt.ylabel('Density')
+	if edge != None:
+		plt.title('Density from top {} models of {} for edge {}'.format(numtop, param_type, edge))
+	elif node != None:
+		plt.title('Density from top {} models of {} for node {}'.format(numtop, param_type, node))
+	else:
+		raise ValueError('Need to specify either node or edge')
+	plt.show()
+	plt.clf()
+
+
+

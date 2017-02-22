@@ -199,6 +199,16 @@ class WholeModel():
 					d[p_type][p.node] = p
 		return d
 
+	def edge_exists(self, edge):
+		return edge in self.get_edges()
+
+	def param_exists(self, param_type, node=None, edge=None):
+		try:
+			x = self.get_param(param_type, node=node, edge=edge)
+			return True
+		except ValueError:
+			return False
+
 	def to_adjacency_mat(self):
 		n = self.num_species
 		adj = np.zeros( (n,n) )
@@ -247,6 +257,18 @@ class ModelBag():
 
 	def top(self, num):
 		return self.models[:num]
+
+	def get_param(self, param_type, num, node=None, edge=None):
+		t = self.top(num)
+		if edge != None:
+			t = [m.get_param(param_type, node=node, edge=edge) for m in t if m.param_exists(param_type, node=node, edge=edge)]
+		elif node != None:
+			t = [m.get_param(param_type, node=node, edge=edge) for m in t]
+
+		else:
+			raise ValueError('Must specify either edge or node for parameter')
+
+		return t 
 
 	def __len__(self):
 		return len(self.models)
