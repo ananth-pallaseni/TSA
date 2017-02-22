@@ -585,7 +585,7 @@ def store(model_bag, fname=None):
 		return pickle.dumps(model_bag)
 	else:
 		with open(fname, 'wb') as f:
-			pickle.dump(model_bag, f)
+			pickle.dump(model_bag, f, protocol=2)
 
 def load(fname):
 	with open(fname, 'rb') as f:

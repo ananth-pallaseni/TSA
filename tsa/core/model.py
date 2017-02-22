@@ -1,7 +1,7 @@
 import random 
 import numpy as np
 
-class Parameter():
+class Parameter(object):
 	num_params = 0
 	def __init__(self, param_type, value, bounds, is_edge_param, edge=None, node=None):
 		self.idx = Parameter.num_params
@@ -74,7 +74,7 @@ class Parameter():
 	def __repr__(self):
 		return self.__str__()
 
-class ParameterType():
+class ParameterType(object):
 	def __init__(self, param_type, bounds, is_edge_param):
 		self.param_type = param_type 
 		self.bounds = bounds 
@@ -99,7 +99,7 @@ class ParameterType():
 		return p 
 
 
-class Species():
+class Species(object):
 	num_species = 0
 	default_name = 'species'
 	def __init__(self, name=None):
@@ -113,7 +113,7 @@ class Species():
 	def from_list(specie_lst):
 		return [Species(name) for name in specie_lst]
 
-class Topology():
+class Topology(object):
 	""" Container for all the parameters required to fully describe a certain topology.
 	"""
 	def __init__(self, target, interactions, parents, order):
@@ -141,7 +141,7 @@ class Topology():
 			bounds_lst += [e.bounds for e in edge_ptypes]
 		return bounds_lst
 
-class ModelSpace():
+class ModelSpace(object):
 	""" Container for the functional description and limitations of the model space
 	"""
 	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn):
@@ -152,7 +152,7 @@ class ModelSpace():
 		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
 		
 
-class TargetModel():
+class TargetModel(object):
 	def __init__(self, topology, params, dist, AIC):
 		self.topology = topology 
 		self.params = params 
@@ -165,7 +165,7 @@ class TargetModel():
 		return lst
 
 
-class WholeModel():
+class WholeModel(object):
 	def __init__(self, target_lst, dist, node_ptypes, edge_ptypes):
 		self.num_species = len(target_lst)
 		self.targets = target_lst
@@ -243,7 +243,7 @@ class WholeModel():
 		return self.get_param_by_node(param_type, node=node, edge=edge).value
 
 
-class ModelBag():
+class ModelBag(object):
 	def __init__(self, lst, node_ptypes, edge_ptypes):
 		self.models = sorted([WholeModel(targets, dist, node_ptypes, edge_ptypes) for (targets, dist) in lst], key=lambda x:x.dist)
 		self.node_ptypes = node_ptypes
