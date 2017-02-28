@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Graph Visualization</title>
+        <script type="text/javascript" src="d3/d3.js"></script>
+        <script type="text/javascript" src="graph.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+
+            // Data
+            var node_lst = [0, 1, 2, 3, 4, 5];
+
+            var layout = [[1.0, 0.0], 
+                          [0.5, 0.866],
+                          [-0.5, 0.866],
+                          [-1.0, 0],
+                          [-0.5, -0.866],
+                          [0.5, -0.866]];
+
+            var edges = [[2, 0],
+                         [4, 0],
+                         [5, 1],
+                         [4, 2],
+                         [0, 3],
+                         [1, 4],
+                         [0, 5],
+                         [3, 5]];
+
+            var doGraph = function(svg, nl, el, ll, nr) {
+              // Map layout to svg
+              lll = ll.map(function(c) {return [c[0] * (svg_w/2 - padding) + svg_w/2, c[1] * (svg_h/2 - padding) + svg_h/2];})
+
+              // Draw graph
+              draw_graph(svg, nl, el, lll, nr);
+            }
+
+            // Drawing vars:
+            var node_radius = 20;
+            var svg_w = 500;
+            var svg_h = 500;
+            var padding = 50;
+
+            // Create SVG area
+            var svg = d3.select("body")
+                .append("svg")
+                .attr("width", svg_w)
+                .attr("height", svg_h);
+
+            var backRect = svg.append('rect')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('fill', 'pink')
+                .attr('fill-opacity', 0)
+                .on('click', function(d) {
+                  console.log('click in svg');
+                  var url = window.location.hostname + '/graph';
+                  d3.json(url, function(d) {
+                    console.log(d);
+                    doGraph(svg, d.nodes, d.edges, d.layout, node_radius);
+                  });
+                });
+
+            doGraph(svg, node_lst, edges, layout, node_radius);
+            
+
+            
+            
+        </script>
+    </body>
+</html>
