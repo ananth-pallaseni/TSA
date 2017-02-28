@@ -15,6 +15,3 @@ test.py
 
 # Pickled data
 *.pickle
-
-# d3 folder
-/tsa/core/d3
