@@ -34,9 +34,11 @@ var padLayoutsSquare = function(layout) {
 	var side = Math.min(whalf, hhalf);
 	var nrad = rad5();
 	var pad = nrad * 2;
-	if (Math.max(whalf, hhalf)-side > pad) {
-		pad = 0;
-	}
+	// if (Math.max(whalf, hhalf)-side > pad) {
+	// 	console.log(Math.max(whalf, hhalf)-side);
+	// 	console.log(pad);
+	// 	pad = 0;
+	// }
 
 	var padded = layout.map(function(coords) {
 		var x = coords[0];
@@ -77,4 +79,9 @@ var edges = [[2, 0],
 
 drawGraphPadded(svg, node_lst, edges, layout);
 
+var redraw = function() {
+	console.log('size percieved as  = ' + svgWidth() + ', ' + svgHeight());
+	drawGraphPadded(svg, node_lst, edges, layout);
+}
+window.addEventListener('resize', redraw);
 
