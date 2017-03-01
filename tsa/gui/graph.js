@@ -1,14 +1,27 @@
-transition_duration = 700;
-edge_duration = transition_duration/2;
-edge_delay = transition_duration / 2;
-hover_width = 15;
-
+var transition_duration = 700;
+var edge_duration = transition_duration/2;
+var edge_delay = transition_duration / 2;
+var hover_width = 15;
 var cur_color = 'teal';
+
+var svgWidth = function() {
+	return svg.node().getBBox().width;
+}
+var svgHeight = function() {
+	return svg.node().getBBox().height;
+}
+var rad5 = function() {
+	return Math.floor(Math.min(svgWidth(), svgHeight()) * 0.05);
+}
+var radx = function(x) {
+	return Math.floor(Math.min(svgWidth(), svgHeight()) * x);
+}
 var randColor = function() {
 	var colors = d3.schemeCategory10;
 	var i = Math.floor(Math.random() * colors.length);
 	cur_color= colors[i];
 }
+
 
 
 // Define arrow endings for edges
@@ -45,7 +58,7 @@ var line_shorten = function(a, b, d, arrow) {
    return [[x1, y1], [x2, y2]];
  }
 
-var update_edge_hovers = function(lines, layout) {
+var update_edge_hovers = function(lines, layout, node_radius) {
 	lines.transition()
     .duration(transition_duration/4)
     .attr('stroke', cur_color)
@@ -94,7 +107,7 @@ var update_edge_hovers = function(lines, layout) {
     .attr('stroke-width', hover_width);
 }
 
-var update_edges = function(lines, layout) {
+var update_edges = function(lines, layout, node_radius) {
 	lines.transition()
 	.duration(transition_duration/4)
 	.attr('opacity', 0)
@@ -171,10 +184,10 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 	    .attr('stroke', cur_color)
 	    .attr('stroke-width', 0)
 	    .attr('stroke-opacity', 0)
-	    .attr('x1', svg.attr('width')/2)
-	    .attr('y1', svg.attr('height')/2)
-	    .attr('x2', svg.attr('width')/2)
-	    .attr('y2', svg.attr('height')/2)
+	    .attr('x1', svgWidth()/2)
+	    .attr('y1', svgHeight()/2)
+	    .attr('x2', svgWidth()/2)
+	    .attr('y2', svgHeight()/2)
 	    .on('mouseover', function(d) {
 	    	d3.select(this)
 	    		.attr('stroke-opacity', 0.5);
@@ -193,7 +206,7 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 	// Grab existing edge hovers and update
 	var all_hovers = svg.selectAll('line.edge-hover')
 		.data(edges);
-	update_edge_hovers(all_hovers, layout);
+	update_edge_hovers(all_hovers, layout, node_radius);
 }
 
 
@@ -210,10 +223,10 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 		.exit()
 		.transition()
 		.duration(transition_duration)
-		.attr('x1', svg.attr('width')/2)
-	    .attr('y1', svg.attr('height')/2)
-	    .attr('x2', svg.attr('width')/2)
-	    .attr('y2', svg.attr('height')/2)
+		.attr('x1', svgWidth()/2)
+	    .attr('y1', svgHeight()/2)
+	    .attr('x2', svgWidth()/2)
+	    .attr('y2', svgHeight()/2)
 		.attr('stroke-opacity', 0)
 		.attr('marker-end', null)
 		.remove();
@@ -227,10 +240,10 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 	    .attr('stroke', 'black')
 	    .attr('stroke-width', 4)
 	    .attr('marker-end', 'url(#arrow-head)')
-	    .attr('x1', svg.attr('width')/2)
-	    .attr('y1', svg.attr('height')/2)
-	    .attr('x2', svg.attr('width')/2)
-	    .attr('y2', svg.attr('height')/2)
+	    .attr('x1', svgWidth()/2)
+	    .attr('y1', svgHeight()/2)
+	    .attr('x2', svgWidth()/2)
+	    .attr('y2', svgHeight()/2)
 	    .attr('opacity', 0);
 
 	new_edges.append('title')
@@ -242,7 +255,7 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 	var all_edges = svg.selectAll('line.edge')
 		.data(edges);
 
-	update_edges(all_edges, layout);
+	update_edges(all_edges, layout, node_radius);
 
 }
 
@@ -267,8 +280,8 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 		.exit()
 		.transition()
 		.duration(transition_duration)
-		.attr('cx', svg.attr('width')/2)
-	    .attr('cy', svg.attr('height')/2)
+		.attr('cx', svgWidth()/2)
+	    .attr('cy', svgHeight()/2)
 	    .attr('fill-opacity', 0)
 		.remove();
 
@@ -280,8 +293,8 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 	    .attr('class', 'node')
 	    .attr('r', node_radius)
 	    .attr('fill', 'teal')
-	    .attr('cx', svg.attr('width')/2)
-	    .attr('cy', svg.attr('height')/2)
+	    .attr('cx', svgWidth()/2)
+	    .attr('cy', svgHeight()/2)
 	    .attr('fill-opacity', 0);
 
 	new_nodes.append('title')
@@ -299,16 +312,15 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 
 var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	if (arrowHead == null) {
-		console.log('initializing arrowHead');
 		initArrowHead(svg);
 	}
-
+	console.log(layout);
 	randColor();
-
+	console.log('aaaaaaaaaaa');
 	draw_edges(svg, edges, layout, node_radius);
-
+	console.log('bbbbbbbbbbb');
 	draw_edge_hovers(svg, edges, layout, node_radius);
-
+	console.log('ccccccccccc');
 	draw_nodes(svg, node_lst, layout, node_radius);
 }
 

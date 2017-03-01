@@ -51,16 +51,16 @@
     }
 
     #navbar-area {
-        background-color: rgba(34, 139, 34, 0.5);
+        /*background-color: rgba(34, 139, 34, 0.5);*/
     }
 
     #graph-col {
-        background-color: rgba(255, 0, 0, 0.2);
+        /*background-color: rgba(255, 0, 0, 0.2);*/
         height: 100%;
     }
 
     #graph-data-col {
-        background-color: rgba(255, 153, 0, 0.5); 
+        /*background-color: rgba(255, 153, 0, 0.5); */
         height: 100%;  
     }
 
@@ -130,19 +130,6 @@
             </div>
     	</div>
 
-        <script type="text/javascript">
-            
-            var svg = d3.select('#graph-col')
-                .append('svg')
-                .attr('class', 'graph')
-                .attr('width', '100%')
-                .attr('height', '100%');
-
-            var backRect = svg.append('rect')
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .attr('fill', 'red')
-                .attr('fill-opacity', 0.5);
-        </script>
+        <script type="text/javascript" src='test.js'> </script>
     </body>
 </html>
