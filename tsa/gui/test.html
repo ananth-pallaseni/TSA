@@ -4,16 +4,145 @@
 		<meta charset='utf8'>
 		<meta name='viewport' content='width=device-width, initial-scale=1'>
 		<title>Test</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
 		<script type="text/javascript" src="d3/d3.js"></script>
         <script type="text/javascript" src="graph.js"></script>
-        <script type="text/javascript" src="bootstrap.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+
+
     </head>
 
+    <style type="text/css">
+
+    html, body {
+        height: 100%;
+    }
+
+    .container-fluid {
+        height: 100%;
+        /*overflow-y: hidden;*/
+    }
+
+    .header-row {
+        height: 10%;
+    }
+
+    .page-header {
+        margin: 0px;
+        padding-bottom: 0px;
+    }
+
+    .body-container {
+        height: 90%;
+    }
+
+    .outer-container {
+        height: 100%;
+    }
+
+    #graph-row {
+        height: 70%;
+    }
+
+    #graph-data-row {
+        height: 30%;
+    }
+
+    #navbar-area {
+        background-color: rgba(34, 139, 34, 0.5);
+    }
+
+    #graph-col {
+        background-color: rgba(255, 0, 0, 0.2);
+        height: 100%;
+    }
+
+    #graph-data-col {
+        background-color: rgba(255, 153, 0, 0.5); 
+        height: 100%;  
+    }
+
+    #data-area {
+        background-color: rgba(0, 0, 255, 0.5);
+    }
+
+
+    /*.data-container {
+        outline: 1px solid white;
+    }*/
+
+    
+
+    </style>
+
     <body>
-    	<div class='container'>
-    		<div class='page-header'>
-    			<h1>Graph Visualization</h1>
-    		</div>
+    	<div class='container-fluid'>
+
+            <!-- Header Row -->
+            <div class='row, header-row'>
+                <div class='col-md-12 header-col'>
+                    <div class='page-header'>
+                        <h2>Graph Visualization</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outermost row -->
+            <div class='row body-container'>
+
+                <!-- Navbar -->
+                <div class='col-md-2 data-container outer-container' id='navbar-area'> 
+                    <ul class = 'nav nav-pills nav-stacked'>
+                        <li class='active'> <a href='#'> Home </a> </li>
+                        <li class='active'> <a href='#'> Inspect </a> </li>
+                        <li class='active'> <a href='#'> Load </a> </li>
+                        <li class='active'> <a href='#'> Save </a> </li>
+                        <li class='active'> <a href='#'> Create </a> </li>
+                    </ul>
+                </div>
+
+                <!-- Graph Area -->
+                <div class='col-md-7 data-container outer-container' id='graph-area'>
+
+                    
+                    <div class='row' id='graph-row'>
+                        <!-- Graph Container -->     
+                        <div class='col-md-12 data-container' id='graph-col'>
+                            
+                        </div>
+                    </div>
+
+                    <div class='row' id='graph-data-row'>
+                        <!-- Graph Data Container -->
+                        <div class='col-md-12 data-container' id='graph-data-col'>GRAPH DATA
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Data Area -->
+                <div class='col-md-3 data-container outer-container' id='data-area'>
+                    DATA
+                </div>
+
+            </div>
     	</div>
+
+        <script type="text/javascript">
+            
+            var svg = d3.select('#graph-col')
+                .append('svg')
+                .attr('class', 'graph')
+                .attr('width', '100%')
+                .attr('height', '100%');
+
+            var backRect = svg.append('rect')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('fill', 'red')
+                .attr('fill-opacity', 0.5);
+        </script>
     </body>
 </html>
