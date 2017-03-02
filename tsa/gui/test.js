@@ -78,6 +78,9 @@ var edges = [[2, 0],
              [3, 5]];
 
 drawGraphPadded(svg, node_lst, edges, layout);
+nodeOnClick(nodeInfo);
+edgeOnClick(edgeInfo);
+
 
 var redraw = function() {
 	console.log('size percieved as  = ' + svgWidth() + ', ' + svgHeight());
@@ -85,3 +88,14 @@ var redraw = function() {
 }
 window.addEventListener('resize', redraw);
 
+var url = window.location.hostname + '/graph';
+d3.select('svg')
+	.on('click', function(d) {
+		d3.json(url, function(d) {
+			node_lst = d.nodes; 
+			edges = d.edges;
+			layout = d.layout;
+		  	redraw();
+	})
+
+});

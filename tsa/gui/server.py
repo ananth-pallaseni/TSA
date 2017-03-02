@@ -4,6 +4,10 @@ import cgi
 import random
 import itertools
 import math
+from urllib.parse import urlparse
+import webbrowser
+
+import tsa
 
 class Server(BaseHTTPRequestHandler):
 
@@ -39,7 +43,7 @@ class Server(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        with open('index.html', 'rb') as index:
+        with open('test.html', 'rb') as index:
           self.wfile.write(index.read())
 
     def serve_js(self, path):
@@ -63,28 +67,55 @@ class Server(BaseHTTPRequestHandler):
       self.end_headers()
       self.wfile.write(json_data)
 
-    # GET sends back a Hello world message
+    def serve_css(self, path):
+      self.send_response(200)
+      self.send_header('Content-type', 'text/css')
+      self.end_headers()
+      with open(path, 'rb') as css:
+        self.wfile.write(css.read())
+
+    def serve_html(self, path):
+      self.send_response(200)
+      self.send_header('Content-type', 'text/html')
+      self.end_headers()
+      with open(path, 'rb') as html:
+        self.wfile.write(html.read())
+
+   
     def do_GET(self):
         print('GET {}'.format(self.path));
         path = self.path;
         fpath = path;
         if len(path) > 1:
           fpath = path[1:];
+
+        # named pages:
         if path == '/':
           self.serve_index();
-        elif path[-3:] == '.js':
-          self.serve_js(fpath);
-        elif path[-5:] == '.json':
-          self.serve_json(fpath);
         elif path[-6:] == '/graph':
           gj = self.random_graph_json();
           jbytes = bytes(gj, 'utf8');
           self.serve_fake_json(jbytes);
+        elif path[-13:] == '/inspect.html':
+          self.serve_html('test.html')
+        elif path[-11:] == '/index.html':
+          self.serve_html('index.html')
 
+        # generic pages
         else:
-          self._set_headers();
-          self.wfile.write(bytes(json.dumps({'hello': 'world', 'received': 'ok'}), 'utf8'));
-        
+          if path[-3:] == '.js':
+            self.serve_js(fpath);
+          elif path[-5:] == '.json':
+            self.serve_json(fpath);
+          elif path[-4:] == '.css':
+            print('asked for css at path: ' + fpath)
+            self.serve_css(fpath)
+          elif path[-5] == '.html':
+            self.serve_html(fpath)
+          else:
+            self._set_headers();
+            self.wfile.write(bytes(json.dumps({'hello': 'world', 'received': 'ok'}), 'utf8'));
+          
     # POST echoes the message adding a JSON field
     def do_POST(self):
         print('POST')
@@ -110,6 +141,8 @@ class Server(BaseHTTPRequestHandler):
 def run(server_class=HTTPServer, handler_class=Server, port=8081):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
+
+    webbrowser.open_new_tab('http://localhost:' + str(port))
     
     print ('Starting httpd on port %d...' % port)
 

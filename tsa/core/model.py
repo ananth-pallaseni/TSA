@@ -170,6 +170,8 @@ class WholeModel(object):
 		self.num_species = len(target_lst)
 		self.targets = target_lst
 		self.dist = dist
+		self.node_ptypes = node_ptypes
+		self.edge_ptypes = edge_ptypes
 		self.params = self.build_par_dict(target_lst, node_ptypes, edge_ptypes)
 
 	def topologies(self):
@@ -239,9 +241,11 @@ class WholeModel(object):
 		else:
 			raise ValueError('Must specify either node or edge')
 
-	def get_param_value(self, param_type, node=None, edge=None):
-		return self.get_param_by_node(param_type, node=node, edge=edge).value
+	def get_edge_params(self, edge):
+		return [self.get_param(pt.param_type, edge=edge) for pt in self.edge_ptypes]
 
+	def get_node_params(self, node):
+		return [self.get_param(pt.param_type, node=node) for pt in self.node_ptypes]
 
 class ModelBag(object):
 	def __init__(self, lst, node_ptypes, edge_ptypes):

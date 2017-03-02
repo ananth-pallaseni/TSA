@@ -191,7 +191,6 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 	    .on('mouseover', function(d) {
 	    	d3.select(this)
 	    		.attr('stroke-opacity', 0.5);
-	    	console.log('mouseover')
 	    })
 	    .on('mouseout', function(d) {
 	    	d3.select(this)
@@ -316,11 +315,11 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	}
 	console.log(layout);
 	randColor();
-	console.log('aaaaaaaaaaa');
+
 	draw_edges(svg, edges, layout, node_radius);
-	console.log('bbbbbbbbbbb');
+
 	draw_edge_hovers(svg, edges, layout, node_radius);
-	console.log('ccccccccccc');
+
 	draw_nodes(svg, node_lst, layout, node_radius);
 }
 
@@ -334,4 +333,24 @@ var get_graph = function() {
 	})
 	return new_graph;
 }
+
+var nodeOnClick = function(f) {
+	d3.selectAll('circle.node')
+		.on('click', f);
+}
+
+var edgeOnClick = function(f) {
+	d3.selectAll('line.edge-hover, line.edge')
+		.on('click', f);
+}
+
+var nodeInfo = function(n) {
+	console.log('n = ' + n);
+}
+
+var edgeInfo = function(e) {
+	console.log('e = ' + e);
+}
+
+
 
