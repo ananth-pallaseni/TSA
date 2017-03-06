@@ -1,0 +1,62 @@
+.col-tall {
+    height: 100%;
+}
+
+.container-fluid {
+	padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.header-row {
+    height: 5%;
+    background-color: darkgray;
+}
+
+.page-header {
+    margin: 0px;
+    padding-bottom: 0px;
+}
+
+.nav-btn-group {
+    height: 100%;
+}
+.nav-btn {
+    height: 100%;
+    font-size: 100%;
+    font-weight: bold;
+}
+.resp-header {
+    font-size: 150%;
+    margin: 0;
+    vertical-align: middle;
+}
+
+#jumbo-header {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    background-color: transparent;
+}
+
+#jumbo-p {
+    font-size: 15pt;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width: 1300px) {
+    #jumbo-p {font-size: 10pt;}
+}
+
+@media (max-width: 500px) {
+    #jumbo-p {font-size: 10pt;}
+}
+
+
+#file-input, #load-frm, #load-frm-btn {
+	display: none;
+}
+

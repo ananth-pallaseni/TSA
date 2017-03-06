@@ -1,0 +1,49 @@
+html, body {
+    height: 100%;
+}
+
+#overarching-container {
+    height: 100%;
+    /*padding: 0;*/
+    /*overflow-y: hidden;*/
+}
+
+.body-container {
+    height: 95%;
+}
+
+#graph-row {
+    height: 100%;
+}
+
+#graph-data-row {
+    height: 30%;
+}
+
+#navbar-area {
+    /*background-color: rgba(34, 139, 34, 0.5);*/
+}
+
+#graph-col {
+    /*background-color: rgba(255, 0, 0, 0.2);*/
+}
+
+#graph-data-col {
+    background-color: rgba(255, 153, 0, 0.5); 
+}
+
+#data-area {
+    background-color: rgba(0, 0, 255, 0.5);
+}
+
+#data-row {
+    height: 70%;
+}
+
+.data-container {
+    outline: 1px solid black;
+}
+
+
+
+
