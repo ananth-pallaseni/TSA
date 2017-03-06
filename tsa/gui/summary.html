@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='utf8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>Summary</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
+		<script type="text/javascript" src="d3/d3.js"></script>
+        <script type="text/javascript" src="graph.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+        <link rel='stylesheet' type='text/css' href='header.css'>
+        <link rel='stylesheet' type='text/css' href='summary.css'>
+    </head>
+    <body>
+        <div class='container-fluid overarching-container'>
+            <!-- Header Row -->
+            <div class='row header-row'>
+                <div class='col-md-2 col-sm-12 col-xs-12 col-tall'>
+                    <!-- <h3 class='text-justified resp-header'>Graph Visualization</h3> -->
+                    <div class='jumbotron col-tall' id='jumbo-header'>
+                        <p id='jumbo-p'> Summary </p>
+                    </div>
+                </div>
+
+                <div class='col-md-10 col-sm-12 col-xs-12 col-tall'>
+                    <div class="btn-group btn-group-justified nav-btn-group">
+                        <a href='/index.html' class="btn btn-muted nav-btn">Home</a>
+                        <a href='/inspect.html' class="btn btn-muted nav-btn">Inspect</a>
+                        <a href='#' class="btn btn-muted nav-btn">Load</a>
+                        <a href='#' class="btn btn-muted nav-btn">Save</a>
+                        <a href='/summary.html' class="btn btn-muted nav-btn">Summary</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Data Row -->
+            <div class='row system-data-row'>   
+                <div class='col-md-12'>
+                    <h3>System Data</h3>
+                </div>
+            </div>
+
+            <div class='row mosaic-area' >
+                <!-- Mosaic Row -->
+                <div class='row mosaic-row'>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                </div>
+                <div class='row mosaic-row'>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                </div>
+                <div class='row mosaic-row'>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
+                    </div>
+                </div>
+                <div class='row mosaic-nav-row'>
+                    <div class='col-md-1 col-md-offset-3 mosaic-nav-btn'>
+                        <p href="/graph"><<</p>
+                    </div>
+                    <div class='col-md-1 mosaic-nav-btn'>
+                        <p href="/graph"><</p>
+                    </div>
+                    <div class='col-md-2 mosaic-nav-btn'>
+                        <p href="/graph">xx</p>
+                    </div>
+                    <div class='col-md-1 mosaic-nav-btn'>
+                        <p href="/graph">></p>
+                    </div>
+                    <div class='col-md-1 mosaic-nav-btn'>
+                        <p href="/graph">>></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <script type="text/javascript">
+            var mosaicSvg = d3.selectAll('.mosaic-square')
+                .append('svg')
+                .attr('id', function(d, i) {
+                    return 'mosaic-svg-' + i;
+                })
+                .attr('width', '100%')
+                .attr('height', '100%');
+
+            var backRects = mosaicSvg.append('rect')
+                .attr('height', '100%')
+                .attr('width', '100%')
+                .attr('fill', 'blue')
+                .attr('fill-opacity', 0.5);
+
+            var reloadGraphs = function() {
+                mosaicSvg.attr('load', function(q, i) {
+                    d3.json('/graph', function(d) {
+                        var localSvg = d3.select('#mosaic-svg-' + i);
+                        drawGraphPadded(localSvg, d.nodes, d.edges, d.layout);
+                    });
+                });
+            }
+
+            reloadGraphs();
+
+            var navBtns = d3.selectAll('.mosaic-nav-btn > p')
+                .on('click', reloadGraphs);
+            
+        </script>
+    </body>
+</html>
