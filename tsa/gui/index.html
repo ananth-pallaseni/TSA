@@ -1,73 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Graph Visualization</title>
-        <script type="text/javascript" src="d3/d3.js"></script>
+<html lang='en'>
+	<head>
+		<meta charset='utf8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>TSA</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
+		<script type="text/javascript" src="d3/d3.js"></script>
         <script type="text/javascript" src="graph.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
+
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+        <link rel='stylesheet' type='text/css' href='header.css'>
+        <link rel='stylesheet' type='text/css' href='index.css'>
     </head>
+
     <body>
+        <div class='container-fluid overarching-container'>
+            <!-- Header Row -->
+            <div class='row header-row'>
+                <div class='col-md-2 col-sm-12 col-xs-12 col-tall'>
+                    <!-- <h3 class='text-justified resp-header'>Graph Visualization</h3> -->
+                    <div class='jumbotron col-tall' id='jumbo-header'>
+                        <p id='jumbo-p'> TSA </p>
+                    </div>
+                </div>
+
+                <div class='col-md-10 col-sm-12 col-xs-12 col-tall'>
+                    <div class="btn-group btn-group-justified nav-btn-group">
+                        <a href='/index.html' class="btn btn-muted nav-btn">Home</a>
+                        <a href='/inspect.html' class="btn btn-muted nav-btn">Inspect</a>
+                        <a href='#' class="btn btn-muted nav-btn" id='load-btn'>Load</a>
+                        <a href='#' class="btn btn-muted nav-btn">Save</a>
+                        <a href='/summary.html' class="btn btn-muted nav-btn">Summary</a>
+                        <form action='/load' method='POST' enctype="multipart/form-data" id='load-frm'>
+                            <input type="file" id="file-input" onchange='handleLoad(this.files)'> 
+                            <button type='submit' id='load-frm-btn'> </button> 
+                        </form>
+                        
+                    </div>
+                </div>
+
+            </div>
+
+            <div class='row body-container'>
+                <div class='row welcome-area'>
+                    <div class='col-md-12 welcome'>
+                        <h1>Welcome to TSA!</h1>
+                        <p>Load a .tsa.json file to continue</p>
+                    </div>
+                </div>
+                <div class='row graph-area'>
+                    <div class='col-md-12 graph-col'>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script type="text/javascript">
-
-            // Data
-            var node_lst = [0, 1, 2, 3, 4, 5];
-
-            var layout = [[1.0, 0.0], 
-                          [0.5, 0.866],
-                          [-0.5, 0.866],
-                          [-1.0, 0],
-                          [-0.5, -0.866],
-                          [0.5, -0.866]];
-
-            var edges = [[2, 0],
-                         [4, 0],
-                         [5, 1],
-                         [4, 2],
-                         [0, 3],
-                         [1, 4],
-                         [0, 5],
-                         [3, 5]];
-
-            var doGraph = function(svg, nl, el, ll, nr) {
-              // Map layout to svg
-              lll = ll.map(function(c) {return [c[0] * (svg_w/2 - padding) + svg_w/2, c[1] * (svg_h/2 - padding) + svg_h/2];})
-
-              // Draw graph
-              draw_graph(svg, nl, el, lll, nr);
-            }
-
-            // Drawing vars:
-            var node_radius = 20;
-            var svg_w = 500;
-            var svg_h = 500;
-            var padding = 50;
-           
-
-            // Create SVG area
-            var svg = d3.select("body")
-                .append("svg")
-                .attr("width", svg_w)
-                .attr("height", svg_h);
+            var svg = d3.select('.graph-col')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%');
 
             var backRect = svg.append('rect')
                 .attr('width', '100%')
                 .attr('height', '100%')
-                .attr('fill', 'pink')
-                .attr('fill-opacity', 0)
-                .on('click', function(d) {
-                  console.log('click in svg');
-                  var url = window.location.hostname + '/graph';
-                  d3.json(url, function(d) {
-                    console.log(d);
-                    doGraph(svg, d.nodes, d.edges, d.layout, node_radius);
-                  });
+                .attr('fill', 'red');
+
+            var redraw = function() {
+                var gnum = Math.floor(Math.random() * 1000);
+                var url = window.location.hostname + '/graph/' + gnum;
+                d3.json(url, function(d) {
+                    drawGraphPadded(svg, d.nodes, d.edges, d.layout);
                 });
+            }
 
-            doGraph(svg, node_lst, edges, layout, node_radius);
-            
+            redraw();
 
-            
+            var intervalID = window.setInterval(redraw, 4000);
             
         </script>
+        <script type="text/javascript" src="header.js"></script>
     </body>
 </html>

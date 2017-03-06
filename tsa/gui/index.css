@@ -1,0 +1,33 @@
+html, body {
+	height: 100%;
+}
+
+.overarching-container {
+	height: 100%;
+}
+
+.body-container {
+	height: 95%;
+}
+
+.welcome-area {
+	height: 20%;
+	background-color: teal;
+}
+
+.welcome {
+	height: 100%;
+	text-align: center;
+}
+
+.graph-area {
+	height: 80%;
+}
+
+.graph-col {
+	height: 100%;
+}
+
+#file-input {
+	display: none;
+}
