@@ -2,24 +2,39 @@ var transition_duration = 700;
 var edge_duration = transition_duration/2;
 var edge_delay = transition_duration / 2;
 var hover_width = 15;
+var allColors = d3.schemeCategory10;
+var curColorPos = 0;
 var cur_color = 'teal';
 
-var svgWidth = function() {
+var svgWidth = function(svg) {
 	return svg.node().getBBox().width;
 }
-var svgHeight = function() {
+var svgHeight = function(svg) {
 	return svg.node().getBBox().height;
 }
-var rad5 = function() {
-	return Math.floor(Math.min(svgWidth(), svgHeight()) * 0.05);
+var rad5 = function(svg) {
+	return Math.floor(Math.min(svgWidth(svg), svgHeight(svg)) * 0.05);
 }
-var radx = function(x) {
-	return Math.floor(Math.min(svgWidth(), svgHeight()) * x);
+var radx = function(x, svg) {
+	return Math.floor(Math.min(svgWidth(svg), svgHeight(svg)) * x);
+}
+var getRandColor = function() {
+	var colors = d3.schemeCategory10;
+	var i = Math.floor(Math.random() * colors.length);
+	return i;
 }
 var randColor = function() {
 	var colors = d3.schemeCategory10;
 	var i = Math.floor(Math.random() * colors.length);
 	cur_color= colors[i];
+}
+
+var nextColor = function() {
+	cur_color = allColors[curColorPos];
+	curColorPos++;
+	if (curColorPos >= allColors.length) {
+		curColorPos = 0;
+	}
 }
 
 
@@ -66,41 +81,41 @@ var update_edge_hovers = function(lines, layout, node_radius) {
     .transition()
     .duration(0)
     .attr('x1', function(d, i) {
-    	return layout[d[0]][0];
+    	return layout[d.from][0];
     })
     .attr('y1', function(d, i) {
-    	return layout[d[0]][1];
+    	return layout[d.from][1];
     })
     .attr('x2', function(d, i) {
-    	return layout[d[0]][0];
+    	return layout[d.from][0];
     })
     .attr('y2', function(d, i) {
-    	return layout[d[0]][1];
+    	return layout[d.from][1];
     })
     .transition()
 	.duration(edge_duration)
 	.delay(edge_delay)
 	.attr('x1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[1][1];
 	})
@@ -114,26 +129,26 @@ var update_edges = function(lines, layout, node_radius) {
 	.transition()
 	.duration(0)
 	.attr('x1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][0];
 	})
 	.attr('y2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][1];
 	})
@@ -141,26 +156,26 @@ var update_edges = function(lines, layout, node_radius) {
 	.duration(edge_duration)
 	.delay(edge_delay)
 	.attr('x1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
-	    var n1 = layout[d[0]];
-	    var n2 = layout[d[1]];
+	    var n1 = layout[d.from];
+	    var n2 = layout[d.to];
 	    pos = line_shorten(n1, n2, node_radius, 15);
 	    return pos[1][1];
 	})
@@ -184,10 +199,10 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 	    .attr('stroke', cur_color)
 	    .attr('stroke-width', 0)
 	    .attr('stroke-opacity', 0)
-	    .attr('x1', svgWidth()/2)
-	    .attr('y1', svgHeight()/2)
-	    .attr('x2', svgWidth()/2)
-	    .attr('y2', svgHeight()/2)
+	    .attr('x1', svgWidth(svg)/2)
+	    .attr('y1', svgHeight(svg)/2)
+	    .attr('x2', svgWidth(svg)/2)
+	    .attr('y2', svgHeight(svg)/2)
 	    .on('mouseover', function(d) {
 	    	d3.select(this)
 	    		.attr('stroke-opacity', 0.5);
@@ -199,7 +214,7 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 
 	new_edge_hovers.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d[0] + ', ' + d[1] + ')';
+	        return 'Edge = (' + d.from + ', ' + d.to + ')';
 	    });
 
 	// Grab existing edge hovers and update
@@ -212,7 +227,6 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 var draw_edges = function(svg, edges, layout, node_radius) {
 
 	if (arrowHead == null) {
-		console.log('initializing arrowHead');
 		initArrowHead(svg);
 	}
 
@@ -222,10 +236,10 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 		.exit()
 		.transition()
 		.duration(transition_duration)
-		.attr('x1', svgWidth()/2)
-	    .attr('y1', svgHeight()/2)
-	    .attr('x2', svgWidth()/2)
-	    .attr('y2', svgHeight()/2)
+		.attr('x1', svgWidth(svg)/2)
+	    .attr('y1', svgHeight(svg)/2)
+	    .attr('x2', svgWidth(svg)/2)
+	    .attr('y2', svgHeight(svg)/2)
 		.attr('stroke-opacity', 0)
 		.attr('marker-end', null)
 		.remove();
@@ -239,15 +253,15 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 	    .attr('stroke', 'black')
 	    .attr('stroke-width', 4)
 	    .attr('marker-end', 'url(#arrow-head)')
-	    .attr('x1', svgWidth()/2)
-	    .attr('y1', svgHeight()/2)
-	    .attr('x2', svgWidth()/2)
-	    .attr('y2', svgHeight()/2)
+	    .attr('x1', svgWidth(svg)/2)
+	    .attr('y1', svgHeight(svg)/2)
+	    .attr('x2', svgWidth(svg)/2)
+	    .attr('y2', svgHeight(svg)/2)
 	    .attr('opacity', 0);
 
 	new_edges.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d[0] + ', ' + d[1] + ')';
+	        return 'Edge = (' + d.from + ', ' + d.to + ')';
 	    });
 
 	// Grab all edges
@@ -279,8 +293,8 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 		.exit()
 		.transition()
 		.duration(transition_duration)
-		.attr('cx', svgWidth()/2)
-	    .attr('cy', svgHeight()/2)
+		.attr('cx', svgWidth(svg)/2)
+	    .attr('cy', svgHeight(svg)/2)
 	    .attr('fill-opacity', 0)
 		.remove();
 
@@ -292,8 +306,8 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 	    .attr('class', 'node')
 	    .attr('r', node_radius)
 	    .attr('fill', 'teal')
-	    .attr('cx', svgWidth()/2)
-	    .attr('cy', svgHeight()/2)
+	    .attr('cx', svgWidth(svg)/2)
+	    .attr('cy', svgHeight(svg)/2)
 	    .attr('fill-opacity', 0);
 
 	new_nodes.append('title')
@@ -313,8 +327,8 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
-	console.log(layout);
-	randColor();
+	//randColor();
+	nextColor();
 
 	draw_edges(svg, edges, layout, node_radius);
 
@@ -323,15 +337,29 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	draw_nodes(svg, node_lst, layout, node_radius);
 }
 
-var get_graph = function() {
-	url = 'http://localhost:8081/graph';
-	console.log(url);
-	var new_graph = null;
-	d3.json(url, function(d) {
-		new_graph = d;
-		console.log(d);
-	})
-	return new_graph;
+
+var padLayoutsSquare = function(svg, layout) {
+	var whalf = svgWidth(svg)/2;
+	var hhalf = svgHeight(svg)/2;
+	var side = Math.min(whalf, hhalf);
+	var nrad = rad5(svg);
+	var pad = nrad * 2;
+
+	var padded = layout.map(function(coords) {
+		var x = coords[0];
+		var y = coords[1];
+		var nx = x * (side - pad) + whalf;
+		var ny = y * (side - pad) + hhalf;
+		return [nx, ny];
+	});
+
+	return padded;
+}
+
+var drawGraphPadded = function(svg, node_lst, edge_lst, layout_lst) {
+	var padLay = padLayoutsSquare(svg, layout_lst);
+	var nrad = rad5(svg);
+	draw_graph(svg, node_lst, edge_lst, padLay, nrad);
 }
 
 var nodeOnClick = function(f) {

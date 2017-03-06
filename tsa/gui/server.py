@@ -9,6 +9,9 @@ import webbrowser
 
 import tsa
 
+SYSTEM = []
+
+
 class Server(BaseHTTPRequestHandler):
 
     def circ_lay(self, num_nodes):
@@ -19,17 +22,21 @@ class Server(BaseHTTPRequestHandler):
 
     def random_graph_json(self, num_nodes=None, num_edges=None):
       if num_nodes is None:
-        num_nodes = max(int(random.random() * 10), 2)
+        num_nodes = max(int(random.random() * 10), 3)
       node_lst = [i for i in range(num_nodes)]
-      all_edges = list(itertools.permutations(node_lst, 3))
+      all_edges = list(itertools.permutations(node_lst, 2))
       if num_edges is None:
         num_edges = max(int(random.random() * len(all_edges)), 2)
-      print(num_edges, all_edges)
+      print(len(all_edges), num_edges)
       edge_lst = random.sample(all_edges, num_edges)
       edge_lst = [list(e) for e in edge_lst]
       layout_lst = self.circ_lay(num_nodes)
       d = {'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
       return json.dumps(d)
+
+    def load_system_json(self, path):
+      with open(path, 'r') as f:
+        self.system = json.load(f)
 
     def _set_headers(self):
         self.send_response(200)
@@ -43,7 +50,7 @@ class Server(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        with open('test.html', 'rb') as index:
+        with open('index.html', 'rb') as index:
           self.wfile.write(index.read())
 
     def serve_js(self, path):
@@ -97,9 +104,23 @@ class Server(BaseHTTPRequestHandler):
           jbytes = bytes(gj, 'utf8');
           self.serve_fake_json(jbytes);
         elif path[-13:] == '/inspect.html':
-          self.serve_html('test.html')
+          self.serve_html('inspect.html')
         elif path[-11:] == '/index.html':
           self.serve_html('index.html')
+        elif path[-13:] == '/summary.html':
+          self.serve_html('summary.html')
+        elif '/graph/' in path:
+          i = path.find('/graph/')
+          print(path[i+7 : ])
+          num = int(path[i+7 : ])
+          gj = json.dumps(SYSTEM[num])
+          jbytes = bytes(gj, 'utf8');
+          self.serve_fake_json(jbytes);
+        elif '/load/' in path:
+          i = path.find('/load/')
+          lpath = path[i+6:]
+          print('lpath = ' + lpath)
+          self.load_system_json(lpath)
 
         # generic pages
         else:
@@ -119,17 +140,31 @@ class Server(BaseHTTPRequestHandler):
     # POST echoes the message adding a JSON field
     def do_POST(self):
         print('POST')
-        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-        
-        # refuse to receive non-json content
-        if ctype != 'application/json':
-            self.send_response(400)
-            self.end_headers()
-            return
+        print(self.path)
+        ctype, pdict = cgi.parse_header(self.headers['content-type'])
+
+      
+        # if ctype == 'multipart/form-data':
+        #   pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
+        #   postvars = cgi.parse_multipart(self.rfile, pdict)
+        #   print (postvars.keys())
+
+        # # refuse to receive non-json content
+        # if ctype != 'application/json':
+        #     self.send_response(400)
+        #     self.end_headers()
+        #     return
             
-        # read the message and convert it into a python dictionary
-        length = int(self.headers.getheader('content-length'))
-        message = json.loads(self.rfile.read(length))
+        # # read the message and convert it into a python dictionary
+        # length = int(self.headers['content-length'])
+        # print(length)
+        # data = self.rfile.read(length)
+        # data = data.decode('utf-8')
+        # message = json.loads(data)
+
+        print(form)
+        print('file' in form)
+      
         
         # add a property to the object, just to mess with data
         message['received'] = 'ok'
@@ -137,6 +172,7 @@ class Server(BaseHTTPRequestHandler):
         # send the message back
         self._set_headers()
         self.wfile.write(bytes(json.dumps(message), 'utf8'))
+
         
 def run(server_class=HTTPServer, handler_class=Server, port=8081):
     server_address = ('', port)
@@ -155,7 +191,17 @@ def run(server_class=HTTPServer, handler_class=Server, port=8081):
 if __name__ == "__main__":
     from sys import argv
     
+    print('argv' + str(argv))
     if len(argv) == 2:
         run(port=int(argv[1]))
+    elif len(argv) == 3:
+        opt = argv[1]
+        val = argv[2]
+        if opt == '-l':
+          with open(val, 'r') as f:
+            SYSTEM = json.load(f)
+            run()
+
+
     else:
         run()

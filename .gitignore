@@ -16,5 +16,5 @@ test.py
 # Pickled data
 *.pickle
 
-# json data
+# Json data
 *.json
