@@ -24,14 +24,17 @@ class Server(BaseHTTPRequestHandler):
       if num_nodes is None:
         num_nodes = max(int(random.random() * 10), 3)
       node_lst = [i for i in range(num_nodes)]
-      all_edges = list(itertools.permutations(node_lst, 2))
+      all_edges = list(itertools.permutations(node_lst, 2)) + [(i,i) for i in node_lst]
       if num_edges is None:
         num_edges = max(int(random.random() * len(all_edges)), 2)
       print(len(all_edges), num_edges)
       edge_lst = random.sample(all_edges, num_edges)
       edge_lst = [list(e) for e in edge_lst]
+
+      edge_lst = [ {'from': e[0], 'to': e[1], 'parameters': []} for e in edge_lst]
+      node_lst = [ {'id': n, 'parameters': []} for n in node_lst]
       layout_lst = self.circ_lay(num_nodes)
-      d = {'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
+      d = {'dist':10, 'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
       return json.dumps(d)
 
     def load_system_json(self, path):
@@ -99,7 +102,7 @@ class Server(BaseHTTPRequestHandler):
         # named pages:
         if path == '/':
           self.serve_index();
-        elif path[-6:] == '/graph':
+        elif path[-13:] == '/graph/random':
           gj = self.random_graph_json();
           jbytes = bytes(gj, 'utf8');
           self.serve_fake_json(jbytes);

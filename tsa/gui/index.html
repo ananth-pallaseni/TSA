@@ -61,7 +61,8 @@
             var svg = d3.select('.graph-col')
                 .append('svg')
                 .attr('width', '100%')
-                .attr('height', '100%');
+                .attr('height', '100%')
+                .attr('id', 'main-svg');
 
             var backRect = svg.append('rect')
                 .attr('width', '100%')
@@ -69,8 +70,7 @@
                 .attr('fill', 'red');
 
             var redraw = function() {
-                var gnum = Math.floor(Math.random() * 1000);
-                var url = window.location.hostname + '/graph/' + gnum;
+                var url = window.location.hostname + '/graph/random';
                 d3.json(url, function(d) {
                     drawGraphPadded(svg, d.nodes, d.edges, d.layout);
                 });

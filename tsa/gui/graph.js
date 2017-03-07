@@ -7,10 +7,12 @@ var curColorPos = 0;
 var cur_color = 'teal';
 
 var svgWidth = function(svg) {
-	return svg.node().getBBox().width;
+	var svgid = svg.attr('id');
+	return $('#' + svgid).width()
 }
 var svgHeight = function(svg) {
-	return svg.node().getBBox().height;
+	var svgid = svg.attr('id');
+	return $('#' + svgid).height()
 }
 var rad5 = function(svg) {
 	return Math.floor(Math.min(svgWidth(svg), svgHeight(svg)) * 0.05);
@@ -122,7 +124,7 @@ var update_edge_hovers = function(lines, layout, node_radius) {
     .attr('stroke-width', hover_width);
 }
 
-var update_edges = function(lines, layout, node_radius) {
+var updateLineEdges = function(lines, layout, node_radius) {
 	lines.transition()
 	.duration(transition_duration/4)
 	.attr('opacity', 0)
@@ -224,11 +226,13 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 }
 
 
-var draw_edges = function(svg, edges, layout, node_radius) {
+var drawLineEdges = function(svg, edges, layout, node_radius) {
 
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
+
+	var regEdges = edges.filter(function(e) {})
 
 	// Grab edges that need to vanish and update
 	var done_edges = svg.selectAll('line.edge')
@@ -268,8 +272,108 @@ var draw_edges = function(svg, edges, layout, node_radius) {
 	var all_edges = svg.selectAll('line.edge')
 		.data(edges);
 
-	update_edges(all_edges, layout, node_radius);
+	updateLineEdges(all_edges, layout, node_radius);
 
+}
+
+var circlePathInterp = function(path, layout, node_radius) {
+	// Factory
+	return function(d, i) {
+		if (d.from < layout.length) {
+			var xMax = layout[d.from][0] + node_radius * Math.cos(0.5) + 10;
+			var yMax = layout[d.from][1] - node_radius * Math.sin(0.5) - 10;
+
+			var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
+			var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
+
+			var drx = node_radius;
+			var dry = node_radius;
+
+			var xrot = 0;
+
+			var largeArcFlag = 1;
+			var sweepFlag = 0;
+
+			var sweepArray = Array.from(Array(50).keys())
+				.map(a => (a+1)/50)
+				.map(a => a*path.getTotalLength())
+				.map(a => path.getPointAtLength(a))
+				.map((a, ind) => 'M' + x1 + ' ' + y1 + ' A' + drx*(ind/50) + ' ' + dry*(ind/50) + ', ' + xrot + ',' + largeArcFlag + ', ' + sweepFlag + ', ' + a.x + ' ' + a.y);
+			
+			// Interp
+			return d3.scaleQuantile()
+				.domain([0,1])
+				.range(sweepArray);
+		}
+	}
+}
+
+var updateSelfEdges = function(paths, layout, node_radius) {
+	var numNodes = layout.length;
+	var step = 360 / numNodes;
+	paths.attr('opacity', 0)		
+		.attr('transform', function(d, i) {
+			var node = d.from; 
+			if (node < layout.length) {
+				return 'rotate(' + (step*node) 
+								 + ' ' 
+								 + layout[d.from][0]
+								 + ' ' 
+								 + layout[d.from][1]
+								 + ')';
+			}
+			
+		}) 
+		.attr('d', function(d, i) {
+			if (d.from < layout.length) {
+				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
+				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
+
+				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5) + 10;
+				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5) - 10;
+
+				var drx = node_radius;
+				var dry = node_radius;
+
+				var xrot = 0;
+
+				var largeArcFlag = 1;
+				var sweepFlag = 0;
+
+				return 'M' + x1 + ' ' + y1 + ' A' + drx + ' ' + dry + ', ' + xrot + ',' + largeArcFlag + ', ' + sweepFlag + ', ' + x2 + ' ' + y2;	
+			}
+		})
+		.transition()
+		.duration(transition_duration )
+		.delay(edge_delay)
+		.attrTween('d', function(d, i) {
+			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
+		}) 
+		.attr('opacity', 1);
+}
+
+var drawSelfEdges = function(svg, edges, layout, node_radius) {
+	var doneEdges = svg.selectAll('path.edge')
+		.data(edges)
+		.exit()
+		.transition()
+		.duration(transition_duration)
+		.remove();
+
+	var newEdges = svg.selectAll('path.edge')
+		.data(edges)
+		.enter()
+		.append('path')
+		.attr('class', 'edge')
+		.attr('opacity', 0)
+		.attr('stroke', 'black')
+		.attr('stroke-width', 4)
+		.attr('marker-end', 'url(#arrow-head)')
+		.attr('fill', 'transparent');
+
+	var allEdges = svg.selectAll('path.edge');
+
+	updateSelfEdges(allEdges, layout, node_radius);
 }
 
 var update_nodes = function(nodes, layout) {
@@ -327,12 +431,19 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
+
+
 	//randColor();
 	nextColor();
 
-	draw_edges(svg, edges, layout, node_radius);
+	lineEdges = edges.filter(e => e.from != e.to);
+	selfEdges = edges.filter(e => e.from == e.to);
+	console.log('>>>>>', selfEdges.length, lineEdges.length, layout.length);
 
-	draw_edge_hovers(svg, edges, layout, node_radius);
+	drawLineEdges(svg, lineEdges, layout, node_radius);
+	drawSelfEdges(svg, selfEdges, layout, node_radius);
+
+	draw_edge_hovers(svg, lineEdges, layout, node_radius);
 
 	draw_nodes(svg, node_lst, layout, node_radius);
 }
@@ -343,7 +454,7 @@ var padLayoutsSquare = function(svg, layout) {
 	var hhalf = svgHeight(svg)/2;
 	var side = Math.min(whalf, hhalf);
 	var nrad = rad5(svg);
-	var pad = nrad * 2;
+	var pad = nrad * 3;
 
 	var padded = layout.map(function(coords) {
 		var x = coords[0];

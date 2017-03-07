@@ -4,7 +4,8 @@ var svg = d3.select('#graph-col')
     .append('svg')
     .attr('class', 'graph')
     .attr('width', '100%')
-    .attr('height', '100%');
+    .attr('height', '100%')
+    .attr('id', 'main-svg');
 
 var backRect = svg.append('rect')
     .attr('width', '100%')
@@ -66,7 +67,6 @@ d3.select('svg')
 		var gnum = Math.floor(Math.random() * 1000);
 		var url = window.location.hostname + '/graph/' + gnum;
 		d3.json(url, function(d) {
-			console.log(d.nodes)
 			node_lst = d.nodes; 
 			edges = d.edges;
 			layout = d.layout;

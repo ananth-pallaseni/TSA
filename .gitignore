@@ -2,7 +2,7 @@
 *.txt
 
 # Test files used to playing around
-test.py
+*test.*
 
 # Compiled python modules.
 *.pyc
