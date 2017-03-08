@@ -5,6 +5,7 @@ var hover_width = 15;
 var allColors = d3.schemeCategory10;
 var curColorPos = 0;
 var cur_color = 'teal';
+var markerSide = 4;
 
 var svgWidth = function(svg) {
 	var svgid = svg.attr('id');
@@ -54,17 +55,18 @@ var initArrowHead = function(svg) {
 	    .attr('markerHeight', 4);
 
 	arrowHead.append('path')
-	    .attr('d', 'M 0 0 V 4 L 4 2 Z')
+	    .attr('d', 'M 0 0 V ' + markerSide +'L ' + markerSide + ' ' + markerSide/2 + ' Z')
 	    .attr('fill', 'black');
 }
 
 
-var line_shorten = function(a, b, d, arrow) {
+var line_shorten = function(a, b, d, strWidth) {
    var dx = b[0] - a[0];
    var dy = b[1] - a[1];
    var dist = Math.sqrt(dx*dx + dy*dy);
+   var arrGap = strWidth*markerSide;
    var start_ratio = d / dist;
-   var end_ratio = (d + arrow) / dist;
+   var end_ratio = (d + arrGap) / dist;
 
    var x1 = dx * start_ratio + a[0];
    var y1 = dy * start_ratio + a[1];
@@ -75,7 +77,18 @@ var line_shorten = function(a, b, d, arrow) {
    return [[x1, y1], [x2, y2]];
  }
 
-var update_edge_hovers = function(lines, layout, node_radius) {
+var calcStrWidth = function(d, edgeScale) {
+	occ = d.occurrences;
+	if (!occ) {
+		occ = 4;
+	}
+	var strScale = edgeScale(occ)/500;
+	var minSide = Math.min(svgWidth(svg), svgHeight(svg));
+	var strWidth = minSide * strScale;
+	return strWidth;
+}
+
+var update_edge_hovers = function(lines, layout, node_radius, edgeScale) {
 	lines.transition()
     .duration(transition_duration/4)
     .attr('stroke', cur_color)
@@ -100,58 +113,67 @@ var update_edge_hovers = function(lines, layout, node_radius) {
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[1][1];
 	})
     .attr('stroke-width', hover_width);
+
+    lines.select('title')
+    	.text(function(d, i) {
+            return 'Edge = (' + d.from + ', ' + d.to + ')';
+        });
 }
 
-var updateLineEdges = function(lines, layout, node_radius) {
+var updateLineEdges = function(lines, layout, node_radius, edgeScale) {
+
 	lines.transition()
 	.duration(transition_duration/4)
 	.attr('opacity', 0)
+	.attr('stroke-width', function(d) {
+		return calcStrWidth(d, edgeScale);
+	})
 	.transition()
 	.duration(0)
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][1];
 	})
 	.transition()
@@ -160,32 +182,37 @@ var updateLineEdges = function(lines, layout, node_radius) {
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, 15);
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
 	    return pos[1][1];
 	})
 	.attr('opacity', 1);
+
+	lines.select('title')
+		.text(function(d, i) {
+	        return 'Edge = (' + d.from + ', ' + d.to + ')';
+	    });
 }
 
 
-var draw_edge_hovers = function(svg, edges, layout, node_radius) {
+var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
 	// Grab edge-hovers that need to vanish and update
 	var done_edge_hovers = svg.selectAll('line.edge-hover')
 		.data(edges)
@@ -222,11 +249,11 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius) {
 	// Grab existing edge hovers and update
 	var all_hovers = svg.selectAll('line.edge-hover')
 		.data(edges);
-	update_edge_hovers(all_hovers, layout, node_radius);
+	update_edge_hovers(all_hovers, layout, node_radius, edgeScale);
 }
 
 
-var drawLineEdges = function(svg, edges, layout, node_radius) {
+var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 
 	if (arrowHead == null) {
 		initArrowHead(svg);
@@ -253,7 +280,9 @@ var drawLineEdges = function(svg, edges, layout, node_radius) {
 		.append('line')
 		.attr('class', 'edge')
 	    .attr('stroke', 'black')
-	    .attr('stroke-width', 4)
+	    .attr('stroke-width', function(d) {
+	    	return calcStrWidth(d, edgeScale);
+	    })
 	    .attr('marker-end', 'url(#arrow-head)')
 	    .attr('x1', svgWidth(svg)/2)
 	    .attr('y1', svgHeight(svg)/2)
@@ -270,7 +299,7 @@ var drawLineEdges = function(svg, edges, layout, node_radius) {
 	var all_edges = svg.selectAll('line.edge')
 		.data(edges);
 
-	updateLineEdges(all_edges, layout, node_radius);
+	updateLineEdges(all_edges, layout, node_radius, edgeScale);
 
 }
 
@@ -306,7 +335,7 @@ var circlePathInterp = function(path, layout, node_radius) {
 	}
 }
 
-var updateSelfEdgeHovers = function(paths, layout, node_radius) {
+var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
 	var numNodes = layout.length;
 	var step = 360 / numNodes;
 	paths.attr('stroke', cur_color)
@@ -328,8 +357,13 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius) {
 				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
 				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
 
-				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5) + 10;
-				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5) - 10;
+				var arrGap = (calcStrWidth(d, edgeScale) * markerSide * 10/16);
+				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5); 
+				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5); 
+				if (!d.occurrences) {
+					x2 += arrGap;
+					y2 -= arrGap;
+				}
 
 				var drx = node_radius;
 				var dry = node_radius;
@@ -349,11 +383,16 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius) {
 			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
 		}) 
 		.attr('stroke-width', hover_width);
+
+	paths.select('title')
+		.text(function(d, i) {
+		    return 'Edge = (' + d.from + ', ' + d.to + ')';
+		});
 }
 
 
 
-var drawSelfEdgeHovers = function(svg, edges, layout, node_radius) {
+var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
 	// Grab edge-hovers that need to vanish and update
 	var done_edge_hovers = svg.selectAll('path.edge-hover')
 		.data(edges)
@@ -388,13 +427,14 @@ var drawSelfEdgeHovers = function(svg, edges, layout, node_radius) {
 	var all_hovers = svg.selectAll('path.edge-hover')
 		.data(edges);
 
-	updateSelfEdgeHovers(all_hovers, layout, node_radius);
+	updateSelfEdgeHovers(all_hovers, layout, node_radius, edgeScale);
 }
 
-var updateSelfEdges = function(paths, layout, node_radius) {
+var updateSelfEdges = function(paths, layout, node_radius, edgeScale) {
 	var numNodes = layout.length;
 	var step = 360 / numNodes;
-	paths.attr('opacity', 0)		
+	paths.attr('opacity', 0)
+		.attr('stroke-width', d => calcStrWidth(d, edgeScale))		
 		.attr('transform', function(d, i) {
 			var node = d.from; 
 			if (node < layout.length) {
@@ -412,8 +452,13 @@ var updateSelfEdges = function(paths, layout, node_radius) {
 				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
 				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
 
-				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5) + 10;
-				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5) - 10;
+				var arrGap = (calcStrWidth(d, edgeScale) * markerSide * 10/16);
+				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5); 
+				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5); 
+				if (!d.occurrences) {
+					x2 += arrGap;
+					y2 -= arrGap;
+				}
 
 				var drx = node_radius;
 				var dry = node_radius;
@@ -433,9 +478,14 @@ var updateSelfEdges = function(paths, layout, node_radius) {
 			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
 		}) 
 		.attr('opacity', 1);
+
+		paths.select('title')
+			.text(function(d, i) {
+			    return 'Edge = (' + d.from + ', ' + d.to + ')';
+			});
 }
 
-var drawSelfEdges = function(svg, edges, layout, node_radius) {
+var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 	var doneEdges = svg.selectAll('path.edge')
 		.data(edges)
 		.exit()
@@ -448,10 +498,15 @@ var drawSelfEdges = function(svg, edges, layout, node_radius) {
 		.enter()
 		.append('path')
 		.attr('class', 'edge')
+		.attr('stroke-linecap', 'round')
 		.attr('opacity', 0)
 		.attr('stroke', 'black')
 		.attr('stroke-width', 4)
-		.attr('marker-end', 'url(#arrow-head)')
+		.attr('marker-end', function(d) {
+			if (!d.occurrences){
+				return 'url(#arrow-head)';
+			}
+		})
 		.attr('fill', 'transparent');
 
 	newEdges.append('title')
@@ -461,7 +516,7 @@ var drawSelfEdges = function(svg, edges, layout, node_radius) {
 
 	var allEdges = svg.selectAll('path.edge');
 
-	updateSelfEdges(allEdges, layout, node_radius);
+	updateSelfEdges(allEdges, layout, node_radius, edgeScale);
 }
 
 var update_nodes = function(nodes, layout) {
@@ -475,7 +530,11 @@ var update_nodes = function(nodes, layout) {
     })
     .attr('fill-opacity', 1)
     .attr('fill', cur_color);
-	    
+	 
+    nodes.select('title')
+    	.text(function(d, i) {
+    		        return 'Node ' + d.id;
+    	});
 }
 
 var draw_nodes = function(svg, node_lst, layout, node_radius) {
@@ -504,7 +563,7 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 
 	new_nodes.append('title')
 	    .text(function(d, i) {
-	        return 'Node ' + d;
+	        return 'Node ' + d.id;
 	    });
 
 	// Grab all nodes and update
@@ -515,11 +574,14 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 
 }
 
-var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
+var draw_graph = function(svg, node_lst, edges, layout, node_radius, edgeScale) {
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
 
+	if (!edgeScale) {
+		edgeScale = d3.scaleLinear();
+	}
 
 	//randColor();
 	nextColor();
@@ -527,11 +589,11 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 	lineEdges = edges.filter(e => e.from != e.to);
 	selfEdges = edges.filter(e => e.from == e.to);
 
-	drawLineEdges(svg, lineEdges, layout, node_radius);
-	drawSelfEdges(svg, selfEdges, layout, node_radius);
+	drawLineEdges(svg, lineEdges, layout, node_radius, edgeScale);
+	drawSelfEdges(svg, selfEdges, layout, node_radius, edgeScale);
 
-	draw_edge_hovers(svg, lineEdges, layout, node_radius);
-	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius);
+	draw_edge_hovers(svg, lineEdges, layout, node_radius, edgeScale);
+	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius, edgeScale);
 
 	draw_nodes(svg, node_lst, layout, node_radius);
 }

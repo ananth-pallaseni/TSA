@@ -112,6 +112,10 @@ class Server(BaseHTTPRequestHandler):
           self.serve_html('index.html')
         elif path[-13:] == '/summary.html':
           self.serve_html('summary.html')
+
+        elif path[-13:] == '/test.html':
+          self.serve_html('test.html')
+
         elif '/graph/' in path:
           i = path.find('/graph/')
           print(path[i+7 : ])
