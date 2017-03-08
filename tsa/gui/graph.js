@@ -232,8 +232,6 @@ var drawLineEdges = function(svg, edges, layout, node_radius) {
 		initArrowHead(svg);
 	}
 
-	var regEdges = edges.filter(function(e) {})
-
 	// Grab edges that need to vanish and update
 	var done_edges = svg.selectAll('line.edge')
 		.data(edges)
@@ -308,6 +306,91 @@ var circlePathInterp = function(path, layout, node_radius) {
 	}
 }
 
+var updateSelfEdgeHovers = function(paths, layout, node_radius) {
+	var numNodes = layout.length;
+	var step = 360 / numNodes;
+	paths.attr('stroke', cur_color)
+	    .attr('stroke-width', 0)	
+		.attr('transform', function(d, i) {
+			var node = d.from; 
+			if (node < layout.length) {
+				return 'rotate(' + (step*node) 
+								 + ' ' 
+								 + layout[d.from][0]
+								 + ' ' 
+								 + layout[d.from][1]
+								 + ')';
+			}
+			
+		}) 
+		.attr('d', function(d, i) {
+			if (d.from < layout.length) {
+				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
+				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
+
+				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5) + 10;
+				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5) - 10;
+
+				var drx = node_radius;
+				var dry = node_radius;
+
+				var xrot = 0;
+
+				var largeArcFlag = 1;
+				var sweepFlag = 0;
+
+				return 'M' + x1 + ' ' + y1 + ' A' + drx + ' ' + dry + ', ' + xrot + ',' + largeArcFlag + ', ' + sweepFlag + ', ' + x2 + ' ' + y2;	
+			}
+		})
+		.transition()
+		.duration(transition_duration )
+		.delay(edge_delay)
+		.attrTween('d', function(d, i) {
+			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
+		}) 
+		.attr('stroke-width', hover_width);
+}
+
+
+
+var drawSelfEdgeHovers = function(svg, edges, layout, node_radius) {
+	// Grab edge-hovers that need to vanish and update
+	var done_edge_hovers = svg.selectAll('path.edge-hover')
+		.data(edges)
+		.exit()
+		.remove();
+
+	// Create new edge hovers 
+	var new_edge_hovers = svg.selectAll('path.edge-hover')
+		.data(edges)
+		.enter()
+	    .append('path')
+		.attr('class', 'edge-hover')
+	    .attr('stroke', cur_color)
+	    .attr('stroke-width', 0)
+	    .attr('stroke-opacity', 0)
+	    .attr('fill', 'transparent')
+	    .on('mouseover', function(d) {
+	    	d3.select(this)
+	    		.attr('stroke-opacity', 0.5);
+	    })
+	    .on('mouseout', function(d) {
+	    	d3.select(this)
+	    		.attr('stroke-opacity', 0)
+	    });
+
+	new_edge_hovers.append('title')
+	    .text(function(d, i) {
+	        return 'Edge = (' + d.from + ', ' + d.to + ')';
+	    });
+
+	// Grab existing edge hovers and update
+	var all_hovers = svg.selectAll('path.edge-hover')
+		.data(edges);
+
+	updateSelfEdgeHovers(all_hovers, layout, node_radius);
+}
+
 var updateSelfEdges = function(paths, layout, node_radius) {
 	var numNodes = layout.length;
 	var step = 360 / numNodes;
@@ -370,6 +453,11 @@ var drawSelfEdges = function(svg, edges, layout, node_radius) {
 		.attr('stroke-width', 4)
 		.attr('marker-end', 'url(#arrow-head)')
 		.attr('fill', 'transparent');
+
+	newEdges.append('title')
+	    .text(function(d, i) {
+	        return 'Edge = (' + d.from + ', ' + d.to + ')';
+	    });
 
 	var allEdges = svg.selectAll('path.edge');
 
@@ -438,12 +526,12 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius) {
 
 	lineEdges = edges.filter(e => e.from != e.to);
 	selfEdges = edges.filter(e => e.from == e.to);
-	console.log('>>>>>', selfEdges.length, lineEdges.length, layout.length);
 
 	drawLineEdges(svg, lineEdges, layout, node_radius);
 	drawSelfEdges(svg, selfEdges, layout, node_radius);
 
 	draw_edge_hovers(svg, lineEdges, layout, node_radius);
+	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius);
 
 	draw_nodes(svg, node_lst, layout, node_radius);
 }
