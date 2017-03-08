@@ -213,14 +213,21 @@ var updateLineEdges = function(lines, layout, node_radius, edgeScale) {
 
 
 var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
+	if (! $('#edge-hover-g').length) {
+		svg.append('g')
+			.attr('id', 'edge-hover-g');
+	}
+
 	// Grab edge-hovers that need to vanish and update
-	var done_edge_hovers = svg.selectAll('line.edge-hover')
+	var done_edge_hovers = svg.select('#edge-hover-g')
+		.selectAll('line.edge-hover')
 		.data(edges)
 		.exit()
 		.remove();
 
 	// Create new edge hovers 
-	var new_edge_hovers = svg.selectAll('line.edge-hover')
+	var new_edge_hovers = svg.select('#edge-hover-g')
+		.selectAll('line.edge-hover')
 		.data(edges)
 		.enter()
 	    .append('line')
@@ -247,20 +254,26 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
 	    });
 
 	// Grab existing edge hovers and update
-	var all_hovers = svg.selectAll('line.edge-hover')
+	var all_hovers = svg.select('#edge-hover-g')
+		.selectAll('line.edge-hover')
 		.data(edges);
 	update_edge_hovers(all_hovers, layout, node_radius, edgeScale);
 }
 
 
 var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
+	if (! $('#edge-g').length) {
+		svg.append('g')
+			.attr('id', 'edge-g');
+	}
 
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
 
 	// Grab edges that need to vanish and update
-	var done_edges = svg.selectAll('line.edge')
+	var done_edges = svg.select('#edge-g')
+		.selectAll('line.edge')
 		.data(edges)
 		.exit()
 		.transition()
@@ -274,7 +287,8 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.remove();
 
 	// Create new edges
-	var new_edges = svg.selectAll('line.edge')
+	var new_edges = svg.select('#edge-g')
+		.selectAll('line.edge')
 		.data(edges)
 		.enter()
 		.append('line')
@@ -296,7 +310,8 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 	    });
 
 	// Grab all edges
-	var all_edges = svg.selectAll('line.edge')
+	var all_edges = svg.select('#edge-g')
+		.selectAll('line.edge')
 		.data(edges);
 
 	updateLineEdges(all_edges, layout, node_radius, edgeScale);
@@ -393,14 +408,21 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
 
 
 var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
+	if (! $('#self-edge-hover-g').length) {
+		svg.append('g')
+			.attr('id', 'self-edge-hover-g');
+	}
+
 	// Grab edge-hovers that need to vanish and update
-	var done_edge_hovers = svg.selectAll('path.edge-hover')
+	var done_edge_hovers = svg.select('#self-edge-hover-g')
+		.selectAll('path.edge-hover')
 		.data(edges)
 		.exit()
 		.remove();
 
 	// Create new edge hovers 
-	var new_edge_hovers = svg.selectAll('path.edge-hover')
+	var new_edge_hovers = svg.select('#self-edge-hover-g')
+		.selectAll('path.edge-hover')
 		.data(edges)
 		.enter()
 	    .append('path')
@@ -424,7 +446,8 @@ var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
 	    });
 
 	// Grab existing edge hovers and update
-	var all_hovers = svg.selectAll('path.edge-hover')
+	var all_hovers = svg.select('#self-edge-hover-g')
+		.selectAll('path.edge-hover')
 		.data(edges);
 
 	updateSelfEdgeHovers(all_hovers, layout, node_radius, edgeScale);
@@ -486,14 +509,21 @@ var updateSelfEdges = function(paths, layout, node_radius, edgeScale) {
 }
 
 var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
-	var doneEdges = svg.selectAll('path.edge')
+	if (! $('#self-edge-g').length) {
+		svg.append('g')
+			.attr('id', 'self-edge-g');
+	}
+
+	var doneEdges = svg.select('#self-edge-g')
+		.selectAll('path.edge')
 		.data(edges)
 		.exit()
 		.transition()
 		.duration(transition_duration)
 		.remove();
 
-	var newEdges = svg.selectAll('path.edge')
+	var newEdges = svg.select('#self-edge-g')
+		.selectAll('path.edge')
 		.data(edges)
 		.enter()
 		.append('path')
@@ -514,7 +544,8 @@ var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 	        return 'Edge = (' + d.from + ', ' + d.to + ')';
 	    });
 
-	var allEdges = svg.selectAll('path.edge');
+	var allEdges = svg.select('#self-edge-g')
+		.selectAll('path.edge');
 
 	updateSelfEdges(allEdges, layout, node_radius, edgeScale);
 }
@@ -538,8 +569,14 @@ var update_nodes = function(nodes, layout) {
 }
 
 var draw_nodes = function(svg, node_lst, layout, node_radius) {
+	if (! $('#node-g').length) {
+		svg.append('g')
+			.attr('id', 'node-g');
+	}
+
 	// Grab nodes that need to vanish and update
-	var done_nodes = svg.selectAll('circle.node')
+	var done_nodes = svg.select('#node-g')
+		.selectAll('circle.node')
 		.data(node_lst)
 		.exit()
 		.transition()
@@ -550,7 +587,8 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 		.remove();
 
 	// Create new nodes
-	var new_nodes = svg.selectAll('circle.node')
+	var new_nodes = svg.select('#node-g')
+		.selectAll('circle.node')
 	    .data(node_lst)
 	    .enter()
 	    .append('circle')
@@ -567,11 +605,11 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 	    });
 
 	// Grab all nodes and update
-	var cur_nodes = svg.selectAll('circle.node')
+	var cur_nodes = svg.select('#node-g')
+		.selectAll('circle.node')
 	    .data(node_lst);
-	update_nodes(cur_nodes, layout);
-	
 
+	update_nodes(cur_nodes, layout);
 }
 
 var draw_graph = function(svg, node_lst, edges, layout, node_radius, edgeScale) {
