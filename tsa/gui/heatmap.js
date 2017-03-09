@@ -45,8 +45,11 @@ var heatmapFrom = function(mat, numBuckets) {
 
 	// Map colors onto bucketed vals
 	var hm = mat.map(row => 
-		row.map(val => 
-			colorScale(val)));
+		row.map(function(val) {
+			return {val: val, 
+					ratio: val/maxVal, 
+					color: colorScale(val)}
+		}));
 
 	return hm;
 }
@@ -57,7 +60,6 @@ var updateHeatmap = function(squares, numRows, squareSide) {
 	var xWidth = squareSide * numRows;
 	var xPad = (svgWidth(svg) - xWidth)/2;
 	var yPad = (svgHeight(svg) - xWidth)/2;
-	console.log(xWidth, xPad, yPad);
 	squares.attr('fill-opacity', 0)
 		.attr('stroke-width', 0)
 		.attr('x', 0)
@@ -78,9 +80,12 @@ var updateHeatmap = function(squares, numRows, squareSide) {
 			return yPos;
 
 		})
-		.attr('fill', d => d)
+		.attr('fill', d => d.color)
 		.attr('fill-opacity', 1)
 		.attr('stroke-width', 1);
+
+	squares.select('title')
+		.text(d => 'Num=' + d.val.toFixed(2) + '\nRatio=' + d.ratio.toFixed(2));
 }
 
 var drawHeatmapMosaic = function(svg, mat) {
@@ -103,7 +108,7 @@ var drawHeatmapMosaic = function(svg, mat) {
 		.remove();
 
 	// Create new grid squares
-	svg.selectAll('rect.hm-square')
+	var newSquares = svg.selectAll('rect.hm-square')
 		.data(flat)
 		.enter()
 		.append('rect')
@@ -117,9 +122,12 @@ var drawHeatmapMosaic = function(svg, mat) {
 		.attr('stroke', 'black')
 		.attr('stroke-width', 0);
 
+	newSquares.append('title');
+
 	// Select all grid squares
 	var squares = svg.selectAll('rect.hm-square')
 		.data(flat);
+
 
 	// Update grid squares
 	updateHeatmap(squares, numRows, side);
@@ -127,6 +135,7 @@ var drawHeatmapMosaic = function(svg, mat) {
 }
 
 var drawColorScale = function(svg, scaleColor, numSquares) {
+
 	// Create heatmap scale if it doesn't exist
 	if (! $('#cmap-scale').length) {
 		var cScale = svg.append('defs')
@@ -172,13 +181,45 @@ var drawColorScale = function(svg, scaleColor, numSquares) {
 		.delay(500)
 		.attr('height', '100%')
 		.attr('stroke-width', 1);
+
+
+	// Check for axis text group
+	if (! $('#text-g').length) {
+		var textg = svg.append('g')
+			.attr('id', 'text-g');
+
+		textg.append('text')
+			.text(0)
+			.attr('transform', 'translate(25,' + svgHeight(svg)/20 + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+
+		textg.append('text')
+			.text(1)
+			.attr('transform', 'translate(25,' + (svgHeight(svg)-svgHeight(svg)/20) + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+
+		textg.append('text')
+			.text(0.5)
+			.attr('transform', 'translate(25,' + (svgHeight(svg)/2) + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	svg.select('#text-g').selectAll('text')
+		.attr('fill', 'transparent')
+		.transition()
+		.duration(transition_duration)
+		.delay(500)
+		.attr('fill', 'black');
+
 }
 
 var drawHeatmap = function(mosaicSvg, scaleSvg, mat) {
 	nextColor();
 	drawHeatmapMosaic(mosaicSvg, mat);
 	var numSquares = mat.reduce((a,b) => a.concat(b)).length;
-	console.log(numSquares);
 	drawColorScale(scaleSvg, cur_color, numSquares);
 }
 
