@@ -1,0 +1,16 @@
+
+html, body {
+	height: 100%;
+}
+
+#data-row {
+	height: 90%;
+}
+
+#hm-col {
+	padding-right: 0;
+}
+
+#sc-col {
+	padding-left: 0;
+}

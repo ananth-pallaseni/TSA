@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='utf8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>Edge Statistics</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
+		<script type="text/javascript" src="d3/d3.js"></script>
+        <script type="text/javascript" src="graph.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+        <link rel='stylesheet' type='text/css' href='header.css'>
+        <link rel='stylesheet' type='text/css' href='prevalence.css'>
+    </head>
+
+    <body>
+        <div class='container-fluid overarching-container'>
+            <!-- Header Row -->
+            <div class='row header-row'></div>
+
+            <div class='row' id='data-row'>
+                <div class='col-md-5 col-sm-11 col-xs-11 col-tall' id='hm-col'>
+                </div>
+                <div class='col-md-1 cols-sm-1 cols-xs-1 col-tall' id='sc-col'>
+                </div>
+                <div class='col-md-6 col-sm-12 cols-xs-12 col-tall' id='pg-col'>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src='header.js'> </script>
+        <script type="text/javascript" src='hm.js'> </script>
+        <script type="text/javascript" src='prevalence.js'> </script>
+        <script type="text/javascript">
+            insertHeader('Inspect');
+            var hmsvg = insertSvg('hm-col', 'hm-svg');
+            var scsvg = insertSvg('sc-col', 'sc-svg');
+            var pgsvg = insertSvg('pg-col', 'pg-svg');
+
+            var clickRect = pgsvg.append('rect')
+                .attr('id', 'click-rect')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('fill', 'red')
+                .attr('opacity', 0);
+
+            var pgdat = function(edges) {
+              var nnum = Math.floor(Math.random() * 8 + 2);
+              var ednum = Math.floor()
+              return edges.map(function(e) {
+                return {from: e.from, to: e.to,
+                  parameters: e.parameters,
+                  occurrences: Math.floor(Math.random() * 1000)};
+              });
+            }
+
+            var cplacce = 0;
+            var ncolor = function() {
+              var ret = d3.schemeCategory10[cplacce];
+              cplacce = (cplacce+1)%(d3.schemeCategory10.length);
+              return ret;
+            }
+
+            /*var reload = function() {
+                console.log('click');
+                d3.json('/graph/random', function(g) {
+                    color = ncolor();
+                    ocEd = pgdat(g.edges);
+                    drawPrevalenceGraphColor(pgsvg, g.nodes, ocEd, g.layout, color);
+                    var rMat = Array.from(Array(g.nodes.length).keys())
+                      .map(_ => Array.from(Array(g.nodes.length).keys()).map(_ => 0));
+
+                    ocEd.forEach(function(e) {
+                      rMat[e.from][e.to] += e.occurrences;
+                    });
+                    drawHeatmapColor(hmsvg, scsvg, rMat, color);
+                })
+            }
+
+            clickRect.on('click', reload);*/
+
+            jQuery.fn.d3Trigger = function (evttype) {
+              this.each(function (i, e) {
+                var evt = new MouseEvent(evttype);
+                e.dispatchEvent(evt);
+              });
+            };
+
+            var mouseoverfn = function(d) {
+                $(d3.selectAll('.edge-hover')
+                    .filter(e => d.from == e.from && d.to == e.to)
+                    .node())
+                    .d3Trigger('mouseover');
+            }
+
+            var mouseoutfn = function(d) {
+                $(d3.selectAll('.edge-hover')
+                    .filter(e => d.from == e.from && d.to == e.to)
+                    .node())
+                    .d3Trigger('mouseout');
+            }
+
+            color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
+            d3.json('/occ-mat/100', function(mat) {
+                drawHeatmapColor(hmsvg, scsvg, mat, color);
+                drawPrevalenceGraphFrom(pgsvg, mat, color);
+                squaresOnMouse(mouseoverfn, mouseoutfn);
+
+                squaresOnClick(function(d) {console.log('Click in square ' + d.from + ', ' + d.to)});
+            });
+            
+        </script>
+    </body>
+</html>
+
+
+    

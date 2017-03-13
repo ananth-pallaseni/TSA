@@ -9,6 +9,10 @@
     margin-left: auto;
 }
 
+.overarching-container {
+    height: 100%;
+}
+
 .header-row {
     height: 5%;
     background-color: darkgray;

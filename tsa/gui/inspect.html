@@ -20,22 +20,7 @@
 
             <!-- Header Row -->
             <div class='row header-row'>
-                <div class='col-md-2 col-sm-12 col-xs-12 col-tall'>
-                    <!-- <h3 class='text-justified resp-header'>Graph Visualization</h3> -->
-                    <div class='jumbotron col-tall' id='jumbo-header'>
-                        <p id='jumbo-p'> Graph Visualization </p>
-                    </div>
-                </div>
-
-                <div class='col-md-10 col-sm-12 col-xs-12 col-tall'>
-                    <div class="btn-group btn-group-justified nav-btn-group">
-                        <a href='/index.html' class="btn btn-muted nav-btn">Home</a>
-                        <a href='/inspect.html' class="btn btn-muted nav-btn">Inspect</a>
-                        <a href='#' class="btn btn-muted nav-btn">Load</a>
-                        <a href='#' class="btn btn-muted nav-btn">Save</a>
-                        <a href='/summary.html' class="btn btn-muted nav-btn">Summary</a>
-                    </div>
-                </div>
+               
 
             </div>
 
@@ -52,25 +37,62 @@
                         </div>
                     </div>
 
+                    <div class='row' id='nav-row'>
+                        <!-- Nav Container -->     
+                        <div class='col-md-12 data-container col-tall' id='nav-col'>
+                            <div class='col-md-1 col-md-offset-3 nav-btn'>
+                                <form name="first-form" class='nav-form'>
+                                    <input class='graph-nav-btn' type="button" id='first-btn' value='<<'>
+                                </form>
+                            </div>
+                            <div class='col-md-1 nav-btn'>
+                                <!-- <p id='back-btn'><</p> -->
+                                <form name="back-form" class='nav-form'>
+                                    <input class='graph-nav-btn' type="button" id='back-btn' value='<'>
+                                </form>
+                            </div>
+                            <div class='col-md-2 nav-btn' id='graph-nav-container'>
+                                <!-- <p id='cur-btn'>0</p> -->
+                                <form name="nav-form" class='nav-form'>
+                                    <input type="text" id="cur-page" placeholder='' size='5' autocomplete='off'>
+                                    <input name="Submit"  type="button" id='go-btn' onclick='return goToGraph();' value="Go" >
+                                </form>
+
+                            </div>
+                            
+                            <div class='col-md-1 nav-btn'>
+                                <form name="next-form" class='nav-form'>
+                                    <input class='graph-nav-btn' type="button" id='next-btn' value='>'>
+                                </form>
+                            </div>
+                            <div class='col-md-1 nav-btn'>
+                                <form name="last-form" class='nav-form'>
+                                    <input class='graph-nav-btn' type="button" id='last-btn' value='>>'>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <!-- Data Area -->
                 <div class='col-md-3 col-sm-12 col-xs-12 data-container col-tall' id='data-area'>
                     <div class='row' id='data-row'>
                         <!-- Graph Data Container -->
-                        <div class='col-md-12 data-container col-tall' id='data-col'>DATA
-                        </div>
+                        <div class='col-md-12 data-container col-tall' id='data-col'></div>
                     </div>
                     <div class='row' id='graph-data-row'>
                         <!-- Graph Data Container -->
-                        <div class='col-md-12 data-container col-tall' id='graph-data-col'>GRAPH DATA
-                        </div>
+                        <div class='col-md-12 data-container col-tall' id='graph-data-col'></div>
                     </div>
                 </div>
 
             </div>
     	</div>
-
+        <script type="text/javascript" src='header.js'> </script>
         <script type="text/javascript" src='inspect.js'> </script>
+        <script type="text/javascript">
+            insertHeader('Inspect');
+        </script>
     </body>
 </html>

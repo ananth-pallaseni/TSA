@@ -589,13 +589,14 @@ def store(model_bag, fname=None):
 			pickle.dump(model_bag, f, protocol=2)
 
 
-def whole_model_to_dict(wm):
+def whole_model_to_dict(wm, rank):
 	json_d = {}
 	json_d['dist'] = wm.dist 
+	json_d['rank'] = rank
 	edges = wm.get_edges()
-	edges = list(map(lambda e: {'from': e[0], 'to':e[1], 'parameters': list(map(lambda ep: {'param-type': ep.param_type, 'val': ep.value, 'bounds': ep.bounds}, wm.get_edge_params(e)))}, edges))
+	edges = list(map(lambda e: {'from': e[0], 'to':e[1], 'parameters': list(map(lambda ep: {'paramType': ep.param_type, 'val': ep.value, 'bounds': ep.bounds}, wm.get_edge_params(e)))}, edges))
 	json_d['edges'] = edges
-	nodes = [{'id': n, 'parameters': list(map(lambda p: {'param-type': p.param_type, 'val': p.value, 'bounds': p.bounds}, wm.get_node_params(n)))} for n in range(wm.num_species)]
+	nodes = [{'id': n, 'parameters': list(map(lambda p: {'paramType': p.param_type, 'val': p.value, 'bounds': p.bounds}, wm.get_node_params(n)))} for n in range(wm.num_species)]
 	json_d['nodes'] = nodes
 	step = math.pi * 2 / wm.num_species
 	theta = [step * i for i in range(wm.num_species)]
@@ -603,12 +604,13 @@ def whole_model_to_dict(wm):
 	json_d['layout'] = layout
 	return json_d
 
-def whole_model_to_json(wm):
-	json_d = whole_model_to_dict(wm)
+def whole_model_to_json(wm, rank):
+	json_d = whole_model_to_dict(wm, rank)
 	return json.dumps(json_d)
 
 def model_bag_to_json(model_bag):
-	to_dict = [whole_model_to_dict(wm) for wm in model_bag]
+	to_dict = [whole_model_to_dict(model_bag[i], i) for i in range(len(model_bag))]
+	#to_dict = [whole_model_to_dict(wm) for wm in model_bag]
 	return json.dumps(to_dict)
 
 def store_json(model_bag, fname):

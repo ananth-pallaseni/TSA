@@ -40,6 +40,10 @@ var nextColor = function() {
 	}
 }
 
+var highlight = function(item) {
+	item.attr('stroke-opacity', 0.5);
+}
+
 
 
 // Define arrow endings for edges
@@ -77,7 +81,7 @@ var line_shorten = function(a, b, d, strWidth) {
    return [[x1, y1], [x2, y2]];
  }
 
-var calcStrWidth = function(d, edgeScale) {
+var calcStrWidth = function(svg, d, edgeScale) {
 	occ = d.occurrences;
 	if (!occ) {
 		occ = 4;
@@ -88,10 +92,10 @@ var calcStrWidth = function(d, edgeScale) {
 	return strWidth;
 }
 
-var update_edge_hovers = function(lines, layout, node_radius, edgeScale) {
+var update_edge_hovers = function(svg, lines, layout, node_radius, edgeScale, color) {
 	lines.transition()
     .duration(transition_duration/4)
-    .attr('stroke', cur_color)
+    .attr('stroke', color)
     .attr('stroke-width', 0)
     .transition()
     .duration(0)
@@ -113,28 +117,28 @@ var update_edge_hovers = function(lines, layout, node_radius, edgeScale) {
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[1][1];
 	})
-    .attr('stroke-width', hover_width);
+    .attr('stroke-width', d => calcStrWidth(svg, d, edgeScale) + 10);
 
     lines.select('title')
     	.text(function(d, i) {
@@ -142,38 +146,38 @@ var update_edge_hovers = function(lines, layout, node_radius, edgeScale) {
         });
 }
 
-var updateLineEdges = function(lines, layout, node_radius, edgeScale) {
+var updateLineEdges = function(svg, lines, layout, node_radius, edgeScale) {
 
 	lines.transition()
 	.duration(transition_duration/4)
 	.attr('opacity', 0)
 	.attr('stroke-width', function(d) {
-		return calcStrWidth(d, edgeScale);
+		return calcStrWidth(svg, d, edgeScale);
 	})
 	.transition()
 	.duration(0)
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][1];
 	})
 	.transition()
@@ -182,25 +186,25 @@ var updateLineEdges = function(lines, layout, node_radius, edgeScale) {
 	.attr('x1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][0];
 	})
 	.attr('y1', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[0][1];
 	})
 	.attr('x2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[1][0];
 	})
 	.attr('y2', function(d, i) {
 	    var n1 = layout[d.from];
 	    var n2 = layout[d.to];
-	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(d, edgeScale));
+	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[1][1];
 	})
 	.attr('opacity', 1);
@@ -212,7 +216,7 @@ var updateLineEdges = function(lines, layout, node_radius, edgeScale) {
 }
 
 
-var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
+var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale, color) {
 	if (! $('#edge-hover-g').length) {
 		svg.append('g')
 			.attr('id', 'edge-hover-g');
@@ -232,7 +236,7 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
 		.enter()
 	    .append('line')
 		.attr('class', 'edge-hover')
-	    .attr('stroke', cur_color)
+	    .attr('stroke', color)
 	    .attr('stroke-width', 0)
 	    .attr('stroke-opacity', 0)
 	    .attr('x1', svgWidth(svg)/2)
@@ -257,7 +261,7 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale) {
 	var all_hovers = svg.select('#edge-hover-g')
 		.selectAll('line.edge-hover')
 		.data(edges);
-	update_edge_hovers(all_hovers, layout, node_radius, edgeScale);
+	update_edge_hovers(svg, all_hovers, layout, node_radius, edgeScale, color);
 }
 
 
@@ -295,7 +299,7 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.attr('class', 'edge')
 	    .attr('stroke', 'black')
 	    .attr('stroke-width', function(d) {
-	    	return calcStrWidth(d, edgeScale);
+	    	return calcStrWidth(svg, d, edgeScale);
 	    })
 	    .attr('marker-end', 'url(#arrow-head)')
 	    .attr('x1', svgWidth(svg)/2)
@@ -314,7 +318,7 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.selectAll('line.edge')
 		.data(edges);
 
-	updateLineEdges(all_edges, layout, node_radius, edgeScale);
+	updateLineEdges(svg, all_edges, layout, node_radius, edgeScale);
 
 }
 
@@ -350,10 +354,10 @@ var circlePathInterp = function(path, layout, node_radius) {
 	}
 }
 
-var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
+var updateSelfEdgeHovers = function(svg, paths, layout, node_radius, edgeScale, color) {
 	var numNodes = layout.length;
 	var step = 360 / numNodes;
-	paths.attr('stroke', cur_color)
+	paths.attr('stroke', color)
 	    .attr('stroke-width', 0)	
 		.attr('transform', function(d, i) {
 			var node = d.from; 
@@ -372,7 +376,7 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
 				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
 				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
 
-				var arrGap = (calcStrWidth(d, edgeScale) * markerSide * 10/16);
+				var arrGap = (calcStrWidth(svg, d, edgeScale) * markerSide * 10/16);
 				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5); 
 				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5); 
 				if (!d.occurrences) {
@@ -397,7 +401,7 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
 		.attrTween('d', function(d, i) {
 			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
 		}) 
-		.attr('stroke-width', hover_width);
+		.attr('stroke-width', d => calcStrWidth(svg, d, edgeScale) + 10);
 
 	paths.select('title')
 		.text(function(d, i) {
@@ -407,7 +411,7 @@ var updateSelfEdgeHovers = function(paths, layout, node_radius, edgeScale) {
 
 
 
-var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
+var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale, color) {
 	if (! $('#self-edge-hover-g').length) {
 		svg.append('g')
 			.attr('id', 'self-edge-hover-g');
@@ -427,7 +431,7 @@ var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
 		.enter()
 	    .append('path')
 		.attr('class', 'edge-hover')
-	    .attr('stroke', cur_color)
+	    .attr('stroke', color)
 	    .attr('stroke-width', 0)
 	    .attr('stroke-opacity', 0)
 	    .attr('fill', 'transparent')
@@ -450,14 +454,14 @@ var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale) {
 		.selectAll('path.edge-hover')
 		.data(edges);
 
-	updateSelfEdgeHovers(all_hovers, layout, node_radius, edgeScale);
+	updateSelfEdgeHovers(svg, all_hovers, layout, node_radius, edgeScale, color);
 }
 
-var updateSelfEdges = function(paths, layout, node_radius, edgeScale) {
+var updateSelfEdges = function(svg, paths, layout, node_radius, edgeScale) {
 	var numNodes = layout.length;
 	var step = 360 / numNodes;
 	paths.attr('opacity', 0)
-		.attr('stroke-width', d => calcStrWidth(d, edgeScale))		
+		.attr('stroke-width', d => calcStrWidth(svg, d, edgeScale))		
 		.attr('transform', function(d, i) {
 			var node = d.from; 
 			if (node < layout.length) {
@@ -475,7 +479,7 @@ var updateSelfEdges = function(paths, layout, node_radius, edgeScale) {
 				var x1 = layout[d.from][0] + node_radius * Math.cos(0.5);
 				var y1 = layout[d.from][1] + node_radius * Math.sin(0.5);
 
-				var arrGap = (calcStrWidth(d, edgeScale) * markerSide * 10/16);
+				var arrGap = (calcStrWidth(svg, d, edgeScale) * markerSide * 10/16);
 				var x2 = layout[d.from][0] + node_radius * Math.cos(0.5); 
 				var y2 = layout[d.from][1] - node_radius * Math.sin(0.5); 
 				if (!d.occurrences) {
@@ -518,8 +522,6 @@ var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.selectAll('path.edge')
 		.data(edges)
 		.exit()
-		.transition()
-		.duration(transition_duration)
 		.remove();
 
 	var newEdges = svg.select('#self-edge-g')
@@ -547,10 +549,10 @@ var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 	var allEdges = svg.select('#self-edge-g')
 		.selectAll('path.edge');
 
-	updateSelfEdges(allEdges, layout, node_radius, edgeScale);
+	updateSelfEdges(svg, allEdges, layout, node_radius, edgeScale);
 }
 
-var update_nodes = function(nodes, layout) {
+var update_nodes = function(nodes, layout, color) {
 	nodes.transition()
 	.duration(transition_duration)
 	.attr('cx', function(d, i) {
@@ -560,7 +562,7 @@ var update_nodes = function(nodes, layout) {
         return layout[i][1];
     })
     .attr('fill-opacity', 1)
-    .attr('fill', cur_color);
+    .attr('fill', color);
 	 
     nodes.select('title')
     	.text(function(d, i) {
@@ -568,7 +570,7 @@ var update_nodes = function(nodes, layout) {
     	});
 }
 
-var draw_nodes = function(svg, node_lst, layout, node_radius) {
+var draw_nodes = function(svg, node_lst, layout, node_radius, color) {
 	if (! $('#node-g').length) {
 		svg.append('g')
 			.attr('id', 'node-g');
@@ -609,10 +611,10 @@ var draw_nodes = function(svg, node_lst, layout, node_radius) {
 		.selectAll('circle.node')
 	    .data(node_lst);
 
-	update_nodes(cur_nodes, layout);
+	update_nodes(cur_nodes, layout, color);
 }
 
-var draw_graph = function(svg, node_lst, edges, layout, node_radius, edgeScale) {
+var draw_graph_color = function(svg, node_lst, edges, layout, node_radius, color, edgeScale) {
 	if (arrowHead == null) {
 		initArrowHead(svg);
 	}
@@ -621,19 +623,22 @@ var draw_graph = function(svg, node_lst, edges, layout, node_radius, edgeScale) 
 		edgeScale = d3.scaleLinear();
 	}
 
-	//randColor();
-	nextColor();
-
 	lineEdges = edges.filter(e => e.from != e.to);
 	selfEdges = edges.filter(e => e.from == e.to);
 
 	drawLineEdges(svg, lineEdges, layout, node_radius, edgeScale);
 	drawSelfEdges(svg, selfEdges, layout, node_radius, edgeScale);
 
-	draw_edge_hovers(svg, lineEdges, layout, node_radius, edgeScale);
-	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius, edgeScale);
+	draw_edge_hovers(svg, lineEdges, layout, node_radius, edgeScale, color);
+	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius, edgeScale, color);
 
-	draw_nodes(svg, node_lst, layout, node_radius);
+	draw_nodes(svg, node_lst, layout, node_radius, color);
+}
+
+var draw_graph = function(svg, node_lst, edges, layout, node_radius, edgeScale) {
+	nextColor();
+	draw_graph_color(svg, node_lst, edges, layout, node_radius, cur_color, edgeScale)
+
 }
 
 
@@ -655,19 +660,27 @@ var padLayoutsSquare = function(svg, layout) {
 	return padded;
 }
 
-var drawGraphPadded = function(svg, node_lst, edge_lst, layout_lst) {
+var drawGraphPadded = function(svg, node_lst, edge_lst, layout_lst, edgeScale) {
 	var padLay = padLayoutsSquare(svg, layout_lst);
 	var nrad = rad5(svg);
-	draw_graph(svg, node_lst, edge_lst, padLay, nrad);
+	draw_graph(svg, node_lst, edge_lst, padLay, nrad, edgeScale);
+}
+
+var drawGraphPaddedColor = function(svg, node_lst, edge_lst, layout_lst, color, edgeScale) {
+	var padLay = padLayoutsSquare(svg, layout_lst);
+	var nrad = rad5(svg);
+	draw_graph_color(svg, node_lst, edge_lst, padLay, nrad, color, edgeScale);
 }
 
 var nodeOnClick = function(f) {
 	d3.selectAll('circle.node')
+		.on('click', null)
 		.on('click', f);
 }
 
 var edgeOnClick = function(f) {
-	d3.selectAll('line.edge-hover, line.edge')
+	d3.selectAll('.edge-hover, .edge')
+		.on('click', null)
 		.on('click', f);
 }
 

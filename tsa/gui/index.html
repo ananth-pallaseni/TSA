@@ -67,7 +67,8 @@
             var backRect = svg.append('rect')
                 .attr('width', '100%')
                 .attr('height', '100%')
-                .attr('fill', 'red');
+                .attr('fill', 'red')
+                .attr('fill-opacity', 0);
 
             var redraw = function() {
                 var url = window.location.hostname + '/graph/random';

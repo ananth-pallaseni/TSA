@@ -8,156 +8,89 @@
 		<script type="text/javascript" src="d3/d3.js"></script>
         <script type="text/javascript" src="graph.js"></script>
         <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
         <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
         <link rel='stylesheet' type='text/css' href='header.css'>
         <link rel='stylesheet' type='text/css' href='summary.css'>
     </head>
+
     <body>
-        <div class='container-fluid overarching-container'>
-            <!-- Header Row -->
-            <div class='row header-row'>
-                <div class='col-md-2 col-sm-12 col-xs-12 col-tall'>
-                    <!-- <h3 class='text-justified resp-header'>Graph Visualization</h3> -->
-                    <div class='jumbotron col-tall' id='jumbo-header'>
-                        <p id='jumbo-p'> Summary </p>
-                    </div>
-                </div>
+    	<div class='container-fluid overarching-container'>
+    		<div class='row header-row'></div>
+    		<div class='row' id='data-row'>
+    			<div class='col-md-12 col-tall' id='data-col'>
+    				<!-- <div class='row col-tall' id='row-1'>
+    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-1'></div>
+    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-2'></div>
+    				</div>
+    				<div class='row col-tall' id='row-2'>
+    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-3'></div>
+    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-4'></div>
+    				</div> -->
+    			</div>
+    		</div>
+    	</div>
 
-                <div class='col-md-10 col-sm-12 col-xs-12 col-tall'>
-                    <div class="btn-group btn-group-justified nav-btn-group">
-                        <a href='/index.html' class="btn btn-muted nav-btn">Home</a>
-                        <a href='/inspect.html' class="btn btn-muted nav-btn">Inspect</a>
-                        <a href='#' class="btn btn-muted nav-btn">Load</a>
-                        <a href='#' class="btn btn-muted nav-btn">Save</a>
-                        <a href='/summary.html' class="btn btn-muted nav-btn">Summary</a>
-                    </div>
-                </div>
-            </div>
 
-            <!-- System Data Row -->
-            <div class='row system-data-row'>   
-                <div class='col-md-12'>
-                    <h3>System Data</h3>
-                </div>
-            </div>
 
-            <div class='row mosaic-area' >
-                <!-- Mosaic Row -->
-                <div class='row mosaic-row'>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                </div>
-                <div class='row mosaic-row'>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                </div>
-                <div class='row mosaic-row'>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                    <div class='col-md-4 col-sm-4 col-xs-12 mosaic-square'>
-                    </div>
-                </div>
-                <div class='row mosaic-nav-row'>
-                    <div class='col-md-1 col-md-offset-3 mosaic-nav-btn'>
-                        <p id='first-btn'><<</p>
-                    </div>
-                    <div class='col-md-1 mosaic-nav-btn'>
-                        <p id='back-btn'><</p>
-                    </div>
-                    <div class='col-md-2 mosaic-nav-btn'>
-                        <p id='cur-btn'>0</p>
-                    </div>
-                    <div class='col-md-1 mosaic-nav-btn'>
-                        <p id='next-btn'>></p>
-                    </div>
-                    <div class='col-md-1 mosaic-nav-btn'>
-                        <p id='last-btn'>>></p>
-                    </div>
-                </div>
-            </div>
+    	<script type="text/javascript" src='header.js'> </script>
+    	<script type="text/javascript" src='hm.js'> </script>
+    	<script type="text/javascript" src='prevalence.js'> </script>
+    	<script type="text/javascript">
+    		var addSelectRect = function(parid, url) {
+    			d3.select('#'+parid)
+    				.append('rect')
+    				.attr('class', 'select-rect')
+    				.attr('height', '100%')
+    				.attr('width', '100%')
+    				.attr('fill', color)
+    				.attr('fill-opacity', 0)
+    				.on('mouseover', function() {
+    					d3.select(this)
+    						.attr('fill-opacity', 0.5);
+    				})
+    				.on('mouseout', function() {
+    					d3.select(this)
+    						.attr('fill-opacity', 0);
+    				})
+    				.on('click', function() {
+    					window.location = url;
+    				});
+    		}
 
-        </div>
+    		insertHeader('Summary');
+    		createGrid('data-col', 2, 2);
+    		gsvg = insertSvg('col-0', 'g-svg');
+    		hmsvg = insertSvg('col-1', 'hm-svg');
+    		ersvg = insertSvg('col-2', 'er-svg');
+    		placeholder = insertSvg('col-3', 'placeholder');
 
-        <script type="text/javascript">
-            var CURPAGE = 0;
-            var LASTPAGE = 3999;
+    		color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
 
-            var mosaicSvg = d3.selectAll('.mosaic-square')
-                .append('svg')
-                .attr('id', function(d, i) {
-                    return 'mosaic-svg-' + i;
-                })
-                .attr('width', '100%')
-                .attr('height', '100%');
+    		d3.json('/graph/0', function(g) {
+    			drawGraphPaddedColor(gsvg, g.nodes, g.edges, g.layout, color);
+    			addSelectRect('g-svg', 'inspect.html');
+    		});
 
-            var backRects = mosaicSvg.append('rect')
-                .attr('height', '100%')
-                .attr('width', '100%')
-                .attr('fill', 'blue')
-                .attr('fill-opacity', 0.5);
+    		d3.json('/occ-mat/100', function(mat) {
+    			drawOnlyHeatmapMosaic(hmsvg, mat, color);
+    			addSelectRect('hm-svg', 'prevalence.html');
+    		});
 
-            var reloadGraphs = function(pageNum) {
-                var baseNum = pageNum * 9;
-                mosaicSvg.each(function(q, i) {
-                    var gNum = baseNum + i;
-                    d3.json('/graph/' + gNum, function(d) {
-                        var localSvg = d3.select('#mosaic-svg-' + i);
-                        drawGraphPadded(localSvg, d.nodes, d.edges, d.layout);
-                    });
-                });
-            }
+    		/*d3.selectAll('#er-svg, #placeholder')
+    			.append('rect')
+    			.attr('height', '100%')
+    			.attr('width', '100%')
+    			.attr('fill', color)
+    			.attr('fill-opacity', 0.5);*/
 
-            reloadGraphs(0);
+    		addSelectRect('er-svg', '#');
+    		addSelectRect('placeholder', '#');
 
-            /*var navBtns = d3.selectAll('.mosaic-nav-btn > p')
-                .on('click', reloadGraphs);*/
+			 
 
-            d3.select('#first-btn')
-                .on('click', function(d) {
-                    reloadGraphs(0);
-                });
 
-            d3.select('#last-btn')
-                .on('click', function(d) {
-                    reloadGraphs(-1);
-                });
+    	</script>
 
-            var updateNavs = function() {
-                var prevPage = CURPAGE-1;
-                var nextPage = CURPAGE+1;
-                if (prevPage <= 0) {
-                    prevPage = 0;
-                }
-                if (nextPage >= LASTPAGE) {
-                    nextPage = LASTPAGE;
-                }
-                d3.select('#back-btn')
-                    .on('click', function(d) {
-                        reloadGraphs(prevPage);
-                        CURPAGE = prevPage;
-                        updateNavs();
-                    });
-                d3.select('#next-btn')
-                    .on('click', function(d) {
-                        reloadGraphs(nextPage);
-                        CURPAGE = nextPage;
-                        updateNavs();
-                    });
-                $('#cur-btn').text('CURPAGE');
-            }
-
-            updateNavs();
-            
-        </script>
     </body>
 </html>

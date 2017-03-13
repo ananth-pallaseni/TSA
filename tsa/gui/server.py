@@ -34,12 +34,25 @@ class Server(BaseHTTPRequestHandler):
       edge_lst = [ {'from': e[0], 'to': e[1], 'parameters': []} for e in edge_lst]
       node_lst = [ {'id': n, 'parameters': []} for n in node_lst]
       layout_lst = self.circ_lay(num_nodes)
-      d = {'dist':10, 'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
+      d = {'rank': 0, 'dist':10, 'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
       return json.dumps(d)
 
-    def load_system_json(self, path):
-      with open(path, 'r') as f:
-        self.system = json.load(f)
+    def system_stats(self):
+      d = {}
+      d['num-graphs'] = len(SYSTEM)
+      return d;
+
+    def occ_mat(self, topx=-1):
+      if topx < 0:
+        topx = len(SYSTEM)
+      num_nodes = len(SYSTEM[0]['nodes'])
+      mat = [[0 for i in range(num_nodes)] for j in range(num_nodes)]
+      for g in SYSTEM[:topx]:
+        for e in g['edges']:
+          mat[e['from']][e['to']] += 1
+      return mat
+
+
 
     def _set_headers(self):
         self.send_response(200)
@@ -112,6 +125,8 @@ class Server(BaseHTTPRequestHandler):
           self.serve_html('index.html')
         elif path[-13:] == '/summary.html':
           self.serve_html('summary.html')
+        elif path[-16:] == '/prevalence.html':
+          self.serve_html('prevalence.html')
 
         elif path[-13:] == '/test.html':
           self.serve_html('test.html')
@@ -120,14 +135,40 @@ class Server(BaseHTTPRequestHandler):
           i = path.find('/graph/')
           print(path[i+7 : ])
           num = int(path[i+7 : ])
-          gj = json.dumps(SYSTEM[num])
-          jbytes = bytes(gj, 'utf8');
-          self.serve_fake_json(jbytes);
+          if num >= 0 and num < len(SYSTEM):
+            gj = json.dumps(SYSTEM[num])
+            jbytes = bytes(gj, 'utf-8');
+            self.serve_fake_json(jbytes);
+
         elif '/load/' in path:
           i = path.find('/load/')
           lpath = path[i+6:]
           print('lpath = ' + lpath)
           self.load_system_json(lpath)
+
+        elif path[-6:] == '/stats':
+          gj = json.dumps(self.system_stats())
+          jbytes = bytes(gj, 'utf-8')
+          self.serve_fake_json(jbytes)
+
+        elif path[-12:] == '/occ-mat/all':
+          gj = json.dumps(self.occ_mat())
+          jbytes = bytes(gj, 'utf-8')
+          self.serve_fake_json(jbytes)
+        elif '/occ-mat/' in path:
+          i = path.find('/occ-mat/')
+          topx = int(path[i+9 : ])
+          gj = json.dumps(self.occ_mat(topx))
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes);
+        elif path[-11:] == '/num-graphs':
+          num = len(SYSTEM)
+          gj = json.dumps(num)
+          jbytes = bytes(gj, 'utf-8')
+          self.serve_fake_json(jbytes);
+
+
+
 
         # generic pages
         else:
@@ -207,7 +248,7 @@ if __name__ == "__main__":
         if opt == '-l':
           with open(val, 'r') as f:
             SYSTEM = json.load(f)
-            run()
+          run()
 
 
     else:
