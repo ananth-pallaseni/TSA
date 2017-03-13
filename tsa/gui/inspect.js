@@ -85,6 +85,10 @@ var initInfoPane = function() {
 	infoPane.append('h4')
 		.attr('id', 'edge-title-p')
 		.attr('align', 'center');
+
+	infoPane.append('h5')
+		.attr('id', 'edge-inter-p')
+		.attr('align', 'center');
 }
 
 
@@ -114,6 +118,8 @@ var clearInfoPane = function() {
 	d3.select('#edge-title-p')
 		.style('display', 'none');
 	d3.select('#node-title-p')
+		.style('display', 'none');
+	d3.select('#edge-inter-p')
 		.style('display', 'none');
 }
 
@@ -163,6 +169,8 @@ var updateNodeData = function(n) {
 	highlightSelected();
 	d3.select('#edge-title-p')
 		.style('display', 'none');
+	d3.select('#edge-inter-p')
+		.style('display', 'none');
 	d3.select('#node-title-p')
 		.style('display', 'block')
 		.text('Node ' + n.id);
@@ -176,6 +184,9 @@ var updateEdgeData = function(e) {
 	d3.select('#edge-title-p')
 		.style('display', 'block')
 		.text('Edge ' + e.from + ', ' + e.to);
+	d3.select('#edge-inter-p')
+		.style('display', 'block')
+		.text('Interaction type ' + e.interaction);
 	d3.select('#node-title-p')
 		.style('display', 'none');
 

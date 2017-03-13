@@ -51,7 +51,10 @@ var nextColor = function() {
 }
 
 var getInteractionColor = function(i) {
-	return allInteractionColors[i % allInteractionColors.length];
+	if (!i) {
+		i = 0;
+	} 
+	return allInteractionColors[i % allInteractionColors.length]; 
 }
 
 var highlight = function(item) {
@@ -85,13 +88,10 @@ var initArrowHeads = function(svg) {
 
 var getArrowHead = function(ee) {
 	var inter = ee.interaction;
-	var ww = 'url(#arrow-head-' + (inter+1) + ')';
-	/*if (inter == 0) {
-		console.log('equals 0')
-		ww = 'url(#arrow-head-0)';
-	}*/
-	console.log(ee.from, ee.to, inter, ww);
-	return ww;
+	if (!inter) {
+		inter = 0;
+	}
+	return 'url(#arrow-head-' + (inter+1) + ')'
 }
 
 
@@ -649,7 +649,7 @@ var draw_graph_color = function(svg, node_lst, edges, layout, node_radius, color
 	if (arrowHeads == null) {
 		initArrowHeads(svg);
 	}
-	edges.forEach(e => console.log(e.from, e.to, e.interaction))
+
 	if (!edgeScale) {
 		edgeScale = d3.scaleLinear();
 	}
