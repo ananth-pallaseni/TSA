@@ -21,3 +21,6 @@
 
 # temp storage
 *.store
+
+# batch files
+*.bat

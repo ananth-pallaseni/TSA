@@ -6,6 +6,16 @@ var allColors = d3.schemeCategory10;
 var curColorPos = 0;
 var cur_color = 'teal';
 var markerSide = 4;
+var allInteractionColors = ['#000', 
+							'#e41a1c', 
+							"#377eb8", 
+							"#4daf4a", 
+							"#984ea3",
+							"#ff7f00",
+							"#ffff33",
+							"#a65628",
+							"#f781bf",
+							"#999999"]
 
 var svgWidth = function(svg) {
 	var svgid = svg.attr('id');
@@ -40,6 +50,10 @@ var nextColor = function() {
 	}
 }
 
+var getInteractionColor = function(i) {
+	return allInteractionColors[i % allInteractionColors.length];
+}
+
 var highlight = function(item) {
 	item.attr('stroke-opacity', 0.5);
 }
@@ -47,20 +61,37 @@ var highlight = function(item) {
 
 
 // Define arrow endings for edges
-var arrowHead = null;
+var arrowHeads = null;
     
-var initArrowHead = function(svg) {
-	arrowHead = svg.append('marker')
-	    .attr('id', 'arrow-head')
-	    .attr('orient', 'auto')
-	    .attr('refX', 0.1)
-	    .attr('refY', 2)
-	    .attr('markerWidth', 4)
-	    .attr('markerHeight', 4);
+var initArrowHeads = function(svg) {
+	var g = svg.append('g')
+		.attr('id', 'marker-g');
 
-	arrowHead.append('path')
-	    .attr('d', 'M 0 0 V ' + markerSide +'L ' + markerSide + ' ' + markerSide/2 + ' Z')
-	    .attr('fill', 'black');
+	for (var i = 1; i <= allInteractionColors.length; i++) {
+		var arrowHead = g.append('marker')
+		    .attr('id', 'arrow-head-' + i)
+		    .attr('orient', 'auto')
+		    .attr('refX', 0.1)
+		    .attr('refY', 2)
+		    .attr('markerWidth', 4)
+		    .attr('markerHeight', 4);
+
+		arrowHead.append('path')
+		    .attr('d', 'M 0 0 V ' + markerSide +'L ' + markerSide + ' ' + markerSide/2 + ' Z')
+		    .attr('fill', getInteractionColor(i-1));
+	}
+	arrowHeads = true;
+}
+
+var getArrowHead = function(ee) {
+	var inter = ee.interaction;
+	var ww = 'url(#arrow-head-' + (inter+1) + ')';
+	/*if (inter == 0) {
+		console.log('equals 0')
+		ww = 'url(#arrow-head-0)';
+	}*/
+	console.log(ee.from, ee.to, inter, ww);
+	return ww;
 }
 
 
@@ -154,6 +185,8 @@ var updateLineEdges = function(svg, lines, layout, node_radius, edgeScale) {
 	.attr('stroke-width', function(d) {
 		return calcStrWidth(svg, d, edgeScale);
 	})
+	.attr('marker-end', e => getArrowHead(e))
+	.attr('stroke', e => getInteractionColor(e.interaction))
 	.transition()
 	.duration(0)
 	.attr('x1', function(d, i) {
@@ -271,8 +304,8 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 			.attr('id', 'edge-g');
 	}
 
-	if (arrowHead == null) {
-		initArrowHead(svg);
+	if (arrowHeads == null) {
+		initArrowHeads(svg);
 	}
 
 	// Grab edges that need to vanish and update
@@ -297,11 +330,9 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.enter()
 		.append('line')
 		.attr('class', 'edge')
-	    .attr('stroke', 'black')
 	    .attr('stroke-width', function(d) {
 	    	return calcStrWidth(svg, d, edgeScale);
 	    })
-	    .attr('marker-end', 'url(#arrow-head)')
 	    .attr('x1', svgWidth(svg)/2)
 	    .attr('y1', svgHeight(svg)/2)
 	    .attr('x2', svgWidth(svg)/2)
@@ -498,6 +529,12 @@ var updateSelfEdges = function(svg, paths, layout, node_radius, edgeScale) {
 				return 'M' + x1 + ' ' + y1 + ' A' + drx + ' ' + dry + ', ' + xrot + ',' + largeArcFlag + ', ' + sweepFlag + ', ' + x2 + ' ' + y2;	
 			}
 		})
+		.attr('marker-end', function(d) {
+			if (!d.occurrences){
+				return getArrowHead(d);
+			}
+		})
+		.attr('stroke', e => getInteractionColor(e.interaction))
 		.transition()
 		.duration(transition_duration )
 		.delay(edge_delay)
@@ -532,13 +569,7 @@ var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 		.attr('class', 'edge')
 		.attr('stroke-linecap', 'round')
 		.attr('opacity', 0)
-		.attr('stroke', 'black')
 		.attr('stroke-width', 4)
-		.attr('marker-end', function(d) {
-			if (!d.occurrences){
-				return 'url(#arrow-head)';
-			}
-		})
 		.attr('fill', 'transparent');
 
 	newEdges.append('title')
@@ -615,10 +646,10 @@ var draw_nodes = function(svg, node_lst, layout, node_radius, color) {
 }
 
 var draw_graph_color = function(svg, node_lst, edges, layout, node_radius, color, edgeScale) {
-	if (arrowHead == null) {
-		initArrowHead(svg);
+	if (arrowHeads == null) {
+		initArrowHeads(svg);
 	}
-
+	edges.forEach(e => console.log(e.from, e.to, e.interaction))
 	if (!edgeScale) {
 		edgeScale = d3.scaleLinear();
 	}

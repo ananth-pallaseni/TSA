@@ -179,7 +179,7 @@ class WholeModel(object):
 		
 	def get_edges(self):
 		tops = [t.topology for t in self.targets]
-		edges = sum([[(p, t.target) for p in t.parents] for t in tops], [])
+		edges = sum([[(t.parents[i], t.target, t.interactions[i]) for i in range(len(t.parents))] for t in tops], [])
 		
 		# Filter out complex interactomes
 		edges = list(filter(lambda tup: tup[0] is not tuple and tup[1] is not tuple, edges))

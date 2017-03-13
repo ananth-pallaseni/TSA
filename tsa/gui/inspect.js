@@ -105,7 +105,7 @@ var updateInfoPane = function(params) {
 		.text(function(d) {
 			return 'Parameter Type: ' + d.paramType + '\n'
 					+ 'Value: ' + d.val + '\n'
-					+ 'Bounds: ' + d.bounds;
+					+ 'Bounds: (' + d.bounds + ')';
 		});
 }
 
@@ -186,7 +186,6 @@ var updateEdgeData = function(e) {
 
 
 var updateNavs = function() {
-	console.log('update navs');
 	if (numGraphs == null) {
 		d3.json('/num-graphs', function(n) {
 			numGraphs = n;
@@ -197,26 +196,22 @@ var updateNavs = function() {
     	.on('click', null)
         .on('click', function(d) {
             getGraph(Math.max(graph.rank -1, 0));
-            updateNavs();
         });
     d3.select('#next-btn')
     	.on('click', null)
         .on('click', function(d) {
             getGraph(Math.min(graph.rank +1, numGraphs-1));
-            updateNavs();
         });
     d3.select('#first-btn')
     	.on('click', null)
         .on('click', function(d) {
             getGraph(0);
-            updateNavs();
         });
 
     d3.select('#last-btn')
     	.on('click', null)
         .on('click', function(d) {
             getGraph(numGraphs-1);
-            updateNavs();
         });
     $('#cur-btn').text(graph.rank);
 }

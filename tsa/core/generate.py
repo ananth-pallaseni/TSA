@@ -594,7 +594,7 @@ def whole_model_to_dict(wm, rank):
 	json_d['dist'] = wm.dist 
 	json_d['rank'] = rank
 	edges = wm.get_edges()
-	edges = list(map(lambda e: {'from': e[0], 'to':e[1], 'parameters': list(map(lambda ep: {'paramType': ep.param_type, 'val': ep.value, 'bounds': ep.bounds}, wm.get_edge_params(e)))}, edges))
+	edges = list(map(lambda e: {'from': e[0], 'to':e[1], 'interaction':e[2], 'parameters': list(map(lambda ep: {'paramType': ep.param_type, 'val': ep.value, 'bounds': ep.bounds}, wm.get_edge_params((e[0], e[1]))))}, edges))
 	json_d['edges'] = edges
 	nodes = [{'id': n, 'parameters': list(map(lambda p: {'paramType': p.param_type, 'val': p.value, 'bounds': p.bounds}, wm.get_node_params(n)))} for n in range(wm.num_species)]
 	json_d['nodes'] = nodes
