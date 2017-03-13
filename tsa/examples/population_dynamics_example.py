@@ -1,13 +1,12 @@
 import tsa 
-from population_dynamics import dX_pop_dynamics_fn, param_len_pop_dynamics, param_bounds_pop_dynamics
+from tsa.models.population_dynamics import dX_pop_dynamics_fn, params_pop_dynamics
 import numpy as np
 
+r = [0.3, 0.7, 0.5, 0.4, 0.4]
+a = [0.4, 0.7, 1.5, 1.4, 0.7, 1.2]
 
 def accepted_model_fn(y,t):
-	r = [0.3, 0.7, 0.5, 0.4, 0.4]
-	a = [0.4, 0.7, 1.5, 1.4, 0.7, 1.2]
-
-    # competitive Lotka-Volterra model.  5 species, model B.  
+	# competitive Lotka-Volterra model.  5 species, model B.  
 	dy = np.zeros(5)
 	dy[0] = (r[0]*y[0])*(1 - y[0] - a[0]*y[2] - a[1]*y[4])
 	dy[1] = (r[1]*y[1])*(1 - y[1] - a[2]*y[3])
@@ -23,11 +22,12 @@ y0 = [0.2, 0.5, 0.2, 0.2, 0.3]
 time_scale = [0,10,40]
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(topology_fn=dX_pop_dynamics_fn,
-                           param_len_fn=param_len_pop_dynamics,
-                           bounds_fn=param_bounds_pop_dynamics,
+candidate_models = tsa.generate_models(topology_fn=dX_pop_dynamics_fn,
+                           parameter_fn=params_pop_dynamics,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
 						   initial_vals=y0)
+
+tsa.store_json(candidate_models, 'pop_dynamics.json')

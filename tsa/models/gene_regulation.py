@@ -1,4 +1,13 @@
 import numpy as np 
+from tsa import ParameterType
+
+# Define parameters
+param_basal_synth = ParameterType(param_type='Basal Synth', bounds=(0.1, 1), is_edge_param=False)
+param_basal_degr = ParameterType(param_type='Basal Degr', bounds=(0.1, 2), is_edge_param=False)
+param_strength = ParameterType(param_type='Strength', bounds=(0.5, 4), is_edge_param=True)
+param_theta = ParameterType(param_type='Theta', bounds=(0.2, 3), is_edge_param=True)
+param_hill_coeff = ParameterType(param_type='Hill Coeff', bounds=(0.7, 5), is_edge_param=True)
+
 
 
 def dX_gene_reg_fn(x, t, topology, params):
@@ -43,21 +52,5 @@ def dX_gene_reg_fn(x, t, topology, params):
 	
 	return dX
 
-def param_len_gene_reg(num_edges):
-	""" Returns the length of the parameter list required for dX based on the number of edges the target has.
-	"""
-	num_params = 0
-	num_params += 2 # For base synth and base degradation
-	num_params += 3 * num_edges # For parent interaction strength, theta and m 
-	return num_params
-
-def param_bounds_gene_reg(num_edges):
-	""" Returns the bounds of the parameters that dX requires.
-	"""
-	s_bound = (0.1, 1)
-	g_bound = (0.1, 2)
-	b_bound = (0.5, 4)
-	k_bound = (0.2, 3)
-	m_bound = (0.7, 5)
-	param_bounds = [s_bound, g_bound] + [b_bound, k_bound, m_bound] * num_edges
-	return param_bounds
+def params_gene_reg():
+	return [param_basal_synth, param_basal_degr, param_strength, param_theta, param_hill_coeff]

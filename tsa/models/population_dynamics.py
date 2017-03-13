@@ -1,5 +1,9 @@
 import numpy as np 
+from tsa import ParameterType
 
+# Define parameters
+param_growth_rate = ParameterType(param_type='Growth Rate', bounds=(0.1, 1), is_edge_param=False)
+param_inter_strength = ParameterType(param_type='Interaction Strength', bounds=(0.1, 2), is_edge_param=True)
 
 
 def dX_pop_dynamics_fn(x, t, topology, params):
@@ -32,20 +36,6 @@ def dX_pop_dynamics_fn(x, t, topology, params):
 
 	return dX
 
-	
-def param_len_pop_dynamics(num_edges):
-	""" Returns the length of the parameter list required for dX based on the number of edges the target has.
-	"""
-	num_params = 0
-	num_params += 1 # For growth rate  
-	num_params += 1 * num_edges # For parent interaction strengths
-	return num_params
 
-def param_bounds_pop_dynamics(num_edges):
-	""" Returns the bounds of the parameters that dX requires.
-	"""
-	growth_bound = (0.1, 1)
-	strength_bound = (0.1, 2)
-	param_bounds = [growth_bound] + [strength_bound] * num_edges 
-	return param_bounds
-
+def params_pop_dynamics():
+	return [param_growth_rate, param_inter_strength]

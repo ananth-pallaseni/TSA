@@ -11,7 +11,7 @@
 # 5 activates 1
 
 import tsa 
-from gene_regulation import dX_gene_reg_fn, param_len_gene_reg, param_bounds_gene_reg
+from tsa.models.gene_regulation import dX_gene_reg_fn, params_gene_reg
 import numpy as np
 
 # Parameters for our gene regulation network:
@@ -20,14 +20,14 @@ max_parents = 2
 time_scale = [0, 10, 31]
 initial_vals = np.array([1, 0.5, 1, 1.5, 0.5])
 
+s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5
+g = [0.9, 0.9, 0.7, 1.5, 1.5];      # basal degradation
+b = [2, 2, 2, 2, 2, 2, 2];          # interaction 'strength' (beta_nk)
+k = [1.5, 1.5, 1.5, 1.5, 1.5];      # hill fn parameter (theta_nk)
+m = [5, 5, 5, 5, 5];                # hill fn parameter (m_nk)
+
 # Define the accepted model
 def accepted_model_fn(x, t):
-	s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5
-	g = [0.9, 0.9, 0.7, 1.5, 1.5];      # basal degradation
-	b = [2, 2, 2, 2, 2, 2, 2];          # interaction 'strength' (beta_nk)
-	k = [1.5, 1.5, 1.5, 1.5, 1.5];      # hill fn parameter (theta_nk)
-	m = [5, 5, 5, 5, 5];                # hill fn parameter (m_nk)
-	
 	dx = [0 for i in range(len(x))]
 	dx[0] = s[0] - g[0]*x[0] + b[0]*(x[4]**m[4])/(x[4]**m[4] + k[4]**m[4]);
 	dx[1] = s[1] - g[1]*x[1] + b[1]*(x[0]**m[0])/(x[0]**m[0] + k[0]**m[0]);	
@@ -37,12 +37,12 @@ def accepted_model_fn(x, t):
 	return dx
 
 # Perform tsa on the model space
-candidate_models = tsa.TSA(topology_fn=dX_gene_reg_fn,
-                           param_len_fn=param_len_gene_reg,
-                           bounds_fn=param_bounds_gene_reg,
+candidate_models = tsa.generate_models(topology_fn=dX_gene_reg_fn,
+                           parameter_fn=params_gene_reg,
 						   num_nodes=num_nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
 						   initial_vals=initial_vals)
 
+tsa.store_json(candidate_models, 'gene_reg.json')
