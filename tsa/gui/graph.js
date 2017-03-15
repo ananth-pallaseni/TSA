@@ -83,15 +83,33 @@ var initArrowHeads = function(svg) {
 		    .attr('d', 'M 0 0 V ' + markerSide +'L ' + markerSide + ' ' + markerSide/2 + ' Z')
 		    .attr('fill', getInteractionColor(i-1));
 	}
+
+	var complexArrow = g.append('marker')
+	    .attr('id', 'arrow-head-complex')
+	    .attr('orient', 'auto')
+	    .attr('refX', 0.1)
+	    .attr('refY', 2)
+	    .attr('markerWidth', 4)
+	    .attr('markerHeight', 4);
+
+	complexArrow.append('path')
+	    .attr('d', 'M 0 0 V ' + markerSide +'L ' + markerSide + ' ' + markerSide/2 + ' Z')
+	    .attr('fill', '#ccc');
 	arrowHeads = true;
 }
 
 var getArrowHead = function(ee) {
-	var inter = ee.interaction;
-	if (!inter) {
-		inter = 0;
+	if (ee.complex) {
+		return 'url(#arrow-head-complex)';
 	}
-	return 'url(#arrow-head-' + (inter+1) + ')'
+	else {
+		var inter = ee.interaction;
+		if (!inter) {
+			inter = 0;
+		}
+		return 'url(#arrow-head-' + (inter+1) + ')'
+	}
+	
 }
 
 
@@ -173,7 +191,16 @@ var update_edge_hovers = function(svg, lines, layout, node_radius, edgeScale, co
 
     lines.select('title')
     	.text(function(d, i) {
-            return 'Edge = (' + d.from + ', ' + d.to + ')';
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
         });
 }
 
@@ -186,7 +213,14 @@ var updateLineEdges = function(svg, lines, layout, node_radius, edgeScale) {
 		return calcStrWidth(svg, d, edgeScale);
 	})
 	.attr('marker-end', e => getArrowHead(e))
-	.attr('stroke', e => getInteractionColor(e.interaction))
+	.attr('stroke', function(e) {
+		if (e.complex) {
+			return '#ccc';
+		}
+		else {
+			return getInteractionColor(e.interaction);
+		}
+	})
 	.transition()
 	.duration(0)
 	.attr('x1', function(d, i) {
@@ -240,12 +274,28 @@ var updateLineEdges = function(svg, lines, layout, node_radius, edgeScale) {
 	    pos = line_shorten(n1, n2, node_radius, calcStrWidth(svg, d, edgeScale));
 	    return pos[1][1];
 	})
-	.attr('opacity', 1);
+	.attr('opacity', function(e) {
+		if (e.complex) {
+			return 0.5;
+		}
+		else {
+			return 1;
+		}
+	});
 
 	lines.select('title')
 		.text(function(d, i) {
-	        return 'Edge = (' + d.from + ', ' + d.to + ')';
-	    });
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 }
 
 
@@ -287,8 +337,17 @@ var draw_edge_hovers = function(svg, edges, layout, node_radius, edgeScale, colo
 
 	new_edge_hovers.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d.from + ', ' + d.to + ')';
-	    });
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 
 	// Grab existing edge hovers and update
 	var all_hovers = svg.select('#edge-hover-g')
@@ -341,8 +400,17 @@ var drawLineEdges = function(svg, edges, layout, node_radius, edgeScale) {
 
 	new_edges.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d.from + ', ' + d.to + ')';
-	    });
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 
 	// Grab all edges
 	var all_edges = svg.select('#edge-g')
@@ -436,8 +504,17 @@ var updateSelfEdgeHovers = function(svg, paths, layout, node_radius, edgeScale, 
 
 	paths.select('title')
 		.text(function(d, i) {
-		    return 'Edge = (' + d.from + ', ' + d.to + ')';
-		});
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 }
 
 
@@ -477,8 +554,17 @@ var drawSelfEdgeHovers = function(svg, edges, layout, node_radius, edgeScale, co
 
 	new_edge_hovers.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d.from + ', ' + d.to + ')';
-	    });
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 
 	// Grab existing edge hovers and update
 	var all_hovers = svg.select('#self-edge-hover-g')
@@ -534,19 +620,35 @@ var updateSelfEdges = function(svg, paths, layout, node_radius, edgeScale) {
 				return getArrowHead(d);
 			}
 		})
-		.attr('stroke', e => getInteractionColor(e.interaction))
+		.attr('stroke', function(e) {
+			if (e.complex) {
+				return '#ccc';
+			}
+			else {
+				return getInteractionColor(e.interaction);
+			}
+		})
 		.transition()
 		.duration(transition_duration )
 		.delay(edge_delay)
 		.attrTween('d', function(d, i) {
 			return circlePathInterp(d3.select(this).node(), layout, node_radius)(d, i);
 		}) 
-		.attr('opacity', 1);
+		.attr('opacity', e => e.complex ? 0.5 : 1);
 
 		paths.select('title')
 			.text(function(d, i) {
-			    return 'Edge = (' + d.from + ', ' + d.to + ')';
-			});
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 }
 
 var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
@@ -574,8 +676,17 @@ var drawSelfEdges = function(svg, edges, layout, node_radius, edgeScale) {
 
 	newEdges.append('title')
 	    .text(function(d, i) {
-	        return 'Edge = (' + d.from + ', ' + d.to + ')';
-	    });
+    		var from = d.from;
+    		var to = d.to
+    		if (d.interactome) {
+    			from = '[' + d.interactome + ']';
+    		}
+    		else if (d.complex) {
+    			from = '[' + d.complex + ']';
+    			to = d.complexTo;
+    		}
+            return 'Edge = (' + from + ', ' + to + ')';
+        });
 
 	var allEdges = svg.select('#self-edge-g')
 		.selectAll('path.edge');
@@ -593,11 +704,24 @@ var update_nodes = function(nodes, layout, color) {
         return layout[i][1];
     })
     .attr('fill-opacity', 1)
-    .attr('fill', color);
+    .attr('fill', function(d) {
+    	if (d.complex) {
+    		return '#ccc'
+    	}
+    	else {
+    		return color;
+    	}
+    });
 	 
     nodes.select('title')
     	.text(function(d, i) {
-    		        return 'Node ' + d.id;
+    		if (d.complex) {
+    			return 'Node [' + d.complex + ']';
+    		}
+    		else {
+			    return 'Node ' + d.id;
+    		}
+    		    
     	});
 }
 
@@ -626,7 +750,14 @@ var draw_nodes = function(svg, node_lst, layout, node_radius, color) {
 	    .enter()
 	    .append('circle')
 	    .attr('class', 'node')
-	    .attr('r', node_radius)
+	    .attr('r', function(d) {
+	    	if (d.complex) {
+	    		return node_radius / 2;
+	    	}
+	    	else {
+	    		return node_radius;
+	    	}
+	    })
 	    .attr('fill', 'teal')
 	    .attr('cx', svgWidth(svg)/2)
 	    .attr('cy', svgHeight(svg)/2)
@@ -634,7 +765,12 @@ var draw_nodes = function(svg, node_lst, layout, node_radius, color) {
 
 	new_nodes.append('title')
 	    .text(function(d, i) {
-	        return 'Node ' + d.id;
+	    	if (d.complex) {
+	    		return 'Node [' + d.complex + ']';
+	    	}
+	    	else {
+	    		return 'Node ' + d.id;
+	    	}  
 	    });
 
 	// Grab all nodes and update
@@ -653,6 +789,8 @@ var draw_graph_color = function(svg, node_lst, edges, layout, node_radius, color
 	if (!edgeScale) {
 		edgeScale = d3.scaleLinear();
 	}
+
+	
 
 	lineEdges = edges.filter(e => e.from != e.to);
 	selfEdges = edges.filter(e => e.from == e.to);
@@ -692,15 +830,23 @@ var padLayoutsSquare = function(svg, layout) {
 }
 
 var drawGraphPadded = function(svg, node_lst, edge_lst, layout_lst, edgeScale) {
-	var padLay = padLayoutsSquare(svg, layout_lst);
+	var processed = preprocess(node_lst, edge_lst)
+	nodes = processed[0];
+	edges = processed[1];
+	layout = processed[2];
+	var padLay = padLayoutsSquare(svg, layout);
 	var nrad = rad5(svg);
-	draw_graph(svg, node_lst, edge_lst, padLay, nrad, edgeScale);
+	draw_graph(svg, nodes, edges, padLay, nrad, edgeScale);
 }
 
 var drawGraphPaddedColor = function(svg, node_lst, edge_lst, layout_lst, color, edgeScale) {
-	var padLay = padLayoutsSquare(svg, layout_lst);
+	var processed = preprocess(node_lst, edge_lst)
+	nodes = processed[0];
+	edges = processed[1];
+	layout = processed[2];
+	var padLay = padLayoutsSquare(svg, layout);
 	var nrad = rad5(svg);
-	draw_graph_color(svg, node_lst, edge_lst, padLay, nrad, color, edgeScale);
+	draw_graph_color(svg, nodes, edges, padLay, nrad, color, edgeScale);
 }
 
 var nodeOnClick = function(f) {
@@ -724,4 +870,60 @@ var edgeInfo = function(e) {
 }
 
 
+var circleLayout = function(nodes) {
+	var step = Math.PI * 2 / nodes.length;
+	var layout = [];
+	for (var i = 0; i < nodes.length; i++) {
+		var theta = step * i;
+		var x = Math.cos(theta);
+		var y = Math.sin(theta);
+		layout.push([x,y]);
+	}
+	return layout;
+}
 
+
+var preprocess = function(nodes, edges) {
+	maxIdx = nodes.map(n => n.id).reduce((a, b) => Math.max(a,b)) + 1;
+	complexNodes = nodes.concat([])
+	newEdges = []
+	for (var i = 0; i < edges.length; i++) {
+		e = edges[i];
+		if (e.from.length && e.from.length > 1) {
+			// Add complex Node
+			complexNodes.push({
+				id: maxIdx,
+				complex: e.from,
+				parameters: []
+			});
+
+			// Add edges to complex node
+			e.from.forEach(function(n) {
+				newEdges.push({
+					from: n,
+					to: maxIdx,
+					parameters: [],
+					interaction: e.interaction,
+					complex: e.from,
+					complexTo: e.to
+				})
+			})
+
+			// Add edge from complex node
+			newEdges.push({
+				from: maxIdx,
+				to: e.to,
+				parameters: e.parameters,
+				interaction: e.interaction,
+				interactome: e.from
+			})
+			maxIdx += 1;
+		} 
+		else {
+			newEdges.push(e);
+		}
+	}
+
+	newLayouts = circleLayout(complexNodes);
+	return [complexNodes, newEdges, newLayouts];
+}

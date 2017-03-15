@@ -95,8 +95,9 @@ var initInfoPane = function() {
 var updateInfoPane = function(params) {
 	var pane = d3.select('#data-col');
 	var oldPars = pane.selectAll('.param')
-		.data(params)
-		.exit()
+		.data(params);
+
+	oldPars.exit()
 		.remove();
 
 	var newPars = pane.selectAll('.param')
@@ -125,20 +126,17 @@ var clearInfoPane = function() {
 
 
 var clearHighlights = function() {
-	if (selectedEdge != null) {
-		var item = d3.selectAll('.edge-hover')
-			.filter(e => e.from == selectedEdge.from && e.to == selectedEdge.to);
-		item.attr('stroke-opacity', 0)
+	d3.selectAll('.edge-hover')
+		.attr('stroke-opacity', 0)
 		.on('mouseout', function() {
-			item.attr('stroke-opacity', 0);
+			d3.select(this).attr('stroke-opacity', 0);
 		}); 
+	d3.selectAll('.node')
+		.attr('stroke-width', 0);
 
-	}
-	if (selectedNode != null) {
-		var item = d3.selectAll('.node')
-			.filter(n => n.id == selectedNode.id)
-			.attr('stroke-width', 0);
-	}
+	d3.selectAll('.edge')
+		.attr('opacity', e => e.complex ? 0.5 : 1);
+
 	selectedEdge = null;
 	selectedNode = null;
 }
@@ -154,12 +152,53 @@ var highlightSelected = function() {
 			.filter(e => e.from == selectedEdge.from && e.to == selectedEdge.to)
 			.attr('stroke-opacity', 0.5)
 			.on('mouseout', null);
+		highlightComplexPath(selectedEdge);
 	}
-	if (selectedNode != null) {
+	else if (selectedNode != null) {
 		d3.selectAll('.node')
 			.filter(n => n.id == selectedNode.id)
 			.attr('stroke-width', 10)
 			.attr('stroke', 'black');
+		highlighAttached(selectedNode);
+	}
+}
+
+var highlighAttached = function(n) {
+	var alledges = d3.selectAll('.edge')
+		.attr('opacity', 0.1);
+	var attachedEdges = d3.selectAll('.edge')
+		.filter(function(e) {
+			var to = e.to == n.id;
+			var complex = e.complex ? e.complexTo : false;
+			return to || complex;
+		})
+		//.each(e => highlightComplexPath(e))
+		.attr('opacity', e => e.complex ? 0.5 : 1);
+	var attachedHovers = d3.selectAll('.edge-hover')
+		.filter(function(e) {
+			var to = e.to == n.id;
+			var complex = e.complex ? e.complex.map(nd => nd.id == n.id).reduce(((a,b) => a || b)) || e.complexTo == n.id : false;
+			return to || complex;
+		})
+		.attr('stroke-opacity', 0.5)
+		.on('mouseout', null)
+}
+
+var highlightComplexPath = function(e) {
+	if (e.interactome || e.complex) {
+		var pathEdges = e.interactome ? e.interactome.map(n => [n, e.from]) : e.complex.map(n => [n, e.to]).concat([[e.to, e.complexTo]]);
+		d3.selectAll('.edge')
+			.filter(function (ed) {
+				var thisEdge = ed.from == e.from && ed.to == e.to;
+				var onPath = pathEdges.map(pe => ed.from == pe[0] && pe[1] == ed.to).reduce((a,b) => a || b);
+				return !(thisEdge || onPath);
+			})
+			.attr('opacity', 0.1);
+		
+		d3.selectAll('.edge-hover')
+			.filter(ed => pathEdges.map(pe => ed.from == pe[0] && pe[1] == ed.to).reduce((a,b) => a || b))
+			.attr('stroke-opacity', 0.5)
+			.on('mouseout', null);
 	}
 }
 
@@ -173,24 +212,34 @@ var updateNodeData = function(n) {
 		.style('display', 'none');
 	d3.select('#node-title-p')
 		.style('display', 'block')
-		.text('Node ' + n.id);
+		.text(n.complex ? 'Node [' + n.complex + ']' : 'Node ' + n.id);
 	updateInfoPane(n.parameters);
+
+
 }
 
 var updateEdgeData = function(e) {
 	clearHighlights();
 	selectedEdge = e;
 	highlightSelected();
+	var edgeTitle = 'Edge ' + e.from + ', ' + e.to;
+	if (e.interactome) {
+		edgeTitle = 'Edge [' + e.interactome + '], ' + e.to;
+	}
+	else if (e.complex) {
+		edgeTitle = 'Edge [' + e.complex + '], ' + e.complexTo;
+	}
 	d3.select('#edge-title-p')
 		.style('display', 'block')
-		.text('Edge ' + e.from + ', ' + e.to);
+		.text(edgeTitle);
 	d3.select('#edge-inter-p')
 		.style('display', 'block')
 		.text('Interaction type ' + e.interaction);
 	d3.select('#node-title-p')
 		.style('display', 'none');
 
-	updateInfoPane(e.parameters);
+	var params = e.complex ? d3.selectAll('.edge').filter(ed => ed.from == e.to && ed.to == e.complexTo).data()[0].parameters : e.parameters;
+	updateInfoPane(params);
 }
 
 // Nav button functions:
