@@ -17,17 +17,11 @@
     <body>
     	<div class='container-fluid overarching-container'>
     		<div class='row header-row'></div>
-    		<div class='row' id='data-row'>
-    			<div class='col-md-12 col-tall' id='data-col'>
-    				<!-- <div class='row col-tall' id='row-1'>
-    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-1'></div>
-    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-2'></div>
-    				</div>
-    				<div class='row col-tall' id='row-2'>
-    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-3'></div>
-    					<div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='col-4'></div>
-    				</div> -->
-    			</div>
+    		<div class='row' id='view-row'>
+                <div class='col-md-4 col-tall' id='data-col'>
+                    <h3>System Data:</h3>
+                </div>
+    			<div class='col-md-8 col-tall' id='view-col'></div>
     		</div>
     	</div>
 
@@ -59,7 +53,7 @@
     		}
 
     		insertHeader('Summary');
-    		createGrid('data-col', 2, 2);
+    		createGrid('view-col', 2, 2);
     		gsvg = insertSvg('col-0', 'g-svg');
     		hmsvg = insertSvg('col-1', 'hm-svg');
     		ersvg = insertSvg('col-2', 'er-svg');
@@ -77,18 +71,44 @@
     			addSelectRect('hm-svg', 'prevalence.html');
     		});
 
-    		/*d3.selectAll('#er-svg, #placeholder')
-    			.append('rect')
-    			.attr('height', '100%')
-    			.attr('width', '100%')
-    			.attr('fill', color)
-    			.attr('fill-opacity', 0.5);*/
-
     		addSelectRect('er-svg', '#');
     		addSelectRect('placeholder', '#');
 
-			 
+            systemInfo = null;
+            d3.json('/stats', function(s) {
+                systemInfo = s;
+                var dataCol = d3.select('#data-col');
+                dataCol.append('pre')
+                    .text(systemInfo.numSpecies + ' Species');
+                dataCol.append('pre')
+                    .text('Max Allowed Parents: ' + systemInfo.maxParents);
+                dataCol.append('pre')
+                    .text('Number of Interaction Types: ' + systemInfo.numInteractions);
+                dataCol.append('pre')
+                    .text('Maxmimum Allowed Order: ' + systemInfo.maxOrder);
+                dataCol.append('pre')
+                    .text(function() {
+                        var enfEdges = systemInfo.enfEdges;
+                        if (enfEdges.length == 0) {
+                            enfEdges = 'None';
+                        }
+                        return 'Enforced Edges: ' + enfEdges;
+                    });
+                dataCol.append('pre')
+                    .text(function() {
+                        var enfGaps = systemInfo.enfGaps;
+                        if (enfGaps.length == 0) {
+                            enfGaps = 'None';
+                        }
+                        return 'Enforced Absences: ' + enfGaps;
+                    });
+                dataCol.append('pre')
+                    .text('Number of Models Retained: ' + systemInfo.numModels);
+                dataCol.append('h4')
+                    .text('Select a data view from the left to analyse further');
+            });
 
+			
 
     	</script>
 

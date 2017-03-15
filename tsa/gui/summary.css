@@ -6,6 +6,15 @@ html, body {
 	height: 100%;
 }
 
-#data-row {
+
+#view-row {
 	height: 95%;
+}
+
+#data-col {
+	border: 1px solid black;
+}
+
+#col-0, #col-1, #col-2, #col-3 {
+	padding: 0;
 }

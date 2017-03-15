@@ -10,7 +10,7 @@ import webbrowser
 import tsa
 
 SYSTEM = []
-
+SYSTEM_INFO = []
 
 class Server(BaseHTTPRequestHandler):
 
@@ -36,11 +36,6 @@ class Server(BaseHTTPRequestHandler):
       layout_lst = self.circ_lay(num_nodes)
       d = {'rank': 0, 'dist':10, 'nodes': node_lst, 'edges': edge_lst, 'layout': layout_lst}
       return json.dumps(d)
-
-    def system_stats(self):
-      d = {}
-      d['num-graphs'] = len(SYSTEM)
-      return d;
 
     def occ_mat(self, topx=-1):
       if topx < 0:
@@ -147,7 +142,7 @@ class Server(BaseHTTPRequestHandler):
           self.load_system_json(lpath)
 
         elif path[-6:] == '/stats':
-          gj = json.dumps(self.system_stats())
+          gj = json.dumps(SYSTEM_INFO)
           jbytes = bytes(gj, 'utf-8')
           self.serve_fake_json(jbytes)
 
@@ -191,25 +186,6 @@ class Server(BaseHTTPRequestHandler):
         print(self.path)
         ctype, pdict = cgi.parse_header(self.headers['content-type'])
 
-      
-        # if ctype == 'multipart/form-data':
-        #   pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
-        #   postvars = cgi.parse_multipart(self.rfile, pdict)
-        #   print (postvars.keys())
-
-        # # refuse to receive non-json content
-        # if ctype != 'application/json':
-        #     self.send_response(400)
-        #     self.end_headers()
-        #     return
-            
-        # # read the message and convert it into a python dictionary
-        # length = int(self.headers['content-length'])
-        # print(length)
-        # data = self.rfile.read(length)
-        # data = data.decode('utf-8')
-        # message = json.loads(data)
-
         print(form)
         print('file' in form)
       
@@ -247,7 +223,9 @@ if __name__ == "__main__":
         val = argv[2]
         if opt == '-l':
           with open(val, 'r') as f:
-            SYSTEM = json.load(f)
+            model_bag = json.load(f)
+            SYSTEM = model_bag['models']
+            SYSTEM_INFO = model_bag['systemInfo']
           run()
 
 

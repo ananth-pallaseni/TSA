@@ -248,10 +248,15 @@ class WholeModel(object):
 		return [self.get_param(pt.param_type, node=node) for pt in self.node_ptypes]
 
 class ModelBag(object):
-	def __init__(self, lst, node_ptypes, edge_ptypes):
+	def __init__(self, lst, node_ptypes, edge_ptypes, max_parents, num_interactions, max_order, enf_edges, enf_gaps):
 		self.models = sorted([WholeModel(targets, dist, node_ptypes, edge_ptypes) for (targets, dist) in lst], key=lambda x:x.dist)
 		self.node_ptypes = node_ptypes
 		self.edge_ptypes = edge_ptypes
+		self.max_parents = max_parents
+		self.num_interactions = num_interactions
+		self.max_order = max_order
+		self.enf_edges = enf_edges
+		self.enf_gaps = enf_gaps
 
 	def __getitem__(self, key):
 		if type(key) is not int:

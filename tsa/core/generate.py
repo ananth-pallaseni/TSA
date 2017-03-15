@@ -575,7 +575,14 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 	
 
 	# Convert to WholeModel format for future analysis
-	best_whole_models = ModelBag(best_whole_models, node_ptypes, edge_ptypes)
+	best_whole_models = ModelBag(best_whole_models, 
+								 node_ptypes, 
+								 edge_ptypes,
+								 max_parents,
+								 num_interactions,
+								 max_order,
+								 enf_edges,
+								 enf_gaps)
 
 	return best_whole_models
 	
@@ -609,9 +616,17 @@ def whole_model_to_json(wm, rank):
 	return json.dumps(json_d)
 
 def model_bag_to_json(model_bag):
+	model_bag_json = {}
 	to_dict = [whole_model_to_dict(model_bag[i], i) for i in range(len(model_bag))]
-	#to_dict = [whole_model_to_dict(wm) for wm in model_bag]
-	return json.dumps(to_dict)
+	model_bag_json['models'] = to_dict
+	model_bag_json['systemInfo'] = {'numSpecies': model_bag[0].num_species,
+									'maxParents': model_bag.max_parents,
+									'numInteractions': model_bag.num_interactions,
+									'maxOrder': model_bag.max_order,
+									'enfEdges': model_bag.enf_edges,
+									'enfGaps': model_bag.enf_gaps,
+									'numModels': len(model_bag.models)}
+	return json.dumps(model_bag_json)
 
 def store_json(model_bag, fname):
 	with open(fname, 'w') as f:

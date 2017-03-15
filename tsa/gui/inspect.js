@@ -194,8 +194,6 @@ var updateEdgeData = function(e) {
 }
 
 // Nav button functions:
-
-
 var updateNavs = function() {
 	if (numGraphs == null) {
 		d3.json('/num-graphs', function(n) {
@@ -229,7 +227,13 @@ var updateNavs = function() {
 
 
 window.addEventListener('resize', redraw);
-
+$('#cur-page').keypress(
+	function(event) {
+		if (event.which == 13) {
+			event.preventDefault();
+			$('#go-btn').trigger('click');
+		}
+	});
 initGraphData();
 initInfoPane();
 backRect.on('click', clearInfoAndHighlights);
@@ -250,7 +254,7 @@ var getGraph = function(gnum) {
 
 var goToGraph = function(event) {
 	var to = document.getElementById('cur-page').value;
-	console.log(to);
+	// Check if to is a number
 	if (to % 1 === 0) {
 		getGraph(to);
 	}
