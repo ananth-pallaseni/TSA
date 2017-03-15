@@ -12,36 +12,38 @@ var handleLoad = function(files) {
 var insertHeader = function(title) {
 	var hr = d3.select('.header-row');
 
-	hr.append('div')
+	/*hr.append('div')
 		.attr('class', 'col-md-2 col-sm-12 col-xs-12 col-tall')
 		.append('div')
 		.attr('class', 'jumbotron col-tall')
 		.attr('id', 'jumbo-header')
-		.append('p')
+		.append('pre')
 		.attr('id', 'jumbo-p')
-		.text(title);
+		.text(title);*/
 
 	var btnrow = hr.append('div')
-		.attr('class', 'col-md-10 col-sm-12 col-xs-12 col-tall')
+		.attr('class', 'col-md-12 col-sm-12 col-xs-12 col-tall nav-col')
 		.append('div')
-		.attr('class', 'btn-group btn-group-justified nav-btn-group');
+		.attr('class', 'btn-group btn-group-justified nav-btn-group')
+		.attr('id', 'btn-row');
+
 
 	btnrow.append('a')
-		.attr('href', '/index.html')
-		.attr('class', 'btn btn-muted nav-btn')
-		.text('Home')
+		.attr('href', '/summary.html')
+		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
+		.attr('id', 'nav-btn-summary')
+		.text('Summary')
 	btnrow.append('a')
 		.attr('href', '/inspect.html')
-		.attr('class', 'btn btn-muted nav-btn')
+		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
+		.attr('id', 'nav-btn-inspect')
 		.text('Inspect')
 	btnrow.append('a')
-		.attr('href', '#')
-		.attr('class', 'btn btn-muted nav-btn')
-		.text('Load')
-	btnrow.append('a')
-		.attr('href', '/summary.html')
-		.attr('class', 'btn btn-muted nav-btn')
-		.text('Summary')
+		.attr('href', '/prevalence.html')
+		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
+		.attr('id', 'nav-btn-prevalence')
+		.text('Heatmap')
+	
 
 }
 

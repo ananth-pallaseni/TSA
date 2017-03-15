@@ -14,3 +14,7 @@ html, body {
 #sc-col {
 	padding-left: 0;
 }
+
+#nav-btn-prevalence {
+	background-color: grey;
+}

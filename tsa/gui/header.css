@@ -15,12 +15,16 @@
 
 .header-row {
     height: 5%;
-    background-color: darkgray;
+    background-color: midnightblue;
 }
 
 .page-header {
     margin: 0px;
     padding-bottom: 0px;
+}
+
+.nav-col {
+    padding: 0;
 }
 
 .nav-btn-group {
@@ -41,23 +45,42 @@
     padding: 0;
     border: 0;
     margin: 0;
-    background-color: transparent;
+    background-color: grey;
 }
 
 #jumbo-p {
-    font-size: 15pt;
+    font-size: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-family: Arial;
 }
 
-@media (max-width: 1300px) {
+#btn-row {
+    font-family: Arial;
+    color: white;
+}
+
+.top-nav-btn {
+    color: white;
+}
+
+.top-nav-btn:hover {
+    color: white;
+    background-color: grey;
+}
+
+/*@media (max-width: 1300px) {
     #jumbo-p {font-size: 10pt;}
 }
 
 @media (max-width: 500px) {
     #jumbo-p {font-size: 10pt;}
-}
+}*/
 
 
 #file-input, #load-frm, #load-frm-btn {

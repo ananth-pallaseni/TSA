@@ -18,13 +18,17 @@ html, body {
 
 #nav-row {
     height: 5%;
-    background-color: darkgray;
+    background-color: midnightblue;
 }
 
 .nav-btn {
     text-align: center;
     padding:  0;
     display: table;
+}
+
+#nav-btn-inspect {
+    background-color: grey;
 }
 
 .graph-nav-btn {
@@ -60,13 +64,13 @@ html, body {
     /*background-color: rgba(255, 0, 0, 0.2);*/
 }
 
-#graph-data-col {
+/*#graph-data-col {
     background-color: rgba(255, 153, 0, 0.5); 
 }
 
 #data-area {
     background-color: rgba(0, 0, 255, 0.5);
-}
+}*/
 
 #data-row {
     height: 70%;
@@ -74,6 +78,10 @@ html, body {
 
 .data-container {
     outline: 1px solid black;
+}
+
+#first-btn, #back-btn, #next-btn, #last-btn {
+    color: white;
 }
 
 

@@ -109,7 +109,7 @@ class Server(BaseHTTPRequestHandler):
 
         # named pages:
         if path == '/':
-          self.serve_index();
+          self.serve_html('summary.html')
         elif path[-13:] == '/graph/random':
           gj = self.random_graph_json();
           jbytes = bytes(gj, 'utf8');
@@ -122,6 +122,8 @@ class Server(BaseHTTPRequestHandler):
           self.serve_html('summary.html')
         elif path[-16:] == '/prevalence.html':
           self.serve_html('prevalence.html')
+        elif path[-13:] == '/welcome.html':
+          self.serve_html('welcome.html')
 
         elif path[-13:] == '/test.html':
           self.serve_html('test.html')

@@ -12,36 +12,13 @@
 
         <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
         <link rel='stylesheet' type='text/css' href='header.css'>
-        <link rel='stylesheet' type='text/css' href='index.css'>
+        <link rel='stylesheet' type='text/css' href='welcome.css'>
     </head>
 
     <body>
         <div class='container-fluid overarching-container'>
             <!-- Header Row -->
-            <div class='row header-row'>
-                <div class='col-md-2 col-sm-12 col-xs-12 col-tall'>
-                    <!-- <h3 class='text-justified resp-header'>Graph Visualization</h3> -->
-                    <div class='jumbotron col-tall' id='jumbo-header'>
-                        <p id='jumbo-p'> TSA </p>
-                    </div>
-                </div>
-
-                <div class='col-md-10 col-sm-12 col-xs-12 col-tall'>
-                    <div class="btn-group btn-group-justified nav-btn-group">
-                        <a href='/index.html' class="btn btn-muted nav-btn">Home</a>
-                        <a href='/inspect.html' class="btn btn-muted nav-btn">Inspect</a>
-                        <a href='#' class="btn btn-muted nav-btn" id='load-btn'>Load</a>
-                        <a href='#' class="btn btn-muted nav-btn">Save</a>
-                        <a href='/summary.html' class="btn btn-muted nav-btn">Summary</a>
-                        <form action='/load' method='POST' enctype="multipart/form-data" id='load-frm'>
-                            <input type="file" id="file-input" onchange='handleLoad(this.files)'> 
-                            <button type='submit' id='load-frm-btn'> </button> 
-                        </form>
-                        
-                    </div>
-                </div>
-
-            </div>
+        
 
             <div class='row body-container'>
                 <div class='row welcome-area'>
