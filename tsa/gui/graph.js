@@ -132,7 +132,6 @@ var line_shorten = function(a, b, d, strWidth) {
 
 var calcStrWidth = function(svg, d, edgeScale) {
 	occ = d.occurrences;
-	var www = d.to==1 && d.interactome && d.interactome[0]==0&&d.interactome[1]==3 ? console.log('def', d.from, d.interactome, d.to, d.occurrences) : 0;
 	if (!occ) {
 		occ = 4;
 	}

@@ -28,7 +28,7 @@ var heatmapFrom = function(mat, numBuckets, color) {
 			{maxVal = Math.max(e.occurrences, maxVal);}
 			)
 		);
-	
+
 
 	
 	// Create an arary of colors from white to baseColor
@@ -58,10 +58,10 @@ var heatmapFrom = function(mat, numBuckets, color) {
 var transition_duration = 700;
 
 var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
-	var xWidth = hside * numCols;
+	var xWidth = hside * (numCols+1);
 	var xPad = (svgWidth(svg) - xWidth)/2;
 
-	var yHeight = vside * numRows;
+	var yHeight = vside * (numRows+1);
 	var yPad = (svgHeight(svg) - yHeight)/2;
 	squares.attr('fill-opacity', 0)
 		.attr('stroke-width', 0)
@@ -74,12 +74,12 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 		.delay((d, i) => i * (500 / (numRows*numCols)))
 		.attr('x', (d, i) => {
 			var col = i % numCols;
-			var xPos = col * hside + xPad;
+			var xPos = col * hside + xPad + hside;
 			return xPos;
 		})
 		.attr('y', (d, i) => {
 			var row = Math.floor(i / numCols);
-			var yPos = row * vside + yPad;
+			var yPos = row * vside + yPad + vside;
 			return yPos;
 
 		})
@@ -91,12 +91,34 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 		var col = i % numCols;
 		var xPos = col * hside + xPad + hside/2;
 		var row = Math.floor(i / numCols);
-		var yPos = row * vside + yPad + vside/2;
-		if (row == 0 || col == 0) {
+		var yPos = row * vside + yPad + vside*2/3 ;
+		if (row == 0 && col != 0) {
 			svg.append('text')
-				.text(row == 0 ? s.to : (s.complex ? s.complex : s.from))
+				.text(s.to)
 				.attr('class', 'square-lbl')
-				.attr('transform', 'translate(' + xPos + ', ' + yPos + ')')
+				.attr('transform', 'translate(' + (xPos + hside) + ', ' + yPos + ')')
+				.attr('font-family', 'Verdana')
+				.attr('text-anchor', 'middle');
+		}
+		else if (row != 0 && col == 0) {
+			svg.append('text')
+				.text(s.complex ? s.complex : s.from)
+				.attr('class', 'square-lbl')
+				.attr('transform', 'translate(' + xPos + ', ' + (yPos+ vside) + ')')
+				.attr('font-family', 'Verdana')
+				.attr('text-anchor', 'middle');
+		}
+		else if (row == 0 && col == 0) {
+			svg.append('text')
+				.text(0)
+				.attr('class', 'square-lbl')
+				.attr('transform', 'translate(' + (xPos+hside) + ', ' + yPos + ')')
+				.attr('font-family', 'Verdana')
+				.attr('text-anchor', 'middle');
+			svg.append('text')
+				.text(0)
+				.attr('class', 'square-lbl')
+				.attr('transform', 'translate(' + xPos + ', ' + (yPos+ vside) + ')')
 				.attr('font-family', 'Verdana')
 				.attr('text-anchor', 'middle');
 		}
@@ -116,8 +138,8 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 	var numRows = hm.length;
 	var numCols = hm[0].length;
 	var side = Math.min(svgWidth(svg), svgHeight(svg));
-	var hside = side / numCols;
-	var vside = side / numRows;
+	var hside = side / (numCols+2);
+	var vside = side / (numRows+1);
 	var flat = hm.reduce((a, b) => a.concat(b));
 	console.log(flat);
 
