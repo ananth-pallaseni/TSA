@@ -58,10 +58,10 @@ var heatmapFrom = function(mat, numBuckets, color) {
 var transition_duration = 700;
 
 var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
-	var xWidth = hside * (numCols+1);
+	var xWidth = hside * (numCols+1.5);
 	var xPad = (svgWidth(svg) - xWidth)/2;
 
-	var yHeight = vside * (numRows+1);
+	var yHeight = vside * (numRows+1.5);
 	var yPad = (svgHeight(svg) - yHeight)/2;
 	squares.attr('fill-opacity', 0)
 		.attr('stroke-width', 0)
@@ -138,8 +138,8 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 	var numRows = hm.length;
 	var numCols = hm[0].length;
 	var side = Math.min(svgWidth(svg), svgHeight(svg));
-	var hside = side / (numCols+2);
-	var vside = side / (numRows+1);
+	var hside = side / (numCols+1.5);
+	var vside = side / (numRows+1.5);
 	var flat = hm.reduce((a, b) => a.concat(b));
 	console.log(flat);
 
@@ -190,10 +190,15 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 
 }
 
-var drawColorScale = function(svg, scaleColor, hmsvg) {
-
-	var side = Math.min(svgWidth(hmsvg), svgHeight(hmsvg));
-	var pad = (svgHeight(svg) - side)/2;
+var drawColorScale = function(svg, scaleColor, numRows, numCols) {
+ 
+	var side = Math.min(svgWidth(svg), svgHeight(svg));
+	var hside = side / (numCols+1.5);
+	var vside = side / (numRows+1.5);
+	var xWidth = hside * (numCols+1.5);
+	var xPad = (svgWidth(svg) - xWidth)/2;
+	var yHeight = vside * (numRows+1.5);
+	var yPad = (svgHeight(svg) - yHeight)/2;
 
 	// Create heatmap scale if it doesn't exist
 	if (! $('#cmap-scale').length) {
@@ -225,9 +230,10 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 	if (! $('cmap-rect').length) {
 		var cRect = svg.append('rect')
 			.attr('id', 'cmap-rect')
-			.attr('width', '100%')
+			.attr('width', hside/2)
 			.attr('height', 0)
-			.attr('y', pad)
+			.attr('x', xPad + (numCols+1)*hside)
+			.attr('y', yPad + vside)
 			.attr('fill', 'url(#cmap-scale)')
 			.attr('stroke', 'black');
 	}
@@ -238,10 +244,12 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 		.transition()
 		.duration(transition_duration)
 		.delay(500)
-		.attr('height', side)
+		.attr('height', vside*numCols)
 		.attr('stroke-width', 1);
 
-	var xPad = svgWidth(svg) / 2;
+	var lblXPad = xPad + (numCols+1)*hside + hside/4;
+	var lblYPad = yPad + vside;
+
 	// Check for axis text group
 	if (! $('#text-g').length) {
 		var textg = svg.append('g')
@@ -249,19 +257,19 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 
 		textg.append('text')
 			.text(0)
-			.attr('transform', 'translate(' + xPad + ',' + (pad + side/20) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(1)
-			.attr('transform', 'translate(' + xPad + ',' + (pad + side-side/20) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols-vside*numCols/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(0.5)
-			.attr('transform', 'translate(' + xPad + ',' + (pad + side/2) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols/2) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
@@ -277,15 +285,19 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 
 }
 
-var drawHeatmap = function(mosaicSvg, scaleSvg, mat) {
+var drawHeatmap = function(mosaicSvg, mat) {
 	nextColor();
 	drawHeatmapMosaic(mosaicSvg, mat, cur_color);
-	drawColorScale(scaleSvg, cur_color, mosaicSvg);
+	numRows = mat.length;
+	numCols = mat[0].length;
+	drawColorScale(mosaicSvg, cur_color, numRows, numCols);
 }
 
-var drawHeatmapColor = function(mosaicSvg, scaleSvg, mat, color) {
+var drawHeatmapColor = function(mosaicSvg, mat, color) {
 	drawHeatmapMosaic(mosaicSvg, mat, color);
-	drawColorScale(scaleSvg, color, mosaicSvg);
+	numRows = mat.length;
+	numCols = mat[0].length;
+	drawColorScale(mosaicSvg, color, numRows, numCols);
 }
 
 var drawOnlyHeatmapMosaic = function(svg, mat, color) {

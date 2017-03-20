@@ -20,10 +20,10 @@
             <div class='row header-row'></div>
 
             <div class='row' id='data-row'>
-                <div class='col-md-5 col-sm-11 col-xs-11 col-tall' id='hm-col'>
+                <div class='col-md-6 col-sm-11 col-xs-11 col-tall' id='hm-col'>
                 </div>
-                <div class='col-md-1 cols-sm-1 cols-xs-1 col-tall' id='sc-col'>
-                </div>
+                <!-- <div class='col-md-1 cols-sm-1 cols-xs-1 col-tall' id='sc-col'>
+                </div> -->
                 <div class='col-md-6 col-sm-12 cols-xs-12 col-tall' id='pg-col'>
                 </div>
             </div>
@@ -34,7 +34,7 @@
         <script type="text/javascript">
             insertHeader('Inspect');
             var hmsvg = insertSvg('hm-col', 'hm-svg');
-            var scsvg = insertSvg('sc-col', 'sc-svg');
+            /*var scsvg = insertSvg('sc-col', 'sc-svg');*/
             var pgsvg = insertSvg('pg-col', 'pg-svg');
 
             var clickRect = pgsvg.append('rect')
@@ -102,7 +102,7 @@
             d3.json('/occ-mat/100', function(tup) {
                 mat = tup[0]
                 cplx = tup[1]
-                drawHeatmapColor(hmsvg, scsvg, mat, color);
+                drawHeatmapColor(hmsvg, mat, color);
                 squaresOnMouse(mouseoverfn, mouseoutfn);
 
                 squaresOnClick(function(d) {console.log('Click in square ' + d.from + ', ' + d.to)});
