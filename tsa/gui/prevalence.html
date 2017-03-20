@@ -70,14 +70,31 @@
 
             var mouseoverfn = function(d) {
                 $(d3.selectAll('.edge-hover')
-                    .filter(e => d.from == e.from && d.to == e.to)
+                    .filter(function(e) {
+                        if (d.complex) {
+                            return e.interactome && e.interactome[0] == d.complex[0] && e.interactome[1] == d.complex[1] && e.to == d.to;
+                        }
+                        else {
+                            return d.from == e.from && d.to == e.to;
+                        }
+                        
+                    })
                     .node())
                     .d3Trigger('mouseover');
+                console.log(d.from, d.to)
             }
 
             var mouseoutfn = function(d) {
                 $(d3.selectAll('.edge-hover')
-                    .filter(e => d.from == e.from && d.to == e.to)
+                    .filter(function(e) {
+                        if (d.complex) {
+                            return e.interactome && e.interactome[0] == d.complex[0] && e.interactome[1] == d.complex[1] && e.to == d.to;
+                        }
+                        else {
+                            return d.from == e.from && d.to == e.to;
+                        }
+                        
+                    })
                     .node())
                     .d3Trigger('mouseout');
             }

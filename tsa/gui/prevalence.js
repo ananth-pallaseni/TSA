@@ -27,7 +27,9 @@ var drawPrevalenceGraphColor = function(svg, nodes, edges, layout, color) {
 }
 
 var drawPrevalenceGraphFrom = function(svg, nodes, edges, layout, color) {
-	nodes_cut = nodes.filter(n => !n.complex)
+	var nodes_cut = nodes.filter(n => !n.complex);
+	//edges = edges.filter(e => e.occurrences > 0);
+	console.log(edges);
 	if (color) {
 	  	drawPrevalenceGraphColor(svg, nodes_cut, edges, layout, color);
 	}

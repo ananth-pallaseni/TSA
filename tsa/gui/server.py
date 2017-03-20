@@ -43,7 +43,7 @@ class Server(BaseHTTPRequestHandler):
       num_nodes = len(SYSTEM[0]['nodes'])
 
       # Init matrix assuming no cplx edges
-      mat = [[0 for i in range(num_nodes)] for j in range(num_nodes)]
+      mat = [[{'occurrences': 0} for i in range(num_nodes)] for j in range(num_nodes)]
       
       # cplx maps from hash->complex node id
       cplx = {}
@@ -57,19 +57,19 @@ class Server(BaseHTTPRequestHandler):
           e_from = e['from']
           e_to = e['to']
           if type(e_from) != list:
-            mat[e_from][e_to] += 1
+            mat[e_from][e_to]['occurrences'] += 1
           else:
             # perform a basic hash on the edge
-            fhash = num_nodes + 3*e_from[0] + 3*e_from[1]
+            fhash =  (3 + e_from[0])*3 + e_from[1]
 
             # if edge doesn't exist, add it and add a new row to the matrix
             if fhash not in cplx:
               cplx[fhash] = num_nodes + new_offset
               new_offset += 1
-              mat = mat + [[0 for i in range(num_nodes)]]
+              mat = mat + [[{'occurrences': 0, 'complex': e_from} for i in range(num_nodes)]]
 
             # increment number of this edge found
-            mat[cplx[fhash]][e_to] += 1
+            mat[cplx[fhash]][e_to]['occurrences'] += 1
 
       return mat, cplx
 
@@ -92,7 +92,7 @@ class Server(BaseHTTPRequestHandler):
               'to': e_to,
               'interaction': e['interaction'],
               'parameters': e['parameters'],
-              'occurrences': 0}
+              'occurrences': 1}
           else:
             edges[(e_from, e_to)]['occurrences'] += 1
 

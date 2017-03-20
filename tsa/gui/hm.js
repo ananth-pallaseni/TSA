@@ -24,10 +24,11 @@ var heatmapFrom = function(mat, numBuckets, color) {
 	// Find maximum value in matrix
 	var maxVal = 1;
 	mat.forEach(row => 
-		row.forEach(val => 
-			{maxVal = Math.max(val, maxVal);}
+		row.forEach(e => 
+			{maxVal = Math.max(e.occurrences, maxVal);}
 			)
 		);
+	
 
 	
 	// Create an arary of colors from white to baseColor
@@ -42,12 +43,13 @@ var heatmapFrom = function(mat, numBuckets, color) {
 
 	// Map colors onto bucketed vals
 	var hm = mat.map((row, ridx) => 
-		row.map(function(val, cidx) {
-			return {val: val, 
-					ratio: val/maxVal, 
-					color: colorScale(val),
+		row.map(function(e, cidx) {
+			return {val: e.occurrences, 
+					ratio: e.occurrences/maxVal, 
+					color: colorScale(e.occurrences),
 					from: ridx,
-					to: cidx}
+					to: cidx,
+					complex: e.complex}
 		}));
 
 	return hm;
@@ -71,13 +73,13 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 		.duration(transition_duration)
 		.delay((d, i) => i * (500 / (numRows*numCols)))
 		.attr('x', (d, i) => {
-			var row = i % numCols;
-			var xPos = row * hside + xPad;
+			var col = i % numCols;
+			var xPos = col * hside + xPad;
 			return xPos;
 		})
 		.attr('y', (d, i) => {
-			var col = Math.floor(i / numCols);
-			var yPos = col * vside + yPad;
+			var row = Math.floor(i / numCols);
+			var yPos = row * vside + yPad;
 			return yPos;
 
 		})
@@ -85,11 +87,26 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 		.attr('fill-opacity', 1)
 		.attr('stroke-width', 1);
 
+	squares.each(function(s, i) {
+		var col = i % numCols;
+		var xPos = col * hside + xPad + hside/2;
+		var row = Math.floor(i / numCols);
+		var yPos = row * vside + yPad + vside/2;
+		if (row == 0 || col == 0) {
+			svg.append('text')
+				.text(row == 0 ? s.to : (s.complex ? s.complex : s.from))
+				.attr('class', 'square-lbl')
+				.attr('transform', 'translate(' + xPos + ', ' + yPos + ')')
+				.attr('font-family', 'Verdana')
+				.attr('text-anchor', 'middle');
+		}
+	})
+
 	squares.select('title')
 		.text(function(d) {
 			if (d.complex) {}
 		})
-		.text(d => 'Edge=(' + d.from + ',' + d.to + ')' + '\nNum=' + d.val.toFixed(2) + '\nRatio=' + d.ratio.toFixed(2));
+		.text(d => 'Edge=(' + (d.complex ? d.complex : d.from) + ',' + d.to + ')' + '\nNum=' + d.val.toFixed(2) + '\nRatio=' + d.ratio.toFixed(2));
 }
 
 var drawHeatmapMosaic = function(svg, mat, color) {
@@ -102,6 +119,11 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 	var hside = side / numCols;
 	var vside = side / numRows;
 	var flat = hm.reduce((a, b) => a.concat(b));
+	console.log(flat);
+
+	// Delete all old text
+	svg.selectAll('.square-lbl')
+		.remove();
 
 	// Delete all old grid squares
 	svg.selectAll('rect.hm-square')
@@ -197,7 +219,7 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 		.attr('height', side)
 		.attr('stroke-width', 1);
 
-
+	var xPad = svgWidth(svg) / 2;
 	// Check for axis text group
 	if (! $('#text-g').length) {
 		var textg = svg.append('g')
@@ -205,19 +227,19 @@ var drawColorScale = function(svg, scaleColor, hmsvg) {
 
 		textg.append('text')
 			.text(0)
-			.attr('transform', 'translate(25,' + (pad + side/20) + ')')
+			.attr('transform', 'translate(' + xPad + ',' + (pad + side/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(1)
-			.attr('transform', 'translate(25,' + (pad + side-side/20) + ')')
+			.attr('transform', 'translate(' + xPad + ',' + (pad + side-side/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(0.5)
-			.attr('transform', 'translate(25,' + (pad + side/2) + ')')
+			.attr('transform', 'translate(' + xPad + ',' + (pad + side/2) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
