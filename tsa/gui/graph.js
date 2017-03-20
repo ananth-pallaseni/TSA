@@ -800,7 +800,6 @@ var draw_graph_color = function(svg, node_lst, edges, layout, node_radius, color
 
 	draw_edge_hovers(svg, lineEdges, layout, node_radius, edgeScale, color);
 	drawSelfEdgeHovers(svg, selfEdges, layout, node_radius, edgeScale, color);
-
 	draw_nodes(svg, node_lst, layout, node_radius, color);
 }
 
@@ -884,46 +883,65 @@ var circleLayout = function(nodes) {
 
 
 var preprocess = function(nodes, edges) {
-	maxIdx = nodes.map(n => n.id).reduce((a, b) => Math.max(a,b)) + 1;
-	complexNodes = nodes.concat([])
-	newEdges = []
+	var maxIdx = nodes.map(n => n.id).reduce((a, b) => Math.max(a,b)) + 1;
+	var offset = 0;
+	var complexNodes = [];
+	var newEdges = []
 	for (var i = 0; i < edges.length; i++) {
 		e = edges[i];
 		if (e.from.length && e.from.length > 1) {
-			// Add complex Node
-			complexNodes.push({
-				id: maxIdx,
-				complex: e.from,
-				parameters: []
-			});
-
-			// Add edges to complex node
-			e.from.forEach(function(n) {
-				newEdges.push({
-					from: n,
-					to: maxIdx,
-					parameters: [],
-					interaction: e.interaction,
+			cplxNode = complexNodes.find(n => n.complex[0] == e.from[0] && n.complex[1] == e.from[1]);
+			if (!cplxNode) {
+				// Add complex Node
+				complexNodes.push({
+					id: maxIdx + offset,
 					complex: e.from,
-					complexTo: e.to
-				})
-			})
+					parameters: []
+				});
 
-			// Add edge from complex node
-			newEdges.push({
-				from: maxIdx,
-				to: e.to,
-				parameters: e.parameters,
-				interaction: e.interaction,
-				interactome: e.from
-			})
-			maxIdx += 1;
+				// Add edges to complex node
+				e.from.forEach(function(n) {
+					newEdges.push({
+						from: n,
+						to: maxIdx + offset,
+						parameters: [],
+						interaction: e.interaction,
+						complex: e.from,
+						complexTo: e.to
+					})
+				})
+
+				// Add edge from complex node
+				newEdges.push({
+					from: maxIdx + offset,
+					to: e.to,
+					parameters: e.parameters,
+					interaction: e.interaction,
+					interactome: e.from
+				})
+
+				offset += 1;
+			}
+			else {
+				// Add edge from complex node
+				newEdges.push({
+					from: cplxNode.id,
+					to: e.to,
+					parameters: e.parameters,
+					interaction: e.interaction,
+					interactome: e.from
+				})
+			}
+
+			
+			
 		} 
 		else {
 			newEdges.push(e);
 		}
 	}
 
+	complexNodes = nodes.concat(complexNodes);
 	newLayouts = circleLayout(complexNodes);
 	return [complexNodes, newEdges, newLayouts];
 }

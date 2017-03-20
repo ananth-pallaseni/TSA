@@ -41,11 +41,67 @@ class Server(BaseHTTPRequestHandler):
       if topx < 0:
         topx = len(SYSTEM)
       num_nodes = len(SYSTEM[0]['nodes'])
+
+      # Init matrix assuming no cplx edges
       mat = [[0 for i in range(num_nodes)] for j in range(num_nodes)]
+      
+      # cplx maps from hash->complex node id
+      cplx = {}
+
+      # next complex node id = num_nodes + new_offset
+      new_offset = 0
+
+      # iterate through all edges
       for g in SYSTEM[:topx]:
         for e in g['edges']:
-          mat[e['from']][e['to']] += 1
-      return mat
+          e_from = e['from']
+          e_to = e['to']
+          if type(e_from) != list:
+            mat[e_from][e_to] += 1
+          else:
+            # perform a basic hash on the edge
+            fhash = num_nodes + 3*e_from[0] + 3*e_from[1]
+
+            # if edge doesn't exist, add it and add a new row to the matrix
+            if fhash not in cplx:
+              cplx[fhash] = num_nodes + new_offset
+              new_offset += 1
+              mat = mat + [[0 for i in range(num_nodes)]]
+
+            # increment number of this edge found
+            mat[cplx[fhash]][e_to] += 1
+
+      return mat, cplx
+
+    def occ_graph(self, topx=-1):
+      if topx < 0:
+        topx = len(SYSTEM)
+      preval_g = {'rank': 0, 'dist': 0}
+      nodes = dict([(n['id'], n) for n in SYSTEM[0]['nodes']])
+      edges = {}
+      layout = []
+      next_idx = len(nodes)
+      for g in SYSTEM[:topx]:
+        for e in g['edges']:
+          e_from = e['from']
+          if type(e_from) == list:
+            e_from = tuple(e_from)
+          e_to = e['to']
+          if (e_from, e_to) not in edges:
+            edges[(e_from, e_to)] = {'from': e_from,
+              'to': e_to,
+              'interaction': e['interaction'],
+              'parameters': e['parameters'],
+              'occurrences': 0}
+          else:
+            edges[(e_from, e_to)]['occurrences'] += 1
+
+      step = 2*math.pi / len(nodes)
+      layout = [[math.cos(step * i), math.sin(step * i)] for i in range(len(nodes))]
+
+      nodes = list(nodes.values())
+      edges = list(edges.values())
+      return [nodes, edges, layout]
 
 
 
@@ -149,13 +205,23 @@ class Server(BaseHTTPRequestHandler):
           self.serve_fake_json(jbytes)
 
         elif path[-12:] == '/occ-mat/all':
-          gj = json.dumps(self.occ_mat())
+          gj = json.dumps(list(self.occ_mat()))
+          jbytes = bytes(gj, 'utf-8')
+          self.serve_fake_json(jbytes)
+        elif path[-14:] == '/occ-graph/all':
+          gj = json.dumps(self.occ_graph())
           jbytes = bytes(gj, 'utf-8')
           self.serve_fake_json(jbytes)
         elif '/occ-mat/' in path:
           i = path.find('/occ-mat/')
           topx = int(path[i+9 : ])
           gj = json.dumps(self.occ_mat(topx))
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes);
+        elif '/occ-graph/' in path:
+          i = path.find('/occ-graph/')
+          topx = int(path[i+11 : ])
+          gj = json.dumps(self.occ_graph(topx))
           jbytes = bytes(gj, 'utf-8');
           self.serve_fake_json(jbytes);
         elif path[-11:] == '/num-graphs':
@@ -174,7 +240,6 @@ class Server(BaseHTTPRequestHandler):
           elif path[-5:] == '.json':
             self.serve_json(fpath);
           elif path[-4:] == '.css':
-            print('asked for css at path: ' + fpath)
             self.serve_css(fpath)
           elif path[-5] == '.html':
             self.serve_html(fpath)
@@ -219,17 +284,25 @@ if __name__ == "__main__":
     
     print('argv' + str(argv))
     if len(argv) == 2:
-        run(port=int(argv[1]))
-    elif len(argv) == 3:
-        opt = argv[1]
-        val = argv[2]
-        if opt == '-l':
-          with open(val, 'r') as f:
-            model_bag = json.load(f)
-            SYSTEM = model_bag['models']
-            SYSTEM_INFO = model_bag['systemInfo']
-          run()
-
-
-    else:
+        # run(port=int(argv[1]))
+        val = argv[1]
+        with open(val, 'r') as f:
+          model_bag = json.load(f)
+          SYSTEM = model_bag['models']
+          SYSTEM_INFO = model_bag['systemInfo']
         run()
+    else:
+        raise ValueError('Need to input a model file')
+    # elif len(argv) == 3:
+    #     opt = argv[1]
+    #     val = argv[2]
+    #     if opt == '-l':
+    #       with open(val, 'r') as f:
+    #         model_bag = json.load(f)
+    #         SYSTEM = model_bag['models']
+    #         SYSTEM_INFO = model_bag['systemInfo']
+    #       run()
+
+
+    # else:
+    #     run()

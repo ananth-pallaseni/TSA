@@ -66,7 +66,9 @@
     			addSelectRect('g-svg', 'inspect.html');
     		});
 
-    		d3.json('/occ-mat/100', function(mat) {
+    		d3.json('/occ-mat/100', function(tup) {
+                mat = tup[0]
+                cplx = tup[1]
     			drawOnlyHeatmapMosaic(hmsvg, mat, color);
     			addSelectRect('hm-svg', 'prevalence.html');
     		});

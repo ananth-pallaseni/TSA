@@ -177,14 +177,14 @@ var highlighAttached = function(n) {
 	var attachedHovers = d3.selectAll('.edge-hover')
 		.filter(function(e) {
 			var to = e.to == n.id;
-			var complex = e.complex ? e.complex.map(nd => nd.id == n.id).reduce(((a,b) => a || b)) || e.complexTo == n.id : false;
-			return to || complex;
+			return to;
 		})
 		.attr('stroke-opacity', 0.5)
 		.on('mouseout', null)
 }
 
 var highlightComplexPath = function(e) {
+	console.log('highlight cplx path')
 	if (e.interactome || e.complex) {
 		var pathEdges = e.interactome ? e.interactome.map(n => [n, e.from]) : e.complex.map(n => [n, e.to]).concat([[e.to, e.complexTo]]);
 		d3.selectAll('.edge')

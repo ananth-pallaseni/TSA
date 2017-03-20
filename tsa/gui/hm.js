@@ -21,7 +21,7 @@ var nextColor = function() {
 }
 
 var heatmapFrom = function(mat, numBuckets, color) {
-	// Split mat vals into buckets
+	// Find maximum value in matrix
 	var maxVal = 1;
 	mat.forEach(row => 
 		row.forEach(val => 
@@ -55,27 +55,29 @@ var heatmapFrom = function(mat, numBuckets, color) {
 
 var transition_duration = 700;
 
-var updateHeatmap = function(svg, squares, numRows, squareSide) {
-	var xWidth = squareSide * numRows;
+var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
+	var xWidth = hside * numCols;
 	var xPad = (svgWidth(svg) - xWidth)/2;
-	var yPad = (svgHeight(svg) - xWidth)/2;
+
+	var yHeight = vside * numRows;
+	var yPad = (svgHeight(svg) - yHeight)/2;
 	squares.attr('fill-opacity', 0)
 		.attr('stroke-width', 0)
 		.attr('x', 0)
 		.attr('y', 0)
-		.attr('width', squareSide)
-		.attr('height', squareSide)
+		.attr('width', hside)
+		.attr('height', vside)
 		.transition()
 		.duration(transition_duration)
-		.delay((d, i) => i * (500 / (numRows*numRows)))
+		.delay((d, i) => i * (500 / (numRows*numCols)))
 		.attr('x', (d, i) => {
-			var row = i % numRows;
-			var xPos = row * squareSide + xPad;
+			var row = i % numCols;
+			var xPos = row * hside + xPad;
 			return xPos;
 		})
 		.attr('y', (d, i) => {
-			var col = Math.floor(i / numRows);
-			var yPos = col * squareSide + yPad;
+			var col = Math.floor(i / numCols);
+			var yPos = col * vside + yPad;
 			return yPos;
 
 		})
@@ -84,6 +86,9 @@ var updateHeatmap = function(svg, squares, numRows, squareSide) {
 		.attr('stroke-width', 1);
 
 	squares.select('title')
+		.text(function(d) {
+			if (d.complex) {}
+		})
 		.text(d => 'Edge=(' + d.from + ',' + d.to + ')' + '\nNum=' + d.val.toFixed(2) + '\nRatio=' + d.ratio.toFixed(2));
 }
 
@@ -92,7 +97,10 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 
 	var hm = heatmapFrom(mat, 10, color); 
 	var numRows = hm.length;
-	var side = Math.min(svgWidth(svg), svgHeight(svg)) / numRows;
+	var numCols = hm[0].length;
+	var side = Math.min(svgWidth(svg), svgHeight(svg));
+	var hside = side / numCols;
+	var vside = side / numRows;
 	var flat = hm.reduce((a, b) => a.concat(b));
 
 	// Delete all old grid squares
@@ -114,8 +122,8 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 		.attr('class', 'hm-square')
 		.attr('x', 0)
 		.attr('y', 0)
-		.attr('width', side)
-		.attr('height', side)
+		// .attr('width', hside)
+		// .attr('height', vside)
 		.attr('fill-opacity', 0)
 		.attr('stroke', 'black')
 		.attr('stroke-width', 0)
@@ -134,7 +142,7 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 
 
 	// Update grid squares
-	updateHeatmap(svg, squares, numRows, side);
+	updateHeatmap(svg, squares, numRows, numCols, hside, vside);
 
 }
 

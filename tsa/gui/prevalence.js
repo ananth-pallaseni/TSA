@@ -4,7 +4,7 @@ var generatePrevalenceScale = function(edges, maxWidth) {
 	var maxNum = edges.map(e => e.occurrences)
 		.reduce((a,b) => Math.max(a,b));
 
-	// Create a scale that maps from {1, maxOccur} to {1, maxWidth}
+	// Create a scale that maps from {1, maxNum} to {1, maxWidth}
 	var sc = d3.scaleLinear()
 		.domain([1, maxNum])
 		.range([1, maxWidth]);
@@ -26,35 +26,12 @@ var drawPrevalenceGraphColor = function(svg, nodes, edges, layout, color) {
 	drawGraphPaddedColor(svg, nodes, edges, layout, color, sc);
 }
 
-var drawPrevalenceGraphFrom = function(svg, mat, color) {
-	var nodes = Array.from(Array(mat.length).keys())
-		.map(function(i) {
-			return {id: i};
-		});
-
-	var edges = [];
-	for (var r = 0; r < mat.length; r++) {
-		for (var c = 0; c < mat.length; c++) {
-			var occ = mat[r][c];
-			if (occ > 0) {
-				var e = {from: r, 
-						 to: c,
-						 occurrences: occ};
-				edges.push(e);
-			}
-			
-		}
-	}
-
-	var step = Math.PI * 2 / nodes.length;
-	var layout = nodes.map(function(n, i) {
-		return [Math.cos(i*step), Math.sin(i*step)];
-	})
-
+var drawPrevalenceGraphFrom = function(svg, nodes, edges, layout, color) {
+	nodes_cut = nodes.filter(n => !n.complex)
 	if (color) {
-		drawPrevalenceGraphColor(svg, nodes, edges, layout, color);
+	  	drawPrevalenceGraphColor(svg, nodes_cut, edges, layout, color);
 	}
 	else {
-		drawPrevalenceGraph(svg, nodes, edges, layout);
+	  	drawPrevalenceGraph(svg, nodes_cut, edges, layout);
 	}
 }

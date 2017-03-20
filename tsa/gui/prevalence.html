@@ -61,24 +61,6 @@
               return ret;
             }
 
-            /*var reload = function() {
-                console.log('click');
-                d3.json('/graph/random', function(g) {
-                    color = ncolor();
-                    ocEd = pgdat(g.edges);
-                    drawPrevalenceGraphColor(pgsvg, g.nodes, ocEd, g.layout, color);
-                    var rMat = Array.from(Array(g.nodes.length).keys())
-                      .map(_ => Array.from(Array(g.nodes.length).keys()).map(_ => 0));
-
-                    ocEd.forEach(function(e) {
-                      rMat[e.from][e.to] += e.occurrences;
-                    });
-                    drawHeatmapColor(hmsvg, scsvg, rMat, color);
-                })
-            }
-
-            clickRect.on('click', reload);*/
-
             jQuery.fn.d3Trigger = function (evttype) {
               this.each(function (i, e) {
                 var evt = new MouseEvent(evttype);
@@ -101,12 +83,17 @@
             }
 
             color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
-            d3.json('/occ-mat/100', function(mat) {
+            d3.json('/occ-mat/100', function(tup) {
+                mat = tup[0]
+                cplx = tup[1]
                 drawHeatmapColor(hmsvg, scsvg, mat, color);
-                drawPrevalenceGraphFrom(pgsvg, mat, color);
                 squaresOnMouse(mouseoverfn, mouseoutfn);
 
                 squaresOnClick(function(d) {console.log('Click in square ' + d.from + ', ' + d.to)});
+            });
+            d3.json('/occ-graph/100', function(prev_g) {
+                drawPrevalenceGraphFrom(pgsvg, prev_g[0], prev_g[1], prev_g[2], color);
+                squaresOnMouse(mouseoverfn, mouseoutfn);
             });
             
         </script>
