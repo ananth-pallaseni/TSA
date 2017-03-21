@@ -180,6 +180,8 @@ class Server(BaseHTTPRequestHandler):
           self.serve_html('prevalence.html')
         elif path[-13:] == '/welcome.html':
           self.serve_html('welcome.html')
+        elif path[-12:] == '/mosaic.html':
+          self.serve_html('mosaic.html')
 
         elif path[-13:] == '/test.html':
           self.serve_html('test.html')
@@ -229,6 +231,11 @@ class Server(BaseHTTPRequestHandler):
           gj = json.dumps(num)
           jbytes = bytes(gj, 'utf-8')
           self.serve_fake_json(jbytes);
+        elif path[-7:] == '/mosaic':
+          mosaic_data = [{'interactome1': i*3, 'interactome2': i*3+1, 'pVal':i*3+2} for i in range(20)]
+          gj = json.dumps(mosaic_data)
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes)
 
 
 

@@ -30,6 +30,7 @@
     	<script type="text/javascript" src='header.js'> </script>
     	<script type="text/javascript" src='hm.js'> </script>
     	<script type="text/javascript" src='prevalence.js'> </script>
+        <script type="text/javascript" src='mosaic.js'> </script>
     	<script type="text/javascript">
     		var addSelectRect = function(parid, url) {
     			d3.select('#'+parid)
@@ -57,7 +58,7 @@
     		gsvg = insertSvg('col-0', 'g-svg');
     		hmsvg = insertSvg('col-1', 'hm-svg');
     		ersvg = insertSvg('col-2', 'er-svg');
-    		placeholder = insertSvg('col-3', 'placeholder');
+    		mossvg = insertSvg('col-3', 'mos-svg');
 
     		color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
 
@@ -74,7 +75,9 @@
     		});
 
     		addSelectRect('er-svg', '#');
-    		addSelectRect('placeholder', '#');
+
+            drawRand(mossvg);
+    		addSelectRect('mos-svg', 'mosaic.html');
 
             systemInfo = null;
             d3.json('/stats', function(s) {

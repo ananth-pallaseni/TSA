@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='utf8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>Mosaic</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
+		<script type="text/javascript" src="d3/d3.js"></script>
+        <script type="text/javascript" src="graph.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+        <link rel='stylesheet' type='text/css' href='header.css'>
+        <link rel='stylesheet' type='text/css' href='mosaic.css'>
+    </head>
+
+    <body>
+        <div class='container-fluid overarching-container'>
+            <!-- Header Row -->
+            <div class='row header-row'></div>
+            <div class='row' id='data-row'>
+                <div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='table-col'></div>
+                <div class='col-md-6 col-sm-12 col-xs-12 col-tall' id='mosaic-col'></div>
+            </div>
+        </div>
+        <script type="text/javascript" src='header.js'> </script>
+        <script type="text/javascript" src='mosaic.js'> </script>
+        <script type="text/javascript">
+            insertHeader('Mosaic');
+            insertSvg('mosaic-col', 'mosaic-svg');
+            var mSvg = d3.select('#mosaic-svg');
+            populateTable();
+            drawRand(mSvg);
+        </script>
+    </body>
+</html> 

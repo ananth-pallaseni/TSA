@@ -1,0 +1,15 @@
+html, body {
+	height: 100%;
+}
+
+#data-row {
+	height: 93%;
+}
+
+#table-col {
+	overflow-y: scroll;
+}
+
+#nav-btn-mosaic {
+	background-color: grey;
+}
