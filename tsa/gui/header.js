@@ -1,13 +1,3 @@
-$('#load-btn').on('click', function() {
-	$('#file-input').trigger('click');
-});
-
-var handleLoad = function(files) {
-	f = files[0]
-	/*d3.select('#load-btn')
-		.attr('href', '/load/' + f.name);*/
-	$('#load-frm-btn').trigger('click');
-}
 
 var insertHeader = function(title) {
 	var hr = d3.select('.header-row');
@@ -34,6 +24,11 @@ var insertHeader = function(title) {
 		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
 		.attr('id', 'nav-btn-prevalence')
 		.text('Heatmap')
+	btnrow.append('a')
+		.attr('href', '/mosaic.html')
+		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
+		.attr('id', 'nav-btn-mosaic')
+		.text('Mosaic')
 
 }
 

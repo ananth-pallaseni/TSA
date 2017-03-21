@@ -4,13 +4,16 @@ html, body {
 }
 
 #data-row {
-	height: 83%;
+	height: 79%;
 }
 
 .info-row {
 	height: 10%;
 }
 
+#bt-nav-row {
+	height: 5%
+}
 /*#hm-col {
 	padding-right: 0;
 }

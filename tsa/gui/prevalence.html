@@ -31,6 +31,17 @@
                 <div class='col-md-6 col-sm-12 cols-xs-12 col-tall' id='pg-col'>
                 </div>
             </div>
+
+            <div class='row' id='bot-nav-row'>
+
+                <div class='col-md-3 col-md-offset-5 nav-btn' id='bot-nav-container'>
+                    <form name="nav-form" class='nav-form'>
+                        <input type="text" id="num-top" placeholder='Number of top models' size='20' autocomplete='off'>
+                        <input name="Submit"  type="button" id='go-btn' onclick='return numTopGo();' value="Go" >
+                    </form>
+
+                </div>
+            </div>
         </div>
         <script type="text/javascript" src='header.js'> </script>
         <script type="text/javascript" src='hm.js'> </script>
@@ -40,10 +51,26 @@
             var hmsvg = insertSvg('hm-col', 'hm-svg');
             var pgsvg = insertSvg('pg-col', 'pg-svg');
 
+            var firstLoad = true;
+            var numTotalGraphs = undefined;
+            d3.json('/num-graphs', function(d) {
+                numTotalGraphs = d;
+            })
+            var getNumModels = function() {
+                var numtop = document.getElementById('num-top').value;
+                if (! numtop) {
+                    numtop = undefined;
+                }
+                if (firstLoad) {
+                    numtop = 100;
+                }
+                return numtop;
+            }
+
             d3.select('.info-col')
                 .style('padding', 0)
                 .append('pre')
-                .text('This is the prevalence view. On the left is a heatmap where the square (row, col) represents how often edge (from, to) was encountered in the top xx models.\nTo the right is a graph containing every edge encountered in the top xx models with the width of the edge reflecting how often it was encountered. Mousing over a square in the heatmap highlights the relevant edge in the graph.')
+                .text('This is the prevalence view. On the left is a heatmap where the square (row, col) represents how often edge (from, to) was encountered in the top ' + 100 + ' models.\nTo the right is a graph containing every edge encountered in the top ' + 100 + ' models with the width of the edge reflecting how often it was encountered. Mousing over a square in the heatmap highlights the relevant edge in the graph. Use the field at the bottom to select how many top graphs to use.')
                 .style('word-break', 'normal')
                 .style('white-space', 'pre-wrap');
 
@@ -109,18 +136,38 @@
             }
 
             color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
-            d3.json('/occ-mat/100', function(tup) {
-                mat = tup[0]
-                cplx = tup[1]
-                drawHeatmapColor(hmsvg, mat, color);
-                squaresOnMouse(mouseoverfn, mouseoutfn);
 
-                squaresOnClick(function(d) {console.log('Click in square ' + d.from + ', ' + d.to)});
-            });
-            d3.json('/occ-graph/100', function(prev_g) {
-                drawPrevalenceGraphFrom(pgsvg, prev_g[0], prev_g[1], prev_g[2], color);
-                squaresOnMouse(mouseoverfn, mouseoutfn);
-            });
+
+            var loadTop = function(numtop) {
+                d3.json('/occ-mat/' + numtop, function(tup) {
+                    mat = tup[0]
+                    cplx = tup[1]
+                    drawHeatmapColor(hmsvg, mat, color);
+                    squaresOnMouse(mouseoverfn, mouseoutfn);
+
+                });
+                d3.json('/occ-graph/' + numtop, function(prev_g) {
+                    drawPrevalenceGraphFrom(pgsvg, prev_g[0], prev_g[1], prev_g[2], color);
+                    squaresOnMouse(mouseoverfn, mouseoutfn);
+                });
+            }
+
+            var numTopGo = function(event) {
+                var numtop = document.getElementById('num-top').value;
+                
+                if (numtop && numtop % 1 === 0 && numtop >= 0 && numtop < numTotalGraphs) {
+                    loadTop(numtop);
+                    firstLoad = false;
+                    d3.select('.info-col').select('pre')
+                        .text('This is the prevalence view. On the left is a heatmap where the square (row, col) represents how often edge (from, to) was encountered in the top ' + getNumModels() + ' models.\nTo the right is a graph containing every edge encountered in the top ' + getNumModels() + ' models with the width of the edge reflecting how often it was encountered. Mousing over a square in the heatmap highlights the relevant edge in the graph. Use the field at the bottom to select how many top graphs to use.')
+                }
+            }
+
+            loadTop(100);
+
+            
+
+            
             
         </script>
     </body>
