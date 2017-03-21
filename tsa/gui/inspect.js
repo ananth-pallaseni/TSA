@@ -98,6 +98,8 @@ var initInfoPane = function() {
 		.style('margin', '10px')
 		.style('white-space', 'normal')
 		.style('word-break', 'normal')
+		.style('background-color', 'grey')
+		.style('color', 'white')
 		.text("This is the graph inspector. Click on a node or edge to see information about its parameters in this pane. The pane below contains statistics about this graph. Change the graph being viewed with the navigation bar below the graph.");
 }
 

@@ -109,8 +109,12 @@
                     });
                 dataCol.append('pre')
                     .text('Number of Models Retained: ' + systemInfo.numModels);
-                dataCol.append('h4')
-                    .text('Select a data view from the left to analyse further');
+                dataCol.append('pre')
+                    .text('Select a data view from the left to analyse further')
+                    .style('white-space', 'normal')
+                    .style('word-break', 'normal')
+                    .style('background-color', 'grey')
+                    .style('color', 'white');
             });
 
 			

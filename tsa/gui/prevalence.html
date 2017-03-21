@@ -72,7 +72,9 @@
                 .append('pre')
                 .text('This is the prevalence view. On the left is a heatmap where the square (row, col) represents how often edge (from, to) was encountered in the top ' + 100 + ' models.\nTo the right is a graph containing every edge encountered in the top ' + 100 + ' models with the width of the edge reflecting how often it was encountered. Mousing over a square in the heatmap highlights the relevant edge in the graph. Use the field at the bottom to select how many top graphs to use.')
                 .style('word-break', 'normal')
-                .style('white-space', 'pre-wrap');
+                .style('white-space', 'pre-wrap')
+                .style('background-color', 'grey')
+                .style('color', 'white');
 
             var clickRect = pgsvg.append('rect')
                 .attr('id', 'click-rect')

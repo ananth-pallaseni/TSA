@@ -6,6 +6,34 @@ html, body {
 	height: 93%;
 }
 
+/*#data-col {
+	border-right: 1px solid black;
+}*/
+
+#table-header-row {
+	height: 5%;
+	border-bottom:1px solid black;
+}
+
+#table-row {
+	height: 85%;
+}
+
+#info-row {
+	height: 9%;
+}
+
+#info-col {
+	padding: 0;
+}
+
+#info-p {
+	white-space: normal;
+	word-break: normal;
+	background-color: grey;
+	color: white;
+}
+
 #table-col {
 	overflow-y: scroll;
 }

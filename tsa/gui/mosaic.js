@@ -20,19 +20,20 @@ var tblRowMouseout = function(data) {
 
 var tblRowClick = function(data) {
 	console.log(data);
+	var svg = d3.select('#mosaic-svg');
+	clearSvg(svg);
+	drawRand(svg);
 }
 
 var populateTable = function() {
 	var tblCol = d3.select('#table-col');
 	
 	d3.json('/mosaic', function(data) {
-		var headerRow = tblCol.append('div')
-			.attr('class', 'row tbl-header-row')
-			.attr('height', '15%')
+		var headerRow = d3.select('#table-header-row')
 		headerRow.append('div')
 			.attr('class', 'col-md-4 col-sm-4 col-xs-4 col-tall tbl-col-0')
-			.style('border-right', '1px solid black')
-			.style('border-left', '1px solid black')
+			//.style('border-right', '1px solid black')
+			//.style('border-left', '1px solid black')
 			.append('p')
 			.text('Interactome 1')
 			.attr('align', 'center')
@@ -41,18 +42,18 @@ var populateTable = function() {
 			.style('font-weight', 'bold');
 		headerRow.append('div')
 			.attr('class', 'col-md-4 col-sm-4 col-xs-4 col-tall tbl-col-1')
-			.style('border-right', '1px solid black')
-			.style('border-left', '1px solid black')
+			//.style('border-right', '1px solid black')
+			//.style('border-left', '1px solid black')
 			.append('p')
-			.text('interactome 2')
+			.text('Interactome 2')
 			.attr('align', 'center')
 			.style('margin-top', '5%')
 			.style('margin-bottom', '5%')
 			.style('font-weight', 'bold');
 		headerRow.append('div')
 			.attr('class', 'col-md-4 col-sm-4 col-xs-4 col-tall tbl-col-2')
-			.style('border-right', '1px solid black')
-			.style('border-left', '1px solid black')
+			//.style('border-right', '1px solid black')
+			//.style('border-left', '1px solid black')
 			.append('p')
 			.text('P Value')
 			.attr('align', 'center')
@@ -170,4 +171,8 @@ var drawMosaic = function(svg, mosaicData, colors) {
 var drawRand = function(svg) {
 	var md = genRandMosaic();
 	drawMosaic(svg, md);
+}
+
+var clearSvg = function(svg) {
+	svg.selectAll('rect').remove();
 }
