@@ -12,15 +12,6 @@ var handleLoad = function(files) {
 var insertHeader = function(title) {
 	var hr = d3.select('.header-row');
 
-	/*hr.append('div')
-		.attr('class', 'col-md-2 col-sm-12 col-xs-12 col-tall')
-		.append('div')
-		.attr('class', 'jumbotron col-tall')
-		.attr('id', 'jumbo-header')
-		.append('pre')
-		.attr('id', 'jumbo-p')
-		.text(title);*/
-
 	var btnrow = hr.append('div')
 		.attr('class', 'col-md-12 col-sm-12 col-xs-12 col-tall nav-col')
 		.append('div')
@@ -43,7 +34,6 @@ var insertHeader = function(title) {
 		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
 		.attr('id', 'nav-btn-prevalence')
 		.text('Heatmap')
-	
 
 }
 

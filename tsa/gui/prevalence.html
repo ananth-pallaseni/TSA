@@ -19,6 +19,10 @@
             <!-- Header Row -->
             <div class='row header-row'></div>
 
+            <div class='row info-row'>
+                <div class='col-md-12 info-col'></div>
+            </div>
+
             <div class='row' id='data-row'>
                 <div class='col-md-6 col-sm-11 col-xs-11 col-tall' id='hm-col'>
                 </div>
@@ -34,8 +38,14 @@
         <script type="text/javascript">
             insertHeader('Inspect');
             var hmsvg = insertSvg('hm-col', 'hm-svg');
-            /*var scsvg = insertSvg('sc-col', 'sc-svg');*/
             var pgsvg = insertSvg('pg-col', 'pg-svg');
+
+            d3.select('.info-col')
+                .style('padding', 0)
+                .append('pre')
+                .text('This is the prevalence view. On the left is a heatmap where the square (row, col) represents how often edge (from, to) was encountered in the top xx models.\nTo the right is a graph containing every edge encountered in the top xx models with the width of the edge reflecting how often it was encountered. Mousing over a square in the heatmap highlights the relevant edge in the graph.')
+                .style('word-break', 'normal')
+                .style('white-space', 'pre-wrap');
 
             var clickRect = pgsvg.append('rect')
                 .attr('id', 'click-rect')

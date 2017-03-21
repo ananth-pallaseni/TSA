@@ -80,15 +80,25 @@ var initInfoPane = function() {
 
 	infoPane.append('h4')
 		.attr('id', 'node-title-p')
-		.attr('align', 'center');
+		.attr('align', 'center')
+		.style('display', 'none');
 
 	infoPane.append('h4')
 		.attr('id', 'edge-title-p')
-		.attr('align', 'center');
+		.attr('align', 'center')
+		.style('display', 'none');
 
 	infoPane.append('h5')
 		.attr('id', 'edge-inter-p')
-		.attr('align', 'center');
+		.attr('align', 'center')
+		.style('display', 'none');
+
+	infoPane.append('pre')
+		.attr('id', 'default-info-p')
+		.style('margin', '10px')
+		.style('white-space', 'normal')
+		.style('word-break', 'normal')
+		.text("This is the graph inspector. Click on a node or edge to see information about its parameters in this pane. The pane below contains statistics about this graph. Change the graph being viewed with the navigation bar below the graph.");
 }
 
 
@@ -122,6 +132,8 @@ var clearInfoPane = function() {
 		.style('display', 'none');
 	d3.select('#edge-inter-p')
 		.style('display', 'none');
+	d3.select('#default-info-p')
+		.style('display', 'none');
 }
 
 
@@ -144,6 +156,12 @@ var clearHighlights = function() {
 var clearInfoAndHighlights = function() {
 	clearHighlights();
 	clearInfoPane();
+	//defaultPane();
+}
+
+var clearAndDefault = function() {
+	clearInfoAndHighlights();
+	defaultPane();
 }
 
 var highlightSelected = function() {
@@ -203,7 +221,7 @@ var highlightComplexPath = function(e) {
 }
 
 var updateNodeData = function(n) {
-	clearHighlights();
+	clearInfoAndHighlights();
 	selectedNode = n;
 	highlightSelected();
 	d3.select('#edge-title-p')
@@ -214,12 +232,10 @@ var updateNodeData = function(n) {
 		.style('display', 'block')
 		.text(n.complex ? 'Node [' + n.complex + ']' : 'Node ' + n.id);
 	updateInfoPane(n.parameters);
-
-
 }
 
 var updateEdgeData = function(e) {
-	clearHighlights();
+	clearInfoAndHighlights();
 	selectedEdge = e;
 	highlightSelected();
 	var edgeTitle = 'Edge ' + e.from + ', ' + e.to;
@@ -275,18 +291,6 @@ var updateNavs = function() {
 }
 
 
-window.addEventListener('resize', redraw);
-$('#cur-page').keypress(
-	function(event) {
-		if (event.which == 13) {
-			event.preventDefault();
-			$('#go-btn').trigger('click');
-		}
-	});
-initGraphData();
-initInfoPane();
-backRect.on('click', clearInfoAndHighlights);
-
 var getGraph = function(gnum) {
 	d3.json('/graph/' + gnum, function(d) {
 		if (d) {
@@ -309,6 +313,25 @@ var goToGraph = function(event) {
 	}
 }
 
+var defaultPane = function() {
+	clearInfoPane();
+	d3.select('#default-info-p')
+		.style('display', 'block');
+}
+
+
+
+window.addEventListener('resize', redraw);
+$('#cur-page').keypress(
+	function(event) {
+		if (event.which == 13) {
+			event.preventDefault();
+			$('#go-btn').trigger('click');
+		}
+	});
+initGraphData();
+initInfoPane();
+backRect.on('click', clearAndDefault);
 getGraph(0);
 
 

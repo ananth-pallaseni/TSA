@@ -4,16 +4,20 @@ html, body {
 }
 
 #data-row {
-	height: 93%;
+	height: 83%;
 }
 
-#hm-col {
+.info-row {
+	height: 10%;
+}
+
+/*#hm-col {
 	padding-right: 0;
 }
 
 #sc-col {
 	padding-left: 0;
-}
+}*/
 
 #nav-btn-prevalence {
 	background-color: grey;

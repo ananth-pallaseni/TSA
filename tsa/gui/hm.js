@@ -58,8 +58,9 @@ var heatmapFrom = function(mat, numBuckets, color) {
 var transition_duration = 700;
 
 var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
-	var xWidth = hside * (numCols+1.5);
+	var xWidth = hside * (numCols+2);
 	var xPad = (svgWidth(svg) - xWidth)/2;
+	console.log(xPad);
 
 	var yHeight = vside * (numRows+1.5);
 	var yPad = (svgHeight(svg) - yHeight)/2;
@@ -138,10 +139,9 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 	var numRows = hm.length;
 	var numCols = hm[0].length;
 	var side = Math.min(svgWidth(svg), svgHeight(svg));
-	var hside = side / (numCols+1.5);
+	var hside = side / (numCols+2);
 	var vside = side / (numRows+1.5);
 	var flat = hm.reduce((a, b) => a.concat(b));
-	console.log(flat);
 
 	// Delete all old text
 	svg.selectAll('.square-lbl')
@@ -166,8 +166,6 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 		.attr('class', 'hm-square')
 		.attr('x', 0)
 		.attr('y', 0)
-		// .attr('width', hside)
-		// .attr('height', vside)
 		.attr('fill-opacity', 0)
 		.attr('stroke', 'black')
 		.attr('stroke-width', 0)
@@ -184,18 +182,17 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 	var squares = svg.selectAll('rect.hm-square')
 		.data(flat);
 
-
 	// Update grid squares
 	updateHeatmap(svg, squares, numRows, numCols, hside, vside);
 
 }
 
 var drawColorScale = function(svg, scaleColor, numRows, numCols) {
- 
+ 	console.log(numCols);
 	var side = Math.min(svgWidth(svg), svgHeight(svg));
-	var hside = side / (numCols+1.5);
+	var hside = side / (numCols+2);
 	var vside = side / (numRows+1.5);
-	var xWidth = hside * (numCols+1.5);
+	var xWidth = hside * (numCols+2);
 	var xPad = (svgWidth(svg) - xWidth)/2;
 	var yHeight = vside * (numRows+1.5);
 	var yPad = (svgHeight(svg) - yHeight)/2;
@@ -244,7 +241,7 @@ var drawColorScale = function(svg, scaleColor, numRows, numCols) {
 		.transition()
 		.duration(transition_duration)
 		.delay(500)
-		.attr('height', vside*numCols)
+		.attr('height', vside*numRows)
 		.attr('stroke-width', 1);
 
 	var lblXPad = xPad + (numCols+1)*hside + hside/4;
@@ -257,19 +254,19 @@ var drawColorScale = function(svg, scaleColor, numRows, numCols) {
 
 		textg.append('text')
 			.text(0)
-			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols/20) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numRows/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(1)
-			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols-vside*numCols/20) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numRows-vside*numRows/20) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
 		textg.append('text')
 			.text(0.5)
-			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numCols/2) + ')')
+			.attr('transform', 'translate(' + lblXPad + ',' + (lblYPad + vside*numRows/2) + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 
