@@ -18,12 +18,18 @@ x0=[0, 1.5, 1, 3, 2]
 num_nodes = 5
 max_parents = 3 
 
+nodes =  {0: 'Molecule 0', 
+          1: 'Molecule 1', 
+          2: 'Molecule 2', 
+          3: 'Molecule 3', 
+          4: 'Molecule 4'}
+
 time_scale = [0,2,51]
 
 # Perform tsa on the model space
 candidate_models = tsa.generate_models(topology_fn=dX_massact_fn,
                            parameter_fn=params_massact,
-						   num_nodes=num_nodes,
+						   nodes=nodes,
 						   max_parents=max_parents,
                max_order=2,
                num_interactions=1,

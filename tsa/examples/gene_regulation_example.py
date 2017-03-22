@@ -20,6 +20,12 @@ max_parents = 2
 time_scale = [0, 10, 31]
 initial_vals = np.array([1, 0.5, 1, 1.5, 0.5])
 
+nodes =  {0: 'Gene 0', 
+          1: 'Gene 1', 
+          2: 'Gene 2', 
+          3: 'Gene 3', 
+          4: 'Gene 4'}
+
 s = [0.2, 0.2, 0.2, 0.2, 0.2];      # basal synthesis for species 1-5
 g = [0.9, 0.9, 0.7, 1.5, 1.5];      # basal degradation
 b = [2, 2, 2, 2, 2, 2, 2];          # interaction 'strength' (beta_nk)
@@ -40,7 +46,7 @@ def accepted_model_fn(x, t):
 # Perform tsa on the model space
 candidate_models = tsa.generate_models(topology_fn=dX_gene_reg_fn,
                            parameter_fn=params_gene_reg,
-						   num_nodes=num_nodes,
+						   nodes=nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,

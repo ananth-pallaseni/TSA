@@ -18,13 +18,19 @@ def accepted_model_fn(y,t):
 num_nodes = 5
 max_parents = 3 
 
+nodes =  {0: 'Species 0', 
+          1: 'Species 1', 
+          2: 'Species 2', 
+          3: 'Species 3', 
+          4: 'Species 4'}
+
 y0 = [0.2, 0.5, 0.2, 0.2, 0.3]
 time_scale = [0,10,40]
 
 # Perform tsa on the model space
 candidate_models = tsa.generate_models(topology_fn=dX_pop_dynamics_fn,
                            parameter_fn=params_pop_dynamics,
-						   num_nodes=num_nodes,
+						   nodes=nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,

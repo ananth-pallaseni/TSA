@@ -236,6 +236,10 @@ class Server(BaseHTTPRequestHandler):
           gj = json.dumps(mosaic_data)
           jbytes = bytes(gj, 'utf-8');
           self.serve_fake_json(jbytes)
+        elif path[-11:] == '/node_names':
+          gj = json.dumps(SYSTEM_INFO['node_names'])
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes)
 
 
 

@@ -3,6 +3,7 @@ graph = {};
 selectedEdge = null;
 selectedNode = null;
 numGraphs = null;
+node_names = null;
 
 var svg = d3.select('#graph-col')
     .append('svg')
@@ -232,7 +233,16 @@ var updateNodeData = function(n) {
 		.style('display', 'none');
 	d3.select('#node-title-p')
 		.style('display', 'block')
-		.text(n.complex ? 'Node [' + n.complex + ']' : 'Node ' + n.id);
+		.text(function() {
+			var name = '';
+			if (n.complex) {
+				name = '[' + n.complex.map(m => node_names[m]) + ']';
+			}
+			else {
+				name = node_names[n.id]
+			}
+			return name;
+		})
 	updateInfoPane(n.parameters);
 }
 
@@ -331,6 +341,9 @@ $('#cur-page').keypress(
 			$('#go-btn').trigger('click');
 		}
 	});
+d3.json('/node_names', function(nn) {
+	node_names = nn;
+})
 initGraphData();
 initInfoPane();
 backRect.on('click', clearAndDefault);

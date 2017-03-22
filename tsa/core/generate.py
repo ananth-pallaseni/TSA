@@ -470,7 +470,7 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 
 
 
-def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, num_nodes=-1, max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
+def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, nodes=[], max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
 	""" Generate a set of models that show similar behaviour to the accepted model. 
 
 		Each model is a permuation of the original system with attached parameter values that are based on gradient matching. 
@@ -486,7 +486,7 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 
 		initial_vals - The initial values for all species. Should be a numpy array such that initial_vals[s] is the starting value of species s.
 
-		num_nodes - The number of nodes/species that exist in the system
+		nodes - A dictionary of (id, name) pairs for each specie in the system
 
 		max_parents - The maximum number of parents that any node in the system can have
 
@@ -515,11 +515,12 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 	elif fn_module == 'tsa.models.mass_action':
 		num_interactions = 1
 
-
+	num_nodes = len(nodes)
 
 	# Create Model Space
 	print("Creating Model Space ... ", end='')
 	model_space = ModelSpace(num_nodes=num_nodes, 
+							 node_names=nodes,
 							 max_parents=max_parents,
 							 num_interactions=num_interactions,
 							 max_order=max_order,
@@ -612,7 +613,8 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 								 num_interactions,
 								 max_order,
 								 enf_edges,
-								 enf_gaps)
+								 enf_gaps,
+								 nodes)
 
 	return best_whole_models
 	
@@ -658,7 +660,8 @@ def model_bag_to_json(model_bag):
 									'enfGaps': model_bag.enf_gaps,
 									'numModels': len(model_bag.models),
 									'node_ptypes': [pt.to_dict() for pt in model_bag.node_ptypes],
-									'edge_ptypes': [pt.to_dict() for pt in model_bag.edge_ptypes]}
+									'edge_ptypes': [pt.to_dict() for pt in model_bag.edge_ptypes],
+									'node_names': model_bag.node_names}
 	return json.dumps(model_bag_json)
 
 def json_to_model_bag(json_data):
@@ -692,7 +695,8 @@ def json_to_model_bag(json_data):
 					si['numInteractions'],
 					si['maxOrder'],
 					si['enfEdges'],
-					si['enfGaps'])
+					si['enfGaps'],
+					si['node_names'])
 
 
 

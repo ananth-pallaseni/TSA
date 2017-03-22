@@ -150,7 +150,7 @@ class Topology(object):
 class ModelSpace(object):
 	""" Container for the functional description and limitations of the model space
 	"""
-	def __init__(self, max_parents, num_interactions, num_nodes, max_order, topology_fn):
+	def __init__(self, max_parents, num_interactions, num_nodes, node_names, max_order, topology_fn):
 		self.max_parents = max_parents				
 		self.num_interactions = num_interactions	# Number of possible interactions (eg: Activation, Repression etc). Not necessarily required for all models.
 		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
@@ -254,7 +254,7 @@ class WholeModel(object):
 		return [self.get_param(pt.param_type, node=node) for pt in self.node_ptypes]
 
 class ModelBag(object):
-	def __init__(self, lst, node_ptypes, edge_ptypes, max_parents, num_interactions, max_order, enf_edges, enf_gaps):
+	def __init__(self, lst, node_ptypes, edge_ptypes, max_parents, num_interactions, max_order, enf_edges, enf_gaps, node_names):
 		self.models = sorted([WholeModel(targets, dist, node_ptypes, edge_ptypes) for (targets, dist) in lst], key=lambda x:x.dist)
 		self.node_ptypes = node_ptypes
 		self.edge_ptypes = edge_ptypes
@@ -263,6 +263,7 @@ class ModelBag(object):
 		self.max_order = max_order
 		self.enf_edges = enf_edges
 		self.enf_gaps = enf_gaps
+		self.node_names = node_names
 
 	def __getitem__(self, key):
 		if type(key) is not int and type(key) is not slice:

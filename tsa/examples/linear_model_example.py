@@ -20,14 +20,21 @@ def accepted_model_fn(x, t):
     return dx
 
 num_nodes = 6
-max_parents = 3 
+max_parents = 3
+
+nodes =  {0: 'Node 0', 
+          1: 'Node 1', 
+          2: 'Node 2', 
+          3: 'Node 3', 
+          4: 'Node 4',
+          5: 'Node 5'}
 
 time_scale = [0,20,51]
 
 # Perform tsa on the model space
 candidate_models = tsa.generate_models(topology_fn=dX_linear_fn,
                            parameter_fn=params_linear,
-						   num_nodes=num_nodes,
+						   nodes=nodes,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,

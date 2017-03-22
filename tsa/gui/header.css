@@ -74,16 +74,4 @@
     background-color: grey;
 }
 
-/*@media (max-width: 1300px) {
-    #jumbo-p {font-size: 10pt;}
-}
-
-@media (max-width: 500px) {
-    #jumbo-p {font-size: 10pt;}
-}*/
-
-
-#file-input, #load-frm, #load-frm-btn {
-	display: none;
-}
 
