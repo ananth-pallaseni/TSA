@@ -10,6 +10,7 @@ from .model import *
 import pickle
 import json
 import math
+import sys
 
 def sim_data(model_fn, time_scale, x0):
 	""" Create time series data for a model by simulating it across the given time scale. 
@@ -289,7 +290,7 @@ def whole_model_to_ode(topology_fn, topologies, params):
 
 		topologies - A list of Topology objects representing the parental structure of each species 
 
-		params - A list such that params[i] is the ist of parameters for topology i 
+		params - A list such that params[i] is the list of parameters for topology i 
 
 		Returns:
 		A function that calculates the derivatives of every species in the model given their values and the time t.
@@ -304,11 +305,11 @@ def whole_model_to_ode(topology_fn, topologies, params):
 		return derivs 
 	return fn 
 
-def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
+def fit_whole_model(model_lst, topology_fn, initial_values, true_vals, time_scale, node_ptypes, edge_ptypes):
 	""" Fits the parameters of every model in the models to match true_vals.
 
 		Args:
-		models - A list of models 
+		model_lst - A list of WholeModel objects
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
@@ -318,38 +319,67 @@ def fit_whole_model(models, topology_fn, initial_values, true_vals, time_scale):
 
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
 
+		node_ptypes - A list of ParameterType objects representing types of parameters attached to nodes
+
+		edge_ptypes - A list of ParameterType objects representing types of parameters attached to edges
+
 		Returns:
-		A list containing every model in models, but refit to match the values in true_vals. Sorted in order of increasing distance from the true_vals.
+		A list of WholeModels containing every model in model_lst, but refit to match the values in true_vals. Sorted in order of increasing distance from the true_vals.
 	"""
 	results = []
 	cnt = 0
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
 	t_start = time.time()
-	for m in models:
-		print("cnt={}".format(cnt))
-		if cnt % 10 == 0:
+	print('Reporting times every batch of 10:')
+	t_ind_start = time.time()
+	for wm in model_lst:
+		if cnt > 0 and cnt % 10 == 0:
 			t_end = time.time()
 			print("batch={}, took {} seconds".format(cnt//10, t_end-t_start))
+			sys.stdout.flush()
 			t_start = time.time()
 		cnt += 1
-		topologies = [tup[0] for tup in m]
-		initial_guess = sum([list(tup[3]) for tup in m], [])
-		param_lens = [tup[2] for tup in m]
-		bounds = sum([list(tup[6]) for tup in m], [])
-		
+		topologies = [tup.topology for tup in wm.targets]
+		initial_guess = [tup.params for tup in wm.targets]
+		param_lens = [len(ig) for ig in initial_guess]
+		bounds = [tup.topology.to_bounds_lst(node_ptypes, edge_ptypes) for tup in wm.targets]
+		bounds = sum(bounds, [])
+		bounds = [tuple(b) for b in bounds]
+
 		def whole_model_obj(params):
-			ode = whole_model_to_ode(topology_fn, topologies, params, param_lens)
+			len_sums = [sum(param_lens[:i]) for i in range(1, len(param_lens))]
+			formatted = []
+			at = 0
+			for pl in param_lens:
+				formatted += [params[at:at+pl]]
+				at += pl 
+			ode = whole_model_to_ode(topology_fn, topologies, formatted)
 			sim_vals = odeint(ode, initial_values, ts)
 			dist = np.linalg.norm(sim_vals-true_vals)
 			return dist 
 
-
+		initial_guess = sum(initial_guess, [])
 		res = minimize(whole_model_obj, initial_guess, method="SLSQP", bounds=bounds)
 		opt_params = res.x 
 		opt_dist = whole_model_obj(opt_params)
-		results.append((m, opt_params, opt_dist))
+		opt_formatted = []
+		opt_at = 0
+		for pl in param_lens:
+			opt_formatted += [opt_params[opt_at:opt_at+pl]]
+			opt_at += pl 
+		new_targets = [TargetModel(topology=wm.targets[i].topology, 
+								   params=opt_formatted[i],
+								   dist=None,
+								   AIC=None) for i in range(len(wm.targets))]
+		new_wm = WholeModel(new_targets, opt_dist, node_ptypes, edge_ptypes)
+		results.append(new_wm);
 
-	return sorted(results, key=lambda x: x[2])[:100]
+		print('	Finished {} in {} seconds'.format(cnt, time.time()-t_ind_start))
+		sys.stdout.flush()
+		t_ind_start = time.time()
+
+
+	return results
 
 def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 	""" Checks the distance of all the input models from the true_vals.
@@ -615,6 +645,7 @@ def whole_model_to_json(wm, rank):
 	json_d = whole_model_to_dict(wm, rank)
 	return json.dumps(json_d)
 
+
 def model_bag_to_json(model_bag):
 	model_bag_json = {}
 	to_dict = [whole_model_to_dict(model_bag[i], i) for i in range(len(model_bag))]
@@ -625,8 +656,46 @@ def model_bag_to_json(model_bag):
 									'maxOrder': model_bag.max_order,
 									'enfEdges': model_bag.enf_edges,
 									'enfGaps': model_bag.enf_gaps,
-									'numModels': len(model_bag.models)}
+									'numModels': len(model_bag.models),
+									'node_ptypes': [pt.to_dict() for pt in model_bag.node_ptypes],
+									'edge_ptypes': [pt.to_dict() for pt in model_bag.edge_ptypes]}
 	return json.dumps(model_bag_json)
+
+def json_to_model_bag(json_data):
+	si = json_data['systemInfo']
+	models = json_data['models']
+	target_lst = []
+	for m in models:
+		tops = {}
+		for e in m['edges']:
+			if e['to'] not in tops:
+				tops[e['to']] = []
+			tops[e['to']] += [(e['from'], e['interaction'], e['parameters'])]
+
+		tmodels = []
+		for target in tops:
+			parents = [e[0] for e in tops[target]]
+			interactions = [e[1] for e in tops[target]]
+			new_top = Topology(target, interactions, parents, None)
+			tnode = [n for n in m['nodes'] if n['id'] == target][0]
+			eparams = sum([e[2] for e in tops[target]], [])
+			params = [d['val'] for d in tnode['parameters'] + eparams]
+			new_target_model = TargetModel(new_top, params, None, None)
+			tmodels.append(new_target_model)
+
+		target_lst.append((tmodels, m['dist']))
+
+	return ModelBag(target_lst, 
+					[ParameterType.from_dict(d) for d in si['node_ptypes']], 
+					[ParameterType.from_dict(d) for d in si['edge_ptypes']],
+					si['maxParents'],
+					si['numInteractions'],
+					si['maxOrder'],
+					si['enfEdges'],
+					si['enfGaps'])
+
+
+
 
 def store_json(model_bag, fname):
 	with open(fname, 'w') as f:
@@ -634,7 +703,8 @@ def store_json(model_bag, fname):
 
 def load_json(fname):
 	with open(fname, 'r') as f:
-		return json.load(f)
+		json_data = json.load(f)
+		return json_to_model_bag(json_data)
 
 def load(fname):
 	with open(fname, 'rb') as f:

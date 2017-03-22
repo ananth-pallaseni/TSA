@@ -98,6 +98,12 @@ class ParameterType(object):
 		p.value = p.random()
 		return p 
 
+	def to_dict(self):
+		return {'param_type': self.param_type, 'bounds': self.bounds, 'is_edge_param': self.is_edge_param}
+
+	def from_dict(d):
+		return ParameterType(d['param_type'], d['bounds'], d['is_edge_param'])
+
 
 class Species(object):
 	num_species = 0
@@ -259,7 +265,7 @@ class ModelBag(object):
 		self.enf_gaps = enf_gaps
 
 	def __getitem__(self, key):
-		if type(key) is not int:
+		if type(key) is not int and type(key) is not slice:
 			raise TypeError('Index must be an int. Instead got a {}'.format(type(key)))
 		else:
 			return self.models[key]
