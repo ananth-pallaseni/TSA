@@ -1,0 +1,39 @@
+html, body {
+	height: 100%;
+	overflow: none; 
+}
+
+#overarching-container {
+	overflow-y: none; 
+}
+
+#data-col {
+	overflow-y: none;
+}
+
+#data-row {
+	height: 94%;
+}
+
+#info-col {
+	padding-top: 15px;
+	border: 1px solid black;
+}
+
+pre {
+	margin-bottom: 2px;
+}
+
+.form-control {
+	margin-top: 2px;
+	margin-bottom: 20px;
+}
+
+#index-select {
+	margin-bottom: 2px;
+	background-color: #f5f5f5;
+}
+
+#to-group {
+	margin-bottom: 20px;
+}

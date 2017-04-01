@@ -30,9 +30,6 @@ class Parameter(object):
 		lb = self.bounds[0]
 		return rnd * rng + lb 
 
-	def from_value_list(param_lst, is_edge_param, param_type, bound):
-		return [Parameter(param_type, is_edge_param, value, bound) for value in param_lst]
-
 	def update_lst(param_lst, value_lst):
 		if len(param_lst) != len(value_lst):
 			raise ValueError('Length of input lists are mismatched')
@@ -122,14 +119,13 @@ class Species(object):
 class Topology(object):
 	""" Container for all the parameters required to fully describe a certain topology.
 	"""
-	def __init__(self, target, interactions, parents, order):
+	def __init__(self, target, interactions, parents):
 		self.target = target 			 # The target species
 		self.interactions = interactions # The interactions that each parent has with the target. 
 		self.parents = parents 			 # The parents of the species
-		self.order = order 				 # Order of equation that represents the topology
 
 	def __str__(self):
-		return 'target = {},\nparents = {},\ninteractions = {},\norder = {}\n'.format(self.target, self.parents, self.interactions, self.order)
+		return 'target = {},\nparents = {},\ninteractions = {}\n'.format(self.target, self.parents, self.interactions)
 
 	# def __repr__(self):
 	# 	return self.__str__()
@@ -148,7 +144,7 @@ class Topology(object):
 		return bounds_lst
 
 class ModelSpace(object):
-	""" Container for the functional description and limitations of the model space
+	""" Container for the parameters describing the model space
 	"""
 	def __init__(self, max_parents, num_interactions, num_nodes, node_names, max_order, topology_fn):
 		self.max_parents = max_parents				
@@ -156,6 +152,7 @@ class ModelSpace(object):
 		self.max_order = max_order					# Max order of ODE that can result from a network in this model. Not necessarily required for all models.
 		self.num_nodes = num_nodes
 		self.topology_fn = topology_fn 				# A function to convert from a given topology for target X to a function for dX and the length of the parameter list that dX requires.
+		self.node_names = node_names
 		
 
 class TargetModel(object):
@@ -188,7 +185,7 @@ class WholeModel(object):
 		edges = sum([[(t.parents[i], t.target, t.interactions[i]) for i in range(len(t.parents))] for t in tops], [])
 		
 		# Filter out complex interactomes
-		edges = list(filter(lambda tup: tup[0] is not tuple and tup[1] is not tuple, edges))
+		# edges = list(filter(lambda tup: tup[0] is not tuple and tup[1] is not tuple, edges))
 		return edges
 
 	def build_par_dict(self, target_lst, node_ptypes, edge_ptypes):
@@ -221,6 +218,8 @@ class WholeModel(object):
 		n = self.num_species
 		adj = np.zeros( (n,n) )
 		for (p, t) in self.get_edges():
+			if type(p) == tuple or type(t) == tuple:
+				continue
 			adj[p, t] = 1
 		return adj 
 

@@ -41,3 +41,7 @@ html, body {
 #nav-btn-mosaic {
 	background-color: grey;
 }
+
+pre {
+	overflow: hidden;
+}

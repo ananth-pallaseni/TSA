@@ -31,6 +31,7 @@
     	<script type="text/javascript" src='hm.js'> </script>
     	<script type="text/javascript" src='prevalence.js'> </script>
         <script type="text/javascript" src='mosaic.js'> </script>
+        <script type="text/javascript" src='density.js'></script>
     	<script type="text/javascript">
     		var addSelectRect = function(parid, url) {
     			d3.select('#'+parid)
@@ -57,7 +58,7 @@
     		createGrid('view-col', 2, 2);
     		gsvg = insertSvg('col-0', 'g-svg');
     		hmsvg = insertSvg('col-1', 'hm-svg');
-    		ersvg = insertSvg('col-2', 'er-svg');
+    		paramsvg = insertSvg('col-2', 'param-svg');
     		mossvg = insertSvg('col-3', 'mos-svg');
 
     		color = d3.schemeCategory10[Math.floor(Math.random() * d3.schemeCategory10.length)];
@@ -74,7 +75,14 @@
     			addSelectRect('hm-svg', 'prevalence.html');
     		});
 
-    		addSelectRect('er-svg', '#');
+
+            // fake parameter density plot:
+            var fakex = Array.from(Array(500).keys()).map(a => a/100)
+            var fakey1 = Array.from(Array(245).keys()).map(a => 0)
+            var fakey2 = [1, 2, 3, 4, 5, 5, 4, 3, 2, 1]
+            var fakey = fakey1.concat(fakey2).concat(fakey1);
+            plotDensity(paramsvg, fakex, fakey);
+    		addSelectRect('param-svg', '#');
 
             drawRand(mossvg);
     		addSelectRect('mos-svg', 'mosaic.html');

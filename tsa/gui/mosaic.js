@@ -1,3 +1,4 @@
+var SELECTED_ROW = null;
 var tblRowMouseover = function(data) {
 	var row = d3.select(this);
 	row.selectAll('.tbl-col-0')
@@ -19,10 +20,32 @@ var tblRowMouseout = function(data) {
 }
 
 var tblRowClick = function(data) {
-	console.log(data);
 	var svg = d3.select('#mosaic-svg');
+
+	if (SELECTED_ROW != null) {
+		SELECTED_ROW.selectAll('.tbl-col-0')
+			.style('background', 'transparent')
+		SELECTED_ROW.selectAll('.tbl-col-1')
+			.style('background', 'transparent')
+		SELECTED_ROW.selectAll('.tbl-col-2')
+			.style('background', 'transparent')
+		SELECTED_ROW.on('mouseout', tblRowMouseout);
+	}
+	SELECTED_ROW = d3.select(this);
+	SELECTED_ROW.selectAll('.tbl-col-0')
+		.style('background', 'grey')
+	SELECTED_ROW.selectAll('.tbl-col-1')
+		.style('background', 'grey')
+	SELECTED_ROW.selectAll('.tbl-col-2')
+		.style('background', 'grey')
+	SELECTED_ROW.on('mouseout', null);
+
 	clearSvg(svg);
-	drawRand(svg);
+	var md = data.contingency[0];
+	var rind = data.contingency[1];
+	var cind = data.contingency[2];
+	var md = preprocessMosaic(md);
+	drawMosaic(svg, md, rind, cind);
 }
 
 var populateTable = function() {
@@ -123,38 +146,47 @@ var genRandMosaic = function() {
 	return [[[w0, h1, 0], [1-w0, h2, 0]], [[w0, 1-h1, 0], [1-w0, 1-h2, 0]]]
 }
 
-var drawMosaic = function(svg, mosaicData, colors) {
+var drawMosaic = function(svg, mosaicData, rowlabels, collabels, colors) {
 	if (!colors) {
 		colors = d3.schemeCategory10.slice(0,4);
 	}
-	var side = Math.min(svgHeight(svg), svgWidth(svg));
+	var side = Math.min(svgHeight(svg), svgWidth(svg)) * 0.85;
 	var xPad = (svgWidth(svg) - side) / 2;
 	var yPad = (svgHeight(svg) - side) / 2;
+
+	svg.selectAll('rect')
+		.remove();
+
+	svg.selectAll('.edge-lbl')
+		.remove();
+	
 	
 	var m00 = mosaicData[0][0]
 	var r00 = svg.append('rect')
 		.attr('x', xPad + 5)
 		.attr('y', yPad + 5)
-		.attr('width', m00[0] * side - 6)
-		.attr('height', m00[1] * side - 6)
+		.attr('width', Math.max(0, m00[0] * side - 6))	
+		.attr('height', Math.max(0, m00[1] * side - 6))
 		.attr('fill', colors[0])
 		.style('outline', '1px solid black')
+
 
 	var m01 = mosaicData[0][1]
 	var r01 = svg.append('rect')
 		.attr('x', xPad + m00[0] * side + 5)
 		.attr('y', yPad + 5)
-		.attr('width', m01[0] * side - 6)
-		.attr('height', m01[1] * side - 6)
+		.attr('width', Math.max(0, m01[0] * side - 6))	
+		.attr('height', Math.max(0, m01[1] * side - 6))
 		.attr('fill', colors[1])
 		.style('outline', '1px solid black')
+
 
 	var m10 = mosaicData[1][0];
 	var r10 = svg.append('rect')
 		.attr('x', xPad + 5)
 		.attr('y', yPad + m00[1]*side + 5)
-		.attr('width', m10[0] * side - 6)
-		.attr('height', m10[1] * side - 6)
+		.attr('width', Math.max(0, m10[0] * side - 6))	
+		.attr('height', Math.max(0, m10[1] * side - 6))
 		.attr('fill', colors[2])
 		.style('outline', '1px solid black')
 
@@ -162,15 +194,93 @@ var drawMosaic = function(svg, mosaicData, colors) {
 	var r11 = svg.append('rect')
 		.attr('x', xPad + m10[0]*side + 5)
 		.attr('y', yPad + m01[1]*side + 5)
-		.attr('width', m11[0] * side - 6)
-		.attr('height', m11[1] * side - 6)
+		.attr('width', Math.max(0, m11[0] * side - 6))	
+		.attr('height', Math.max(0, m11[1] * side - 6))
 		.attr('fill', colors[3])
 		.style('outline', '1px solid black')
+
+
+	var c1lblX = m00[0] > 0 ? xPad + 5 + Math.max(0, m00[0] * side - 6)/2 : -1;
+	var c1lblY = yPad/2;
+	if (c1lblX > 0) {
+		svg.append('text')
+			.text(collabels[0])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + c1lblX + ', ' + c1lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	var c2lblX = m01[0] > 0 ? xPad + m00[0] * side + 5 + Math.max(0, m01[0] * side - 6)/2 : -1;
+	var c2lblY = yPad/2;
+	if (collabels.length > 1 && c2lblX > 0) {
+		svg.append('text')
+			.text(collabels[1])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + c2lblX + ', ' + c2lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	var r1lblX = xPad/2;
+	var r1lblY = m00[0] > 0 && m00[1] > 0 ? yPad + 5 + Math.max(0, m00[1] * side - 6)/2 : -1;
+	if (r1lblY > 0) {
+		svg.append('text')
+			.text(rowlabels[0])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + r1lblX + ', ' + r1lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	var r2lblX = xPad/2;
+	var r2lblY = m10[0] > 0 && m10[1] > 0 ? yPad + m00[1]*side + 5 + Math.max(0, m10[1] * side - 6)/2 : -1;
+	if (rowlabels.length > 1 && r2lblY > 0) {
+		svg.append('text')
+			.text(rowlabels[1])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + r2lblX + ', ' + r2lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	var r3lblX = svgWidth(svg) - xPad/2;
+	var r3lblY = m01[0] > 0 && m01[1] > 0 ? yPad + 5 + Math.max(0, m01[1] * side - 6)/2 : -1;
+	if (r3lblY > 0) {
+		svg.append('text')
+			.text(rowlabels[0])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + r3lblX + ', ' + r3lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+
+	var r4lblX = svgWidth(svg) - xPad/2;
+	var r4lblY = m11[0] > 0 && m11[1] > 0 ? yPad + m01[1]*side + 5 + Math.max(0, m11[1] * side - 6)/2 : -1;
+	if (rowlabels.length > 1 && r4lblY > 0) {
+		svg.append('text')
+			.text(rowlabels[0])
+			.attr('class', 'edge-lbl')
+			.attr('transform', 'translate(' + r4lblX + ', ' + r4lblY + ')')
+			.attr('font-family', 'Verdana')
+			.attr('text-anchor', 'middle');
+	}
+}
+
+var preprocessMosaic = function(m) {
+	var rsum = m[0][0] + m[0][1];
+	var csum1 = m[1][0] + m[0][0];
+	var csum2 = m[0][1] + m[1][1];
+
+	var data = [ [[ m[0][0] / rsum , m[0][0] / csum1], [ m[0][1] / rsum, m[0][1] / csum2]],
+				 [[ m[0][0] / rsum , m[1][0] / csum1], [ m[0][1] / rsum, m[1][1] / csum2]] ];
+
+	return data;
 }
 
 var drawRand = function(svg) {
 	var md = genRandMosaic();
-	drawMosaic(svg, md);
+	drawMosaic(svg, md, [-1, -1], [-1, -1]);
 }
 
 var clearSvg = function(svg) {

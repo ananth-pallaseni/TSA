@@ -23,7 +23,7 @@ def sim_data(model_fn, time_scale, x0):
 		x0 - The initial values of the system 
 
 		Returns:
-		A numpy array of each species values and another numpy aray of each species derivatives. In both cases rows are time steps, columns are species such that specie_derviates[t, s] = value of derivative of species s at time t. 
+		A tuple of numpy array. The first is each species values and the second is each species derivatives. In both cases rows are time steps, columns are species such that specie_vals[t, s] = value of species s at time t and specie_derivatives[t, s] = value of derivative of species s at time t. 
 	"""
 	# Create time scale array
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
@@ -72,14 +72,15 @@ def generate_target_topologies(model_space, target, enf_edges=[], enf_gaps=[]):
 		Args:
 		model_space - A ModelSpace object containing the description of the model space 
 
-		target - The value of the target species 
+		target - The id of the target species (must be an integer > 0)
 
 		enf_edges - An array of nodes that specify which nodes must be parents of this target 
 
 		enf_gaps - An array of nodes that specify which nodes cannot be parents of this target 
 
 		Returns:
-		An iterator containing all possible network topologies in the form (dX, param_len, bounds, topology). dX is a function that takes in a list of length param_len and returns the derivatives of the target variable for the given topology. bounds specifies the lower and upper bounds for each parameter to dX, such that bounds[i] = (lower bound, upper bound) for parameter i. 
+		An iterator containing all possible network topologies in the form (dX, topology). 
+		dX is a function that takes in a list of parameters and returns the derivatives of the target variable for the given topology. topology is a Topology object specifying the structure of this part of the graph.
 	"""
 	# Check if there are more enforced edges than allowable parents
 	num_enf_edges = len(enf_edges)
@@ -133,11 +134,16 @@ def generate_target_topologies(model_space, target, enf_edges=[], enf_gaps=[]):
 
 def objective_fn(fn, specie_vals, target_derivs, topology, time_scale):
 	""" Creates an objective function that calculates the euclidean distance between the target_derivs and the output of fn for given parameters. 
+		
 		Args:
 		fn - A function that takes in the value of species at time t, the time t, the topology and parameter list and outputs the derivative of x.
-		A numpy array containing the value of each species across all time stpes, such that species_vals[t, s] = value of species s at time t.
+		
+		specie_vals - A numpy array containing the value of each species across all time steps, such that species_vals[t, s] = value of species s at time t.
+		
 		target_derivs - A numpy array containing the values against which to compare the output of fn.
+		
 		topology - A Topology object describing the model currently being examined
+		
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
 		
 		Returns:
@@ -156,7 +162,7 @@ def gradient_match_topologies(models, target, species_vals, species_derivs, time
 		Performs gradient matching on each model to find parameters that produce gradient values that are closest to to those in species_derivs.
 
 		Args: 
-		models - An iterator containing all the possible model topologies in the form (dX, top). See the generate_target_topologies function for more details 
+		models - An iterator containing model topologies in the form (dX, topology). See the generate_target_topologies function for more details 
 
 		target - The target species the models are for (eg. species 0)
 
@@ -175,7 +181,7 @@ def gradient_match_topologies(models, target, species_vals, species_derivs, time
 		weak_sig_thresh - The threshold below which any parameter is considered to be spurious
 
 		Returns:
-		A list of the of length num_best_models containing the models that closest matched the "true" values in the form (topology, dX, optimal_parameters, distance_from_true_vals).
+		A list of length length num_best_models containing TargetModel objects that closest match the "true" values.
 	"""
 	best = []
 	target_derivs = species_derivs[:, target]
@@ -219,10 +225,10 @@ def gradient_match_topologies(models, target, species_vals, species_derivs, time
 				best_dist = dist 
 
 		# Create TargetModel using best parameters and AIC 
-		model_details = model_details = TargetModel(topology=top,
-													params=best_params,
-													dist=best_dist,
-													AIC=min_AIC)
+		model_details = TargetModel(topology=top,
+									params=best_params,
+									dist=best_dist,
+									AIC=min_AIC)
 
 		# Check if any parameter is below the weak signal threshold
 		weakest_param = min(best_params, key=lambda x:abs(x))
@@ -306,7 +312,7 @@ def whole_model_to_ode(topology_fn, topologies, params):
 	return fn 
 
 def fit_whole_model(model_lst, topology_fn, initial_values, true_vals, time_scale, node_ptypes, edge_ptypes):
-	""" Fits the parameters of every model in the models to match true_vals.
+	""" Fits the parameters of every model in the input list to produce outputs similar to true_vals. This method compares the actual values of all species against the true values of all species, making it different from gradient matching where the only derivatives are compared. Warning: this method can take a long time on even small lists (expect on the order of ~10 seconds per item). 
 
 		Args:
 		model_lst - A list of WholeModel objects
@@ -382,7 +388,7 @@ def fit_whole_model(model_lst, topology_fn, initial_values, true_vals, time_scal
 	return results
 
 def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
-	""" Checks the distance of all the input models from the true_vals.
+	""" Checks the distance of the input model from the true_vals.
 
 		Args: 
 		model - An array of TargetModel objects
@@ -396,7 +402,7 @@ def model_dist(model, topology_fn, initial_values, true_vals, time_scale):
 		time_scale - The time scale to simulate across. Should have the form [start, stop, num_steps]
 
 		Returns:
-		A sorted list of the models in ascending order of distace from the true_vals 
+		The euclidean distance between the input model and the true vals.
 	"""
 	ts = np.linspace(time_scale[0], time_scale[1], time_scale[2])
 	topologies = [tup.topology for tup in model]
@@ -417,7 +423,7 @@ def whole_model_check(models, topology_fn, initial_values, true_vals, time_scale
 	""" Checks the distance of all the input models from the true_vals.
 
 		Args: 
-		models - An array of TargetModel objects
+		models - A list of models, represented by arrays of TargetModels for each species.
 
 		topology_fn -  A function that converts from a topology and specie values to a function, dX, that outputs the value of a species' derivatives
 
@@ -497,6 +503,8 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 		enf_edges - A list of edge tuples for edges that must be present in all models 
 
 		enf_gaps - A list of edge tuples for edges that must not be present in any models 
+
+		processes - How many processes to use when multiprocessing (only valid for non-windows systems)
 
 		Returns:
 		A ModelBag object containing the top models that closest match the accepted model.
@@ -679,7 +687,7 @@ def json_to_model_bag(json_data):
 		for target in tops:
 			parents = [e[0] for e in tops[target]]
 			interactions = [e[1] for e in tops[target]]
-			new_top = Topology(target, interactions, parents, None)
+			new_top = Topology(target, interactions, parents)
 			tnode = [n for n in m['nodes'] if n['id'] == target][0]
 			eparams = sum([e[2] for e in tops[target]], [])
 			params = [d['val'] for d in tnode['parameters'] + eparams]

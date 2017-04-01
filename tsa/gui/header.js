@@ -29,6 +29,11 @@ var insertHeader = function(title) {
 		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
 		.attr('id', 'nav-btn-mosaic')
 		.text('Mosaic')
+	btnrow.append('a')
+		.attr('href', '/density.html')
+		.attr('class', 'btn btn-muted nav-btn top-nav-btn')
+		.attr('id', 'nav-btn-density')
+		.text('Density')
 
 }
 

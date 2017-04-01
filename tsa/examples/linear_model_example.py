@@ -34,10 +34,10 @@ time_scale = [0,20,51]
 # Perform tsa on the model space
 candidate_models = tsa.generate_models(topology_fn=dX_linear_fn,
                            parameter_fn=params_linear,
-						   nodes=nodes,
-						   max_parents=max_parents,
-						   accepted_model_fn=accepted_model_fn,
-						   time_scale=time_scale,
-						   initial_vals=y0)
+            						   nodes=nodes,
+            						   max_parents=max_parents,
+            						   accepted_model_fn=accepted_model_fn,
+            						   time_scale=time_scale,
+            						   initial_vals=y0)
 
 tsa.store_json(candidate_models, 'linear.json')

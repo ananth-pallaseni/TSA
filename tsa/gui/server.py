@@ -6,11 +6,17 @@ import itertools
 import math
 from urllib.parse import urlparse
 import webbrowser
+import numpy as np
 
 import tsa
+import os
 
 SYSTEM = []
 SYSTEM_INFO = []
+THIS_DIR = ''
+THIS_FN = ''
+
+MODEL_BAG = None
 
 class Server(BaseHTTPRequestHandler):
 
@@ -103,6 +109,10 @@ class Server(BaseHTTPRequestHandler):
       edges = list(edges.values())
       return [nodes, edges, layout]
 
+    def param_density(self, numtop, ptype, index):
+      x, y = tsa.param_density(MODEL_BAG, numtop, ptype, index)
+      return x, y
+
 
 
     def _set_headers(self):
@@ -125,14 +135,16 @@ class Server(BaseHTTPRequestHandler):
       self.send_response(200)
       self.send_header('Content-type', 'text/javascript')
       self.end_headers()
-      with open(path, 'rb') as js:
+      realpath = os.path.join(THIS_DIR, path)
+      with open(realpath, 'rb') as js:
         self.wfile.write(js.read())
 
     def serve_json(self, path):
       self.send_response(200)
       self.send_header('Content-type', 'application/json')
       self.end_headers()
-      with open(path, 'rb') as js:
+      realpath = os.path.join(THIS_DIR, path)
+      with open(realpath, 'rb') as js:
         self.wfile.write(js.read())
 
     def serve_fake_json(self, json_data):
@@ -145,14 +157,16 @@ class Server(BaseHTTPRequestHandler):
       self.send_response(200)
       self.send_header('Content-type', 'text/css')
       self.end_headers()
-      with open(path, 'rb') as css:
+      realpath = os.path.join(THIS_DIR, path)
+      with open(realpath, 'rb') as css:
         self.wfile.write(css.read())
 
     def serve_html(self, path):
       self.send_response(200)
       self.send_header('Content-type', 'text/html')
       self.end_headers()
-      with open(path, 'rb') as html:
+      realpath = os.path.join(THIS_DIR, path)
+      with open(realpath, 'rb') as html:
         self.wfile.write(html.read())
 
    
@@ -182,6 +196,8 @@ class Server(BaseHTTPRequestHandler):
           self.serve_html('welcome.html')
         elif path[-12:] == '/mosaic.html':
           self.serve_html('mosaic.html')
+        elif path[:] == '/density.html':
+          self.serve_html('density.html')
 
         elif path[-13:] == '/test.html':
           self.serve_html('test.html')
@@ -232,7 +248,11 @@ class Server(BaseHTTPRequestHandler):
           jbytes = bytes(gj, 'utf-8')
           self.serve_fake_json(jbytes);
         elif path[-7:] == '/mosaic':
-          mosaic_data = [{'interactome1': i*3, 'interactome2': i*3+1, 'pVal':i*3+2} for i in range(20)]
+          ntop = 100
+          thrsh = 0.01
+          mosaic_data = tsa.chi_edge(MODEL_BAG, num_top=ntop, threshold=thrsh)
+          mosaic_data = [{'interactome1': e1, 'interactome2': e2, 'pVal':pval, 'contingency': [cc.tolist() if type(cc) == np.ndarray else cc for cc in ctab]} for (e1, e2, pval, ctab) in mosaic_data]
+
           gj = json.dumps(mosaic_data)
           jbytes = bytes(gj, 'utf-8');
           self.serve_fake_json(jbytes)
@@ -240,8 +260,31 @@ class Server(BaseHTTPRequestHandler):
           gj = json.dumps(SYSTEM_INFO['node_names'])
           jbytes = bytes(gj, 'utf-8');
           self.serve_fake_json(jbytes)
-
-
+        elif '/pdensity/' in path:
+          i = path.find('/pdensity/')
+          args = path[i+10 : ].split('?')
+          if len(args) != 3:
+            raise ValueError('Need 3 arguments in path')
+          try:
+            numtop = int(args[0])
+            ptype = args[1]
+            index = int(args[2])
+          except ValueError:
+            raise ValueError
+          x, y = self.param_density(numtop, ptype, index)
+          x = list(x)
+          y = list(y)
+          gj = json.dumps({'x': x, 'y': y})
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes)
+        elif path[-7:] == '/ptypes':
+          ptypes = SYSTEM_INFO['node_ptypes'] + SYSTEM_INFO['edge_ptypes']
+          gj = json.dumps(ptypes)
+          jbytes = bytes(gj, 'utf-8');
+          self.serve_fake_json(jbytes)
+        elif path[-9:] == '/getedges':
+          edges = MODEL_BAG.get_edges()
+          
 
 
         # generic pages
@@ -284,11 +327,35 @@ def run(server_class=HTTPServer, handler_class=Server, port=8081):
     
     print ('Starting httpd on port %d...' % port)
 
+    global THIS_DIR
+    THIS_DIR, THIS_FN = os.path.split(__file__)
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print ('^C received, shutting down the web server')
         httpd.socket.close()
+
+def run_using_model_bag(model_bag):
+  global SYSTEM
+  global SYSTEM_INFO
+  global MODEL_BAG
+  mb = json.loads(tsa.model_bag_to_json(model_bag))
+  SYSTEM = mb['models']
+  SYSTEM_INFO = mb['systemInfo']
+  MODEL_BAG = model_bag
+  run()
+
+def run_using_fname(fname):
+  global SYSTEM
+  global SYSTEM_INFO
+  global MODEL_BAG
+  with open(fname, 'r') as f:
+    model_bag = json.load(f)
+    SYSTEM = model_bag['models']
+    SYSTEM_INFO = model_bag['systemInfo']
+    MODEL_BAG = tsa.json_to_model_bag(f)
+  run()
     
 if __name__ == "__main__":
     from sys import argv
@@ -297,23 +364,7 @@ if __name__ == "__main__":
     if len(argv) == 2:
         # run(port=int(argv[1]))
         val = argv[1]
-        with open(val, 'r') as f:
-          model_bag = json.load(f)
-          SYSTEM = model_bag['models']
-          SYSTEM_INFO = model_bag['systemInfo']
-        run()
+        run_using_fname(val)
     else:
         raise ValueError('Need to input a model file')
-    # elif len(argv) == 3:
-    #     opt = argv[1]
-    #     val = argv[2]
-    #     if opt == '-l':
-    #       with open(val, 'r') as f:
-    #         model_bag = json.load(f)
-    #         SYSTEM = model_bag['models']
-    #         SYSTEM_INFO = model_bag['systemInfo']
-    #       run()
 
-
-    # else:
-    #     run()

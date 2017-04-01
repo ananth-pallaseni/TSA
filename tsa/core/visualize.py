@@ -4,8 +4,9 @@
 
 import matplotlib.pyplot as plt
 import networkx as nx
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, fisher_exact
 import numpy as np 
+import tsa
 
 def parse_topology(topology_lst):
 	nodes = [i for i in range(len(topology_lst))]
@@ -143,22 +144,118 @@ def inter_map(model_lst, numtop):
 	plt.colorbar()
 	plt.show()
 
-def param_density(model_lst, numtop, param_type, node=None, edge=None):
-	params = model_lst.get_param(param_type, numtop, node=node, edge=edge)
-	params = [p.value for p in params]
-	density = gaussian_kde(params)
-	bins = np.linspace(min(params)-0.5, max(params)+0.5, 200)
-	plt.plot(bins, density(bins), label='Parameter Density Estimate')
-	plt.xlabel('Parameter Value')
-	plt.ylabel('Density')
-	if edge != None:
-		plt.title('Density from top {} models of {} for edge {}'.format(numtop, param_type, edge))
-	elif node != None:
-		plt.title('Density from top {} models of {} for node {}'.format(numtop, param_type, node))
-	else:
-		raise ValueError('Need to specify either node or edge')
-	plt.show()
-	plt.clf()
+# def param_density(model_lst, numtop, param_type, node=None, edge=None):
+# 	params = model_lst.get_param(param_type, numtop, node=node, edge=edge)
+# 	params = [p.value for p in params]
+# 	density = gaussian_kde(params)
+# 	bins = np.linspace(min(params)-0.5, max(params)+0.5, 200)
+# 	plt.plot(bins, density(bins), label='Parameter Density Estimate')
+# 	plt.xlabel('Parameter Value')
+# 	plt.ylabel('Density')
+# 	if edge != None:
+# 		plt.title('Density from top {} models of {} for edge {}'.format(numtop, param_type, edge))
+# 	elif node != None:
+# 		plt.title('Density from top {} models of {} for node {}'.format(numtop, param_type, node))
+# 	else:
+# 		raise ValueError('Need to specify either node or edge')
+# 	plt.show()
+# 	plt.clf()
+
+def param_density(model_lst,numtop,p_type,index,cushion = 1):
+	a = []
+	best = model_lst.top(numtop)
+	for i in range(0,numtop):
+		mod1 = best[i]
+		try:
+			if type(index) == int:
+				a.append(mod1.get_param(p_type,node=index).value)
+			elif type(index) == tuple or type(index) == list:
+				a.append(mod1.get_param(p_type,edge=index).value)
+		except ValueError:
+			pass
+	density1 = gaussian_kde(a)
+	bins = np.linspace(min(a)-cushion,max(a)+cushion,200)
+	return bins,density1(bins)
+
+def contingency(x1, x2):
+    d = {}
+    z = zip(x1, x2)
+    for tup in z:
+        if tup not in d:
+            d[tup] = 1
+        else:
+            d[tup] += 1
+   
+    maxind = max([max(k[0], k[1]) for k in d.keys()])
+    ret = np.zeros((int(maxind+2), int(maxind+2)))
+    for key in d:
+        ret[int(key[0]+1), int(key[1]+1)] = d[key]
+    
+    rowind = np.sum(ret, 1) != 0
+    colind = np.sum(ret, 0) != 0
+    
+    ret = ret[rowind].T[colind].T
+    rowind = [i-1 for i in range(len(rowind)) if rowind[i]]
+    colind = [i-1 for i in range(len(colind)) if colind[i]]
+    # print(rowind)
+    # print(colind)
+    # print(ret)
+    # print('--------------------	')
+    return rowind, colind, ret
 
 
+def chi_edge(model_lst,num_top = 100, ignore_same= True, threshold = 0.01):
+    l1 = model_lst
+    # num_top = 100 # number of top models to consider
+    # ignore_same = True # choose whether to ignore
+    # threshold = 0.01
+    
+    num_spec = l1.top(1)[0].num_species
+    a = -1*np.ones((num_top,num_spec,num_spec))
+    for i in range(0,num_top):
+        for (nfrom, nto, ninter) in l1.top(100)[i].get_edges():
+            a[i][(nfrom, nto)] = 1
+            
+    b = np.ones((num_spec**2,num_spec**2))
+    c = np.ones((num_spec**2,num_spec**2))
+    c = {}
+    
+    for i in range(0,num_spec**2-1):
+        out1 = i %num_spec
+        inc1 = i //num_spec
+        for j in range(i+1,num_spec**2):
+            out2 = j %num_spec
+            inc2 = j //num_spec
+            rind, cind, cont = contingency(a[:,out1,inc1],a[:,out2,inc2])
+            sh = np.array(cont.shape)
+            if (np.array(cont.shape) >=2).sum() == np.array(cont.shape).size:
+                if(ignore_same == True):
+                    if(inc2!=inc1):
+                        b[i,j] = fisher_exact(cont)[1]
+                        c[(i,j)] = cont, rind, cind
+                else:
+                    b[i,j] = fisher_exact(cont)[1]
+                    c[(i,j)] = cont, rind, cind
+    
+    sigs = np.transpose(np.nonzero(b<threshold))
+    edges = []
+    
+    for k in range(0,sigs.shape[0]):
+        e1 = (float(sigs[k,0]%num_spec), float(sigs[k,0]//num_spec))
+        e2 = (float(sigs[k,1]%num_spec), float(sigs[k,1]//num_spec))
+        pval = float(b[sigs[k,0],sigs[k,1]])
+        ctable = c[sigs[k,0],sigs[k,1]]
+       	edges.append((e1, e2, pval, ctable))
+    
+    # Returns [ ( edge1, edge2, p-value, (contingency table, row indices, column indices)) ]
+    return edges
+
+
+
+
+def start_gui(model_bag):
+	tsa.run_using_model_bag(model_bag)
+
+def start_gui_from_file(fname):
+	tsa.run_using_fname(fname)
 

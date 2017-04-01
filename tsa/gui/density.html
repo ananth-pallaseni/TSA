@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='utf8'>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+		<title>Parameter Density</title>
+        <script type="text/javascript" src='jquery-3.1.1.js'></script>
+		<script type="text/javascript" src="d3/d3.js"></script>
+        <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+
+        <link rel='stylesheet' type='text/css' href='bootstrap/css/bootstrap.css'>
+        <link rel='stylesheet' type='text/css' href='header.css'>
+        <link rel='stylesheet' type='text/css' href='density.css'>
+    </head>
+    <body>
+        <div class='container-fluid overarching-container'>
+            <!-- Header Row -->
+            <div class='row header-row'></div>
+            <div class='row' id='data-row'>
+                <div class='col-md-9 col-tall' id='data-col'></div>
+                <div class='col-md-3 col-tall' id='info-col'>
+
+
+                    <!-- <pre>Species:</pre> -->
+                    <select class="form-control" id='index-select'>
+                        <option>Node</option>
+                        <option>Edge</option>
+                    </select>
+                    <!-- <select class="form-control" id='node-select'>
+                    </select> -->
+                    <div class="input-group" id='node-group'>
+                      <span class="input-group-addon" id="basic-addon1" >Node:</span>
+                      <select class="form-control" id='node-select'>
+                    </select>
+                    </div>
+                    
+                    <div class="input-group edge-select" id='from-group'>
+                      <span class="input-group-addon edge-select"  >From:</span>
+                      <select class="form-control edge-select" id='from-select'>
+                    </select>
+                    </div>
+                    <div class="input-group edge-select" id='to-group'>
+                      <span class="input-group-addon edge-select"  >   To:</span>
+                      <select class="form-control edge-select" id='to-select'>
+                      </select>
+                    </div>
+
+                    <pre>Parameter Type:</pre>
+                    <select class="form-control" id='type-select'>
+                    </select>
+
+
+                    <pre>Number of Top Models</pre>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id='top-select' placeholder="Number of Top Models">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" onclick='return go()'>Go</button>
+                      </span>
+                    </div>
+
+                </div>
+
+
+            </div>
+        </div>
+        <script type="text/javascript" src='header.js'></script>
+        <script type="text/javascript" src='density.js'></script>
+        <script type="text/javascript">
+            insertHeader('Parameter Density');
+            var svg = insertSvg('data-col', 'd-svg');
+
+            //getAndPlot(svg, 100, 'CONST', 0);
+
+            $('#index-select').change(function() {
+                var ival = this.value;
+                if (ival == 'Node') {
+                    populateNodeSelect();
+                }
+                else if (ival == 'Edge') {
+                    populateEdgeSelect();
+                }
+                populateTypeSelect();
+            })
+
+            populateNodeSelect();
+            populateTypeSelect();
+
+            
+        </script>
+    </body>
+</html>
