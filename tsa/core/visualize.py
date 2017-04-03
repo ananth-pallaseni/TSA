@@ -194,7 +194,16 @@ def contingency(x1, x2):
     rowind = np.sum(ret, 1) != 0
     colind = np.sum(ret, 0) != 0
     
+    print('\n\n>>>>>>>>> RET SHAPE BEFORE >>>>>>>>>')
+    print(ret.shape)
+    print(rowind)
+    print(colind)
+    print(d)
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n')
     ret = ret[rowind].T[colind].T
+    print('\n\n>>>>>>>>> RET SHAPE AFTER >>>>>>>>>')
+    print(ret.shape)
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n')
     rowind = [i-1 for i in range(len(rowind)) if rowind[i]]
     colind = [i-1 for i in range(len(colind)) if colind[i]]
     # print(rowind)

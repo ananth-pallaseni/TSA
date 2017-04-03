@@ -45,7 +45,9 @@ var tblRowClick = function(data) {
 	var rind = data.contingency[1];
 	var cind = data.contingency[2];
 	var md = preprocessMosaic(md);
-	drawMosaic(svg, md, rind, cind);
+	var e1 = data.interactome1;
+	var e2 = data.interactome2;
+	drawMosaic(svg, md, rind, cind, e1, e2);
 }
 
 var populateTable = function() {
@@ -146,10 +148,14 @@ var genRandMosaic = function() {
 	return [[[w0, h1, 0], [1-w0, h2, 0]], [[w0, 1-h1, 0], [1-w0, 1-h2, 0]]]
 }
 
-var drawMosaic = function(svg, mosaicData, rowlabels, collabels, colors) {
+var drawMosaic = function(svg, mosaicData, rowlabels, collabels, e1, e2, colors) {
 	if (!colors) {
 		colors = d3.schemeCategory10.slice(0,4);
 	}
+
+	console.log(rowlabels)
+	console.log(collabels)
+
 	var side = Math.min(svgHeight(svg), svgWidth(svg)) * 0.85;
 	var xPad = (svgWidth(svg) - side) / 2;
 	var yPad = (svgHeight(svg) - side) / 2;
@@ -165,18 +171,18 @@ var drawMosaic = function(svg, mosaicData, rowlabels, collabels, colors) {
 	var r00 = svg.append('rect')
 		.attr('x', xPad + 5)
 		.attr('y', yPad + 5)
-		.attr('width', Math.max(0, m00[0] * side - 6))	
-		.attr('height', Math.max(0, m00[1] * side - 6))
+		.attr('width', Math.max(1, m00[0] * side - 6))	
+		.attr('height', Math.max(1, m00[1] * side - 6))
 		.attr('fill', colors[0])
 		.style('outline', '1px solid black')
 
 
 	var m01 = mosaicData[0][1]
 	var r01 = svg.append('rect')
-		.attr('x', xPad + m00[0] * side + 5)
+		.attr('x', xPad + Math.max(6, m00[0] * side) + 5)
 		.attr('y', yPad + 5)
-		.attr('width', Math.max(0, m01[0] * side - 6))	
-		.attr('height', Math.max(0, m01[1] * side - 6))
+		.attr('width', Math.max(1, m01[0] * side - 6))	
+		.attr('height', Math.max(1, m01[1] * side - 6))
 		.attr('fill', colors[1])
 		.style('outline', '1px solid black')
 
@@ -184,82 +190,101 @@ var drawMosaic = function(svg, mosaicData, rowlabels, collabels, colors) {
 	var m10 = mosaicData[1][0];
 	var r10 = svg.append('rect')
 		.attr('x', xPad + 5)
-		.attr('y', yPad + m00[1]*side + 5)
-		.attr('width', Math.max(0, m10[0] * side - 6))	
-		.attr('height', Math.max(0, m10[1] * side - 6))
+		.attr('y', yPad + Math.max(6, m00[1]*side) + 5)
+		.attr('width', Math.max(1, m10[0] * side - 6))	
+		.attr('height', Math.max(1, m10[1] * side - 6))
 		.attr('fill', colors[2])
 		.style('outline', '1px solid black')
 
 	var m11 = mosaicData[1][1];
 	var r11 = svg.append('rect')
-		.attr('x', xPad + m10[0]*side + 5)
-		.attr('y', yPad + m01[1]*side + 5)
-		.attr('width', Math.max(0, m11[0] * side - 6))	
-		.attr('height', Math.max(0, m11[1] * side - 6))
+		.attr('x', xPad + Math.max(6, m10[0]*side) + 5)
+		.attr('y', yPad + Math.max(6, m01[1]*side) + 5)
+		.attr('width', Math.max(1, m11[0] * side - 6))	
+		.attr('height', Math.max(1, m11[1] * side - 6))
 		.attr('fill', colors[3])
 		.style('outline', '1px solid black')
 
 
-	var c1lblX = m00[0] > 0 ? xPad + 5 + Math.max(0, m00[0] * side - 6)/2 : -1;
-	var c1lblY = yPad/2;
+	var e1lblX = xPad/4;
+	var e1lblY = yPad + side/2;
+	svg.append('text')
+		.text('Has (' + e1 + ')')
+		.attr('class', 'edge-lbl')
+		.attr('transform', 'translate(' + e1lblX + ', ' + e1lblY + ') rotate(270)')
+		.attr('font-family', 'Verdana')
+		.attr('text-anchor', 'middle');
+
+	var e2lblX = xPad + side/2;
+	var e2lblY = yPad/4;
+	svg.append('text')
+		.text('Has (' + e2 + ')')
+		.attr('class', 'edge-lbl')
+		.attr('transform', 'translate(' + e2lblX + ', ' + e2lblY + ')')
+		.attr('font-family', 'Verdana')
+		.attr('text-anchor', 'middle');
+
+
+	var c1lblX = m00[0] > 0 ? xPad + 5 + Math.max(1, m00[0] * side - 6)/2 : -1;
+	var c1lblY = 3 * yPad/4;
 	if (c1lblX > 0) {
 		svg.append('text')
-			.text(collabels[0])
+			.text(collabels[0] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + c1lblX + ', ' + c1lblY + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 	}
 
-	var c2lblX = m01[0] > 0 ? xPad + m00[0] * side + 5 + Math.max(0, m01[0] * side - 6)/2 : -1;
-	var c2lblY = yPad/2;
+	var c2lblX = m01[0] > 0 ? xPad + m00[0] * side + 5 + Math.max(1, m01[0] * side - 6)/2 : -1;
+	var c2lblY = 3 * yPad/4;
 	if (collabels.length > 1 && c2lblX > 0) {
 		svg.append('text')
-			.text(collabels[1])
+			.text(collabels[1] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + c2lblX + ', ' + c2lblY + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 	}
 
-	var r1lblX = xPad/2;
-	var r1lblY = m00[0] > 0 && m00[1] > 0 ? yPad + 5 + Math.max(0, m00[1] * side - 6)/2 : -1;
+	var r1lblX = 3*xPad/4;
+	var r1lblY = m00[0] > 0 && m00[1] > 0 ? yPad + 5 + Math.max(1, m00[1] * side - 6)/2 : -1;
 	if (r1lblY > 0) {
 		svg.append('text')
-			.text(rowlabels[0])
+			.text(rowlabels[0] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + r1lblX + ', ' + r1lblY + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 	}
 
-	var r2lblX = xPad/2;
-	var r2lblY = m10[0] > 0 && m10[1] > 0 ? yPad + m00[1]*side + 5 + Math.max(0, m10[1] * side - 6)/2 : -1;
+	var r2lblX = 3*xPad/4;
+	var r2lblY = m10[0] > 0 && m10[1] > 0 ? yPad + m00[1]*side + 5 + Math.max(1, m10[1] * side - 6)/2 : -1;
 	if (rowlabels.length > 1 && r2lblY > 0) {
 		svg.append('text')
-			.text(rowlabels[1])
+			.text(rowlabels[1] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + r2lblX + ', ' + r2lblY + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 	}
 
-	var r3lblX = svgWidth(svg) - xPad/2;
-	var r3lblY = m01[0] > 0 && m01[1] > 0 ? yPad + 5 + Math.max(0, m01[1] * side - 6)/2 : -1;
+	var r3lblX = svgWidth(svg) - 3*xPad/4;
+	var r3lblY = m01[0] > 0 && m01[1] > 0 ? yPad + 5 + Math.max(1, m01[1] * side - 6)/2 : -1;
 	if (r3lblY > 0) {
 		svg.append('text')
-			.text(rowlabels[0])
+			.text(rowlabels[0] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + r3lblX + ', ' + r3lblY + ')')
 			.attr('font-family', 'Verdana')
 			.attr('text-anchor', 'middle');
 	}
 
-	var r4lblX = svgWidth(svg) - xPad/2;
-	var r4lblY = m11[0] > 0 && m11[1] > 0 ? yPad + m01[1]*side + 5 + Math.max(0, m11[1] * side - 6)/2 : -1;
+	var r4lblX = svgWidth(svg) - 3*xPad/4;
+	var r4lblY = m11[0] > 0 && m11[1] > 0 ? yPad + m01[1]*side + 5 + Math.max(1, m11[1] * side - 6)/2 : -1;
 	if (rowlabels.length > 1 && r4lblY > 0) {
 		svg.append('text')
-			.text(rowlabels[0])
+			.text(rowlabels[1] == -1 ? 'No' : 'Yes')
 			.attr('class', 'edge-lbl')
 			.attr('transform', 'translate(' + r4lblX + ', ' + r4lblY + ')')
 			.attr('font-family', 'Verdana')

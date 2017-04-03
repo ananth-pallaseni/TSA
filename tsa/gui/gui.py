@@ -252,7 +252,7 @@ class Server(BaseHTTPRequestHandler):
           thrsh = 0.01
           mosaic_data = tsa.chi_edge(MODEL_BAG, num_top=ntop, threshold=thrsh)
           mosaic_data = [{'interactome1': e1, 'interactome2': e2, 'pVal':pval, 'contingency': [cc.tolist() if type(cc) == np.ndarray else cc for cc in ctab]} for (e1, e2, pval, ctab) in mosaic_data]
-
+          mosaic_data = sorted(mosaic_data, key=lambda x:x['pVal'])
           gj = json.dumps(mosaic_data)
           jbytes = bytes(gj, 'utf-8');
           self.serve_fake_json(jbytes)
