@@ -35,6 +35,8 @@ candidate_models = tsa.generate_models(topology_fn=dX_massact_fn,
                num_interactions=1,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
-						   initial_vals=x0)
+						   initial_vals=x0,
+               retained_top=5,
+               restarts=1)
 
 tsa.store_json(candidate_models, 'mass_action.json')

@@ -156,7 +156,7 @@ var drawMosaic = function(svg, mosaicData, rowlabels, collabels, e1, e2, colors)
 	console.log(rowlabels)
 	console.log(collabels)
 
-	var side = Math.min(svgHeight(svg), svgWidth(svg)) * 0.85;
+	var side = Math.min(svgHeight(svg), svgWidth(svg)) * 0.8;
 	var xPad = (svgWidth(svg) - side) / 2;
 	var yPad = (svgHeight(svg) - side) / 2;
 

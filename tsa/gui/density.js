@@ -8,8 +8,8 @@ var svgHeight = function(svg) {
 	return $('#' + svgid).height()
 }
 
-var getAndPlot = function(svg, numtop, ptype, index) {
-	var url = '/pdensity/' + numtop + '?' + ptype + '?' + index;
+var getAndPlot = function(svg, numtop, ptype, isnode, index) {
+	var url = '/pdensity/' + numtop + '?' + ptype + '?' + isnode + '?' + index;
 	d3.json(url, function(d) {
 	    plotDensity(svg, d.x, d.y);
 	})
@@ -176,6 +176,12 @@ var go = function() {
 
 	var svg = d3.select('#d-svg');
 
-	getAndPlot(svg, numtop, ptype, index);
+	var nodeOrEdge = isNode ? 'node' : 'edge';
 
+	getAndPlot(svg, numtop, ptype, nodeOrEdge, index);
+
+}
+
+var populateInfo = function() {
+	
 }

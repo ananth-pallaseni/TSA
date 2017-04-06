@@ -38,6 +38,8 @@ candidate_models = tsa.generate_models(topology_fn=dX_linear_fn,
             						   max_parents=max_parents,
             						   accepted_model_fn=accepted_model_fn,
             						   time_scale=time_scale,
-            						   initial_vals=y0)
+            						   initial_vals=y0,
+                           retained_top=5,
+                           restarts=1)
 
 tsa.store_json(candidate_models, 'linear.json')

@@ -33,7 +33,6 @@ class Server(BaseHTTPRequestHandler):
       all_edges = list(itertools.permutations(node_lst, 2)) + [(i,i) for i in node_lst]
       if num_edges is None:
         num_edges = max(int(random.random() * len(all_edges)), 2)
-      print(len(all_edges), num_edges)
       edge_lst = random.sample(all_edges, num_edges)
       edge_lst = [list(e) for e in edge_lst]
 
@@ -204,7 +203,6 @@ class Server(BaseHTTPRequestHandler):
 
         elif '/graph/' in path:
           i = path.find('/graph/')
-          print(path[i+7 : ])
           num = int(path[i+7 : ])
           if num >= 0 and num < len(SYSTEM):
             gj = json.dumps(SYSTEM[num])
@@ -263,14 +261,25 @@ class Server(BaseHTTPRequestHandler):
         elif '/pdensity/' in path:
           i = path.find('/pdensity/')
           args = path[i+10 : ].split('?')
-          if len(args) != 3:
-            raise ValueError('Need 3 arguments in path')
+          if len(args) != 4:
+            raise ValueError('Need 4 arguments in path')
+
           try:
             numtop = int(args[0])
             ptype = args[1]
-            index = int(args[2])
+            isnode = args[2]
+            if isnode == 'node':
+              index = int(args[3])
+            else:
+              split = args[3].split(',')
+              if len(split) > 2:
+                index = tuple([int(q) for q in split[:-1]]), int(split[-1])
+              else:
+                index = tuple([int(q) for q in split])
+
           except ValueError:
             raise ValueError
+
           x, y = self.param_density(numtop, ptype, index)
           x = list(x)
           y = list(y)
@@ -360,7 +369,6 @@ def run_using_fname(fname):
 if __name__ == "__main__":
     from sys import argv
     
-    print('argv' + str(argv))
     if len(argv) == 2:
         # run(port=int(argv[1]))
         val = argv[1]

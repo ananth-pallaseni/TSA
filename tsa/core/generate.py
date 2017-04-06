@@ -125,7 +125,7 @@ def generate_target_topologies(model_space, target, enf_edges=[], enf_gaps=[]):
 
 			# What permutation of interactions?
 			for interaction_perm in all_interaction_perms:
-				topology = Topology(target=target, interactions=interaction_perm, parents=parent_comb, order=0)
+				topology = Topology(target=target, interactions=interaction_perm, parents=parent_comb)
 
 				dX = model_space.topology_fn
 
@@ -476,7 +476,7 @@ def whole_model_check_par(models, topology_fn, initial_values, true_vals, time_s
 
 
 
-def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, nodes=[], max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None):
+def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, initial_vals, nodes=[], max_parents=-1, num_interactions=-1, max_order=-1, enf_edges=[], enf_gaps=[], processes=None, retained_top=5, restarts=1):
 	""" Generate a set of models that show similar behaviour to the accepted model. 
 
 		Each model is a permuation of the original system with attached parameter values that are based on gradient matching. 
@@ -505,6 +505,16 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 		enf_gaps - A list of edge tuples for edges that must not be present in any models 
 
 		processes - How many processes to use when multiprocessing (only valid for non-windows systems)
+
+		retained_top - How many of the top gradient-matched topologies are
+			 retained for each species. The retained topologies are combined 
+			 (one per species) to create whole models. Thus lower values of 
+			 this parameter result in a smaller search space of models 
+			 (and thus shorter runtime).
+
+		restarts - How many times to run the gradient-matching optimization 
+			per topology (to escape local minima). Note that increasing this 
+			parameter greatly increases runtime. 
 
 		Returns:
 		A ModelBag object containing the top models that closest match the accepted model.
@@ -578,8 +588,8 @@ def generate_models(topology_fn, parameter_fn, accepted_model_fn, time_scale, in
 								time_scale=time_scale,
 								edge_ptypes= edge_ptypes,
 								node_ptypes= node_ptypes,
-								num_best_models=4,
-								num_restarts=1)
+								num_best_models=retained_top,
+								num_restarts=restarts)
 
 		best_target_models.append(best)
 	print('Done')

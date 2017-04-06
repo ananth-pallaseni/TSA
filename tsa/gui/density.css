@@ -37,3 +37,15 @@ pre {
 #to-group {
 	margin-bottom: 20px;
 }
+
+#info-p {
+	margin-top: 20px;
+	white-space: normal;
+	word-break: normal;
+	background-color: grey;
+	color: white;
+}
+
+pre {
+	overflow: hidden;
+}

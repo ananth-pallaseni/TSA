@@ -168,9 +168,12 @@ def param_density(model_lst,numtop,p_type,index,cushion = 1):
 		mod1 = best[i]
 		try:
 			if type(index) == int:
-				a.append(mod1.get_param(p_type,node=index).value)
+				if mod1.param_exists(p_type, node=index):
+					a.append(mod1.get_param(p_type,node=index).value)
 			elif type(index) == tuple or type(index) == list:
-				a.append(mod1.get_param(p_type,edge=index).value)
+				if mod1.param_exists(p_type, edge=index):
+					pval = mod1.get_param(p_type,edge=index).value
+					a.append(pval)
 		except ValueError:
 			pass
 	density1 = gaussian_kde(a)
@@ -194,22 +197,9 @@ def contingency(x1, x2):
     rowind = np.sum(ret, 1) != 0
     colind = np.sum(ret, 0) != 0
     
-    print('\n\n>>>>>>>>> RET SHAPE BEFORE >>>>>>>>>')
-    print(ret.shape)
-    print(rowind)
-    print(colind)
-    print(d)
-    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n')
     ret = ret[rowind].T[colind].T
-    print('\n\n>>>>>>>>> RET SHAPE AFTER >>>>>>>>>')
-    print(ret.shape)
-    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n')
     rowind = [i-1 for i in range(len(rowind)) if rowind[i]]
     colind = [i-1 for i in range(len(colind)) if colind[i]]
-    # print(rowind)
-    # print(colind)
-    # print(ret)
-    # print('--------------------	')
     return rowind, colind, ret
 
 

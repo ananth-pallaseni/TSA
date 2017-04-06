@@ -50,6 +50,8 @@ candidate_models = tsa.generate_models(topology_fn=dX_gene_reg_fn,
 						   max_parents=max_parents,
 						   accepted_model_fn=accepted_model_fn,
 						   time_scale=time_scale,
-						   initial_vals=initial_vals)
+						   initial_vals=initial_vals,
+						   retained_top=5,
+                           restarts=1)
 
 tsa.store_json(candidate_models, 'gene_reg.json')
