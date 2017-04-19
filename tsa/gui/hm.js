@@ -57,7 +57,7 @@ var heatmapFrom = function(mat, numBuckets, color) {
 
 var transition_duration = 700;
 
-var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
+var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside, cheat) {
 	var xWidth = hside * (numCols+2);
 	var xPad = (svgWidth(svg) - xWidth)/2;
 	console.log(xPad);
@@ -123,6 +123,33 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 				.attr('font-family', 'Verdana')
 				.attr('text-anchor', 'middle');
 		}
+
+		if (cheat) {
+			var orig=  [[0,0], [1,1], [2,2], [3,3], [4,4], [5,5],
+				[2,0], [4,0], [5,1], [4,2], [0,3], [1,4] , [0,5], [3,5]]
+
+			for (var i = 0; i < orig.length; i++) {
+				var row = orig[i][0]
+				var col = orig[i][1]
+				var xPos = col * hside + xPad + hside + hside/2;
+				var yPos = row * vside + yPad + vside + vside/2;
+				svg.append('circle')
+					.attr('class', 'cheat')
+					.attr('cx', 0)
+					.attr('cy', 0)
+					.transition()
+					.duration(transition_duration)
+					.delay(function(d, i) {
+						var q = row * numRows + col;
+						return q * (500 / (numRows*numCols));
+					})
+					.attr('cx', xPos)
+					.attr('cy', yPos)
+					.attr('r', Math.min(hside, vside)/5)
+					.attr('fill', 'grey')
+					.attr('stroke', 'black');
+			}
+		}
 	})
 
 	squares.select('title')
@@ -132,7 +159,7 @@ var updateHeatmap = function(svg, squares, numRows, numCols, hside, vside) {
 		.text(d => 'Edge=(' + (d.complex ? d.complex : d.from) + ',' + d.to + ')' + '\nNum=' + d.val.toFixed(2) + '\nRatio=' + d.ratio.toFixed(2));
 }
 
-var drawHeatmapMosaic = function(svg, mat, color) {
+var drawHeatmapMosaic = function(svg, mat, color, cheat) {
 	//nextColor();
 
 	var hm = heatmapFrom(mat, 10, color); 
@@ -183,7 +210,7 @@ var drawHeatmapMosaic = function(svg, mat, color) {
 		.data(flat);
 
 	// Update grid squares
-	updateHeatmap(svg, squares, numRows, numCols, hside, vside);
+	updateHeatmap(svg, squares, numRows, numCols, hside, vside, cheat);
 
 }
 
@@ -284,14 +311,14 @@ var drawColorScale = function(svg, scaleColor, numRows, numCols) {
 
 var drawHeatmap = function(mosaicSvg, mat) {
 	nextColor();
-	drawHeatmapMosaic(mosaicSvg, mat, cur_color);
+	drawHeatmapMosaic(mosaicSvg, mat, cur_color, true);
 	numRows = mat.length;
 	numCols = mat[0].length;
 	drawColorScale(mosaicSvg, cur_color, numRows, numCols);
 }
 
 var drawHeatmapColor = function(mosaicSvg, mat, color) {
-	drawHeatmapMosaic(mosaicSvg, mat, color);
+	drawHeatmapMosaic(mosaicSvg, mat, color, true);
 	numRows = mat.length;
 	numCols = mat[0].length;
 	drawColorScale(mosaicSvg, color, numRows, numCols);

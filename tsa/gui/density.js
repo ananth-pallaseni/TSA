@@ -11,6 +11,7 @@ var svgHeight = function(svg) {
 var getAndPlot = function(svg, numtop, ptype, isnode, index) {
 	var url = '/pdensity/' + numtop + '?' + ptype + '?' + isnode + '?' + index;
 	d3.json(url, function(d) {
+		console.log(d);
 	    plotDensity(svg, d.x, d.y);
 	})
 }
@@ -28,6 +29,14 @@ var plotDensity = function(svg, x, y, color) {
 	var endx = svgWidth(svg) - startx;
 	var starty = svgHeight(svg) * 0.05;
 	var endy = svgHeight(svg) - starty;
+
+	var qqqqq = -10;
+	for (var i = 0; i < y.length; i++) {
+		qqqqq = Math.max(qqqqq, y[i]);
+	}
+	console.log(qqqqq);
+	console.log(minx, maxx, miny, maxy);
+	console.log(startx, endx, starty, endy);
 
 	var xscale = d3.scaleLinear()
 		.domain([minx, maxx])
@@ -180,8 +189,4 @@ var go = function() {
 
 	getAndPlot(svg, numtop, ptype, nodeOrEdge, index);
 
-}
-
-var populateInfo = function() {
-	
 }

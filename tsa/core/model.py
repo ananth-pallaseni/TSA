@@ -264,6 +264,20 @@ class ModelBag(object):
 		self.enf_gaps = enf_gaps
 		self.node_names = node_names
 
+	def from_wm_list(self, wmlist):
+		nmb = ModelBag([], 
+			self.node_ptypes, 
+			self.edge_ptypes, 
+			self.max_parents, 
+			self.num_interactions, 
+			self.max_order, 
+			self.enf_edges, 
+			self.enf_gaps, 
+			self.node_names)
+		nmb.models = sorted(wmlist, key=lambda x: x.dist)
+
+		return nmb
+
 	def __getitem__(self, key):
 		if type(key) is not int and type(key) is not slice:
 			raise TypeError('Index must be an int. Instead got a {}'.format(type(key)))
